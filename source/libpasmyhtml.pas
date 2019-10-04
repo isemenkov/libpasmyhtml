@@ -182,6 +182,7 @@ function mcsimple_get_by_absolute_position (mcsimple : pmcsimple_t;
 (*mycore/utils/mcsync.h********************************************************)
 
 type
+  pmcsync_status_t = ^mcsync_status_t;
   mcsync_status_t = (
     MCSYNC_STATUS_OK                                                    = $0000,
     MCSYNC_STATUS_NOT_OK                                                = $0001,
@@ -227,6 +228,92 @@ function mcsync_mutex_init (mutex : Pointer) : mcsync_status_t; cdecl;
 procedure mcsync_mutex_clear (mutex : Pointer); cdecl; external MyHTMLLib;
 procedure mcsync_mutex_destroy (mutex : Pointer); cdecl; external MyHTMLLib;
 {$ENDIF}{MyCORE_BUILD_WITHOUT_THREADS}
+
+(*mycore/utils/mcobject_async.h************************************************)
+
+type
+  pmcobject_async_status_t = ^mcobject_async_status_t;
+  mcobject_async_status_t = (
+    MCOBJECT_ASYNC_STATUS_OK                                            = 0,
+    MCOBJECT_ASYNC_STATUS_ERROR_MEMORY_ALLOCATION                       = 1,
+    MCOBJECT_ASYNC_STATUS_CHUNK_ERROR_MEMORY_ALLOCATION                 = 2,
+    MCOBJECT_ASYNC_STATUS_CHUNK_CACHE_ERROR_MEMORY_ALLOCATION           = 3,
+    MCOBJECT_ASYNC_STATUS_NODES_ERROR_MEMORY_ALLOCATION                 = 4,
+    MCOBJECT_ASYNC_STATUS_NODES_ERROR_BAD_NODE_ID                       = 5,
+    MCOBJECT_ASYNC_STATUS_CACHE_ERROR_MEMORY_REALLOC                    = 6
+  );
+
+  ppmcobject_async_chunk_t = ^pmcobject_async_chunk_t;
+  pmcobject_async_chunk_t = ^mcobject_async_chunk_t;
+  mcobject_async_chunk_t = record
+    start : PByte;
+    length : QWord;
+    size : QWord;
+
+    next : pmcobject_async_chunk_t;
+    prev : pmcobject_async_chunk_t;
+  end;
+
+  pmcobject_async_node_t = ^mcobject_async_node_t;
+  mcobject_async_node_t = record
+    chunk : pmcobject_async_chunk_t;
+    cache : Pointer;
+    cache_size : QWord;
+    cache_length : QWord;
+  end;
+
+  pmcobject_async_t = ^mcobject_async_t;
+  mcobject_async_t = record
+    origin_size : QWord;
+    struct_size : QWord;
+    struct_size_sn : QWord;
+
+    chunk_cache : ppmcobject_async_chunk_t;
+    chunk_cache_size : QWord;
+    chunk_cache_length : QWord;
+
+    chunks : ppmcobject_async_chunk_t;
+    chunks_pos_size : QWord;
+    chunks_pos_length : QWord;
+    chunks_size : QWord;
+    chunks_length : QWord;
+
+    nodes : pmcobject_async_node_t;
+    nodes_length : QWord;
+    nodes_size : QWord;
+
+    nodes_cache : PQWord;
+    nodes_cache_length : QWord;
+    nodes_cache_size : QWord;
+  end;
+
+function mcobject_async_create : pmcobject_async_t; cdecl; external MyHTMLLib;
+function mcobject_async_init (mcobj_async : pmcobject_async_t; chunk_len :
+  QWord; obj_size_by_one_chunk : QWord; struct_size : QWord) :
+  pmcobject_async_status_t; cdecl; external MyHTMLLib;
+procedure mcobject_async_clean (mcobj_async : pmcobject_async_t); cdecl;
+  external MyHTMLLib;
+function mcobject_async_destroy (mcobj_async : pmcobject_async_t; destroy_self :
+  Integer) : pmcobject_async_t; cdecl; external MyHTMLLib;
+function mcobject_async_node_add (mcobj_async : pmcobject_async_t; status :
+  pmcobject_async_status_t) : QWord; cdecl; external MyHTMLLib;
+procedure mcobject_async_node_clean (mcobj_async : pmcobject_async_t; node_idx :
+  QWord); cdecl; external MyHTMLLib;
+procedure mcobject_async_node_all_clean (mcobj_async : pmcobject_async_t);
+  cdecl; external MyHTMLLib;
+procedure mcobject_async_node_delete (mcobj_async : pmcobject_async_t;
+  node_idx : QWord); cdecl; external MyHTMLLib;
+function mcobject_async_malloc (mcobj_async : pmcobject_async_t; node_idx :
+  QWord; status : pmcobject_async_status_t) : Pointer; cdecl;
+  external MyHTMLLib;
+function mcobject_async_free (mcobj_async : pmcobject_async_t; entry : Pointer)
+  : mcobject_async_status_t; cdecl; external MyHTMLLib;
+function mcobject_async_chunk_malloc (mcobj_async : pmcobject_async_t; length :
+  QWord; status : pmcobject_async_status_t) : pmcobject_async_chunk_t; cdecl;
+  external MyHTMLLib;
+function mcobject_async_chunk_malloc_without_lock (mcobj_async :
+  pmcobject_async_t; length : QWord; status : pmcobject_async_status_t) :
+  pmcobject_async_chunk_t; cdecl; external MyHTMLLib;
 
 (*mycore/utils/mchar_async.h***************************************************)
 
@@ -334,6 +421,101 @@ procedure mchar_async_cache_add (cache : pmchar_async_cache_t; value : Pointer;
   size : QWord); cdecl; external MyHTMLLib;
 function mchar_async_cache_delete (cache : pmchar_async_cache_t; size : QWord) :
   QWord; cdecl; external MyHTMLLib;
+
+(*mycore/utils/mhash.h*********************************************************)
+
+type
+  ppmycore_utils_mhash_entry_t = ^pmycore_utils_mhash_entry_t;
+  pmycore_utils_mhash_entry_t = ^mycore_utils_mhash_entry_t;
+  mycore_utils_mhash_entry_t = record
+    key : PChar;
+    key_length : QWord;
+
+    value : Pointer;
+
+    next : pmycore_utils_mhash_entry_t;
+  end;
+
+  pmycore_utils_mhash_t = ^mycore_utils_mhash_t;
+  mycore_utils_mhash_t = record
+    mchar_obj : pmchar_async_t;
+    mchar_node : QWord;
+
+    table : ppmycore_utils_mhash_entry_t;
+    table_size : QWord;
+    table_length : QWord;
+
+    table_max_depth : QWord;
+  end;
+
+function mycore_utils_mhash_create : pmycore_utils_mhash_t; cdecl;
+  external MyHTMLLib;
+function mycore_utils_mhash_init (mhash : pmycore_utils_mhash_t; table_size :
+  QWord; depth : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+procedure mycore_utils_mhash_clean (mhash : pmycore_utils_mhash_t); cdecl;
+  external MyHTMLLib;
+function mycore_utils_mhash_destroy (mhash : pmycore_utils_mhash_t;
+  self_destroy : Boolean) : pmycore_utils_mhash_t; cdecl; external MyHTMLLib;
+function mycore_utils_mhash_create_entry (mhash : pmycore_utils_mhash_t;
+  const key : PChar; key_size : QWord; value : Pointer) :
+  pmycore_utils_mhash_entry_t; cdecl; external MyHTMLLib;
+function mycore_utils_mhash_add (mhash : pmycore_utils_mhash_t; const key :
+  PChar; key_size : QWord; value : Pointer) : pmycore_utils_mhash_entry_t;
+  cdecl; external MyHTMLLib;
+function mycore_utils_mhash_search (mhash : pmycore_utils_mhash_t; const key :
+  PChar; key_size : QWord; value : Pointer) : pmycore_utils_mhash_entry_t;
+  cdecl; external MyHTMLLib;
+function mycore_utils_mhash_add_with_choice (mhash : pmycore_utils_mhash_t;
+  const key : PChar; key_size : QWord) : pmycore_utils_mhash_entry_t; cdecl;
+  external MyHTMLLib;
+function mycore_utils_mhash_entry_by_id (mhash : pmycore_utils_mhash_t; id :
+  QWord) : pmycore_utils_mhash_entry_t; cdecl; external MyHTMLLib;
+function mycore_utils_mhash_get_table_size (mhash : pmycore_utils_mhash_t) :
+  QWord; cdecl; external MyHTMLLib;
+function mycore_utils_mhash_rebuld (mhash : pmycore_utils_mhash_t) :
+  ppmycore_utils_mhash_entry_t; cdecl; external MyHTMLLib;
+
+(*mycore/utils/mctree.h********************************************************)
+
+ type
+   pmctree_index_t = ^mctree_index_t;
+   mctree_index_t = type QWord;
+
+   pmctree_node_t = ^mctree_node_t;
+   mctree_node_t = record
+     str : PChar;
+     str_size : QWord;
+     value : Pointer;
+
+     child_count : QWord;
+     prev : mctree_index_t;
+     next : mctree_index_t;
+     child : mctree_index_t;
+   end;
+
+   pmctree_t = ^mctree_t;
+   mctree_t = record
+     nodes : pmctree_node_t;
+     nodes_length : QWord;
+     nodes_size : QWord;
+     start_size : QWord;
+   end;
+
+   mctree_before_insert_f = procedure (const key : PChar; key_size : QWord;
+     value : Pointer) of object;
+
+function mctree_create (start_size : QWord) : pmctree_t; cdecl;
+  external MyHTMLLib;
+procedure mctree_clean (mctree : pmctree_t); cdecl; external MyHTMLLib;
+function mctree_destroy (mctree : pmctree_t) : pmctree_t; cdecl;
+  external MyHTMLLib;
+function mctree_insert (mctree : pmctree_t; const key : PChar; key_size : QWord;
+  value : Pointer; b_insert : mctree_before_insert_f) : mctree_index_t; cdecl;
+  external MyHTMLLib;
+function mctree_search (mctree : pmctree_t; const key : PChar; key_size : QWord)
+  : mctree_index_t; cdecl; external MyHTMLLib;
+function mctree_search_lowercase (mctree : pmctree_t; const key : PChar;
+  key_size : QWord) : mctree_index_t; cdecl; external MyHTMLLib;
 
 (*mycore/myosi.h***************************************************************)
 
@@ -541,7 +723,7 @@ type
     MyHTML_TOKENIZER_STATE_LAST_ENTRY                                   = $0046
   );
 
-  myhtml_insetion_mode = (
+  myhtml_insertion_mode = (
     MyHTML_INSERTION_MODE_INITIAL                                       = $0000,
     MyHTML_INSERTION_MODE_BEFORE_HTML                                   = $0001,
     MyHTML_INSERTION_MODE_BEFORE_HEAD                                   = $0002,
