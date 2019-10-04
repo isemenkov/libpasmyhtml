@@ -37,6 +37,152 @@ uses
   {$PACKRECORDS C}
 {$ENDIF}
 
+{$IFDEF WINDOWS}
+  const MyHTMLLib = 'libmyhtml.dll';
+{$ENDIF}
+{$IFDEF LINUX}
+  const MyHTMLLib = 'libmyhtml.so';
+{$ENDIF}
+
+(*mycore/myosi.h***************************************************************)
+
+type
+  pmystatus_t = ^mystatus_t;
+  mystatus_t = type Cardinal;
+
+(*mycore/utils.h***************************************************************)
+
+function mycore_power (t : QWord; k : QWord) : QWord; cdecl; external MyHTMLLib;
+function mycore_strncasecmp (const str1 : PChar; const str2 : PChar; size :
+  QWord) : QWord; cdecl; external MyHTMLLib;
+function mycore_strcasecmp (const str1 : PChar; const str2 : PChar) : QWord;
+  cdecl; external MyHTMLLib;
+function mycore_strncmp (const str1 : PChar; const str2 : PChar; size :
+  QWord) : QWord; cdecl; external MyHTMLLib;
+function mycore_strcmp (const str1 : PChar; const str2 : PChar) : QWord; cdecl;
+  external MyHTMLLib;
+function mycore_strcmp_ws (const str1 : PChar; const str2 : PChar) : QWord;
+  cdecl; external MyHTMLLib;
+function mycore_ustrcasecmp_without_checks_by_secondary (const ustr1 : PByte;
+  const ustr2 : PByte) : Boolean; cdecl; external MyHTMLLib;
+
+(*mycore/utils/mcobject.h******************************************************)
+
+type
+  pmcobject_chunk_t = ^mcobject_chunk_t;
+  mcobject_chunk_t = record
+    start : PByte;
+    length : QWord;
+    size : QWord;
+
+    next : pmcobject_chunk_t;
+    prev : pmcobject_chunk_t;
+  end;
+
+  pmcobject_t = ^mcobject_t;
+  mcobject_t = record
+    chunk : pmcobject_chunk_t;
+    cache : Pointer;
+    cache_size : QWord;
+    cache_length : QWord;
+
+    struct_size : QWord;
+    chunk_size : QWord;
+  end;
+
+function mcobject_create : pmcobject_t; cdecl; external MyHTMLLib;
+function mcobject_init (mcobject : pmcobject_t; chunk_size : QWord;
+  struct_size : QWord ) : mystatus_t; cdecl; external MyHTMLLib;
+procedure mcobject_clean (mcobject : pmcobject_t); cdecl; external MyHTMLLib;
+function mcobject_destroy (mcobject : pmcobject_t; destroy_self : Boolean) :
+  pmcobject_t; cdecl; external MyHTMLLib;
+procedure mcobject_chunk_malloc (mcobject : pmcobject_t; status : pmystatus_t);
+  cdecl; external MyHTMLLib;
+function mcobject_malloc (mcobject : pmcobject_t; status : pmystatus_t) :
+  Pointer; cdecl; external MyHTMLLib;
+function mcobject_free (mcobject : pmcobject_t; entry : Pointer) : mystatus_t;
+  cdecl; external MyHTMLLib;
+
+(*mycore/utils/mcsimple.h******************************************************)
+
+type
+  pmcsimple_t = ^mcsimple_t;
+  mcsimple_t = record
+    struct_size : QWord;
+    list : PByte;
+    list_pos_size : QWord;
+    list_pos_length : QWord;
+    list_pos_length_used : QWord;
+    list_size : QWord;
+    list_length : QWord;
+  end;
+
+function mcsimple_create : pmcsimple_t; cdecl; external MyHTMLLib;
+procedure mcsimple_init (mcsimple : pmcsimple_t; pos_size : QWord;
+  list_size : QWord; struct_size : QWord); cdecl; external MyHTMLLib;
+procedure mcsimple_clean (mcsimple : pmcsimple_t); cdecl; external MyHTMLLib;
+function mcsimple_destroy (mcsimple : pmcsimple_t; destroy_self : Boolean)
+  : pmcsimple_t; cdecl; external MyHTMLLib;
+function mcsimple_init_list_entries (mcsimple : pmcimple_t; pos : QWord)
+  : PByte; cdecl; external MyHTMLLib;
+function mcsimple_malloc (mcsimple : pmcsimple_t) : Pointer; cdecl;
+  external MyHTMLLib;
+function mcsimple_get_by_absolute_position (mcsimple : pmcsimple_t;
+  pos : QWord) : Pointer; cdecl; external MyHTMLLib;
+
+(*mycore/utils/mcsync.h********************************************************)
+
+type
+  mcsync_status_t = (
+    MCSYNC_STATUS_OK                                                    = $0000,
+    MCSYNC_STATUS_NOT_OK                                                = $0001,
+    MCSYNC_STATUS_ERROR_MEM_ALLOCATE                                    = $0002
+  );
+
+  pmcsync_t = ^mcsync_t;
+  mcsync_t = record
+    spinlock : PInteger;
+    mutex : Pointer;
+  end;
+
+function mcsync_create : pmcsync_t; cdecl; external MyHTMLLib;
+function mcsync_init (mcsync : pmcsync_t) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+procedure mcsync_clean (mcsync : pmcsync_t); cdecl; external MyHTMLLib;
+function mcsync_destroy (mcsync : pmcsync_t; destroy_self : Integer)
+  : pmcsync_t; cdecl; external MyHTMLLib;
+function mcsync_lock (mcsync : pmcsync_t) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+function mcsync_unlock (mcsync : pmcsync_t) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+
+{$IFNDEF MyCORE_BUILD_WITHOUT_THREADS}
+function mcsync_spin_lock (spinlock : Pointer) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+function mcsync_spin_unlock (spinlock : Pointer) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+function mcsync_mutex_lock (mutex : Pointer) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+function mcsync_mutex_try_lock (mutex : Pointer) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+function mcsync_mutex_unlock (mutex : Pointer) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+function mcsync_spin_create : Pointer; cdecl; external MyHTMLLib;
+function mcsync_spin_init (spiclock : Pointer) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+procedure mcsync_spin_clear (spinlock : Pointer); cdecl; external MyHTMLLib;
+procedure mcsync_spin_destroy (spinlock : Pointer); cdecl; external MyHTMLLib;
+function mcsync_mutex_create : Pointer; cdecl; external MyHTMLLib;
+function mcsync_mutex_init (mutex : Pointer) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+procedure mcsync_mutex_clear (mutex : Pointer); cdecl; external MyHTMLLib;
+procedure mcsync_mutex_destroy (mutex : Pointer); cdecl; external MyHTMLLib;
+{$ENDIF}{MyCORE_BUILD_WITHOUT_THREADS}
+
+
+
+(*mycore/myosi.h***************************************************************)
+
 type
   mycore_status_t = (
     MyCORE_STATUS_OK                                                    = $0000,
@@ -73,6 +219,44 @@ type
     MyCORE_STATUS_ASYNC_ERROR_UNLOCK                                    = $0061,
     MyCORE_STATUS_ERROR_NO_FREE_SLOT                                    = $0062
   );
+
+  (* thread *)
+  pmythread_queue_list_entry_t;
+  mythread_queue_list_entry_t = record;
+
+
+  pmythread_queue_thread_param_t = ^mythread_queue_thread_param_t;
+  mythread_queue_thread_param_t = record
+  end;
+
+  pmythread_queue_list_t = ^mythread_queue_list_t;
+  mythread_queue_list_t = record
+  end;
+
+  pmythread_queue_node_t = ^mythread_queue_node_t;
+  mythread_queue_node_t = record
+  end;
+
+  pmythread_queue_t = ^mythread_queue_t;
+  mythread_queue_t = record
+  end;
+
+  pmythread_id_t = ^mythread_id_t;
+  mythread_id_t = type QWord;
+
+  pmythread_context_t = ^mythread_context_t;
+  mythread_context_t = record
+  end;
+
+  pmythread_entry_t = ^mythread_entry_t;
+  mythread_entry_t = record
+  end;
+
+  pmythread_t = ^mythred_t;
+  mythread_t = record
+  end;
+
+
 
   (* tree *)
   myhtml_tree_flags = (
@@ -279,35 +463,11 @@ type
     MyHTML_OPTIONS_PARSE_MODE_SEPARATELY                                = $0004
   );
 
-  mystatus_t = type Cardinal;
 
-  (* thread *)
-  mythread_queua_list_entry_t = record
-  end;
 
-  mythread_queue_thread_param_t = record
-  end;
 
-  mythread_queue_list_t = record
-  end;
 
-  mythread_queue_node_t = record
-  end;
 
-  mythread_queue_t = record
-  end;
-
-  mythread_id_t = type QWord;
-
-  mythread_context_t = record
-  end;
-
-  mythread_entry_t = record
-  end;
-
-  pmythread_t = ^mythred_t;
-  mythread_t = record
-  end;
 
   (* mystring *)
   mycore_string_raw_t = record
@@ -474,12 +634,7 @@ type
     marker : pmyhtml_tree_node_t;
   end;
 
-{$IFDEF WINDOWS}
-  const MyHTMLLib = 'libmyhtml.dll';
-{$ENDIF}
-{$IFDEF LINUX}
-  const MyHTMLLib = 'libmyhtml.so';
-{$ENDIF}
+
 
   function mycore_malloc (size : QWord) : Pointer; cdecl; external MyHTMLLib;
   function mycore_realloc (dst : Pointer; size : QWord) : Pointer; cdecl;
