@@ -103,6 +103,55 @@ function mcobject_malloc (mcobject : pmcobject_t; status : pmystatus_t) :
 function mcobject_free (mcobject : pmcobject_t; entry : Pointer) : mystatus_t;
   cdecl; external MyHTMLLib;
 
+(*mycore/utils/avl_tree.h******************************************************)
+
+type
+  ppmycore_utils_avl_tree_node_t = ^pmycore_utils_avl_tree_node_t;
+  pmycore_utils_avl_tree_node_t = ^mycore_utils_avl_tree_node_t;
+  mycore_utils_avl_tree_node_t = record
+    value : Pointer;
+    node_type : QWord;
+
+    left : pmycore_utils_avl_tree_node_t;
+    rigth : pmycore_utils_avl_tree_node_t;
+    parent : pmycore_utils_avl_tree_node_t;
+
+    height : SmallInt;
+  end;
+
+  pmycore_utils_avl_tree_t = ^mycore_utils_avl_tree_t;
+  mycore_utils_avl_tree_t = record
+    mc_nodes : pmcobject_t;
+  end;
+
+  mycore_utils_avl_tree_node_callback_f = procedure (avl_tree_node :
+    pmycore_utils_avl_tree_node_t; ctx : Pointer) of object;
+
+function mycore_utils_avl_tree_create : pmycore_utils_avl_tree_t; cdecl;
+  external MyHTMLLib;
+function mycore_utils_avl_tree_init (avl_tree : pmycore_utils_avl_tree_t)
+  : mystatus_t; cdecl; external MyHTMLLib;
+procedure mycore_utils_avl_tree_clean (avl_tree : pmycore_utils_avl_tree_t);
+  cdecl; external MyHTMLLib;
+function mycore_utils_avl_tree_destroy (avl_tree : pmycore_utils_avl_tree_t;
+  self_destroy : Boolean) : pmycore_utils_avl_tree_t; cdecl; external MyHTMLLib;
+function mycore_utils_avl_tree_node_create_root (avl_tree :
+  pmycore_utils_avl_tree_t; node_type : QWord; value : Pointer)
+  : pmycore_utils_avl_tree_node_t; cdecl; external MyHTMLLib;
+procedure mycore_utils_avl_tree_add (avl_tree : pmycore_utils_avl_tree_t;
+  root : ppmycore_utils_avl_tree_node_t; node_type : QWord; value : Pointer);
+  cdecl; external MyHTMLLib;
+function mycore_utils_avl_tree_delete (avl_tree : pmycore_utils_avl_tree_t;
+  root : ppmycore_utils_avl_tree_node_t; node_type : QWord) : Pointer; cdecl;
+  external MyHTMLLib;
+function mycore_utils_avl_tree_search_by_type (avl_tree :
+  pmycore_utils_avl_tree_t; node : pmycore_utils_avl_tree_node_t; node_type :
+  QWord) : pmycore_utils_avl_tree_node_t; cdecl; external MyHTMLLib;
+procedure mycore_utils_avl_tree_list_all_nodes (avl_tree :
+  pmycore_utils_avl_tree_t; root : pmycore_utils_avl_tree_node_t; callback :
+  mycore_utils_avl_tree_node_callback_f; ctx : Pointer); cdecl;
+  external MyHTMLLib;
+
 (*mycore/utils/mcsimple.h******************************************************)
 
 type
@@ -179,7 +228,112 @@ procedure mcsync_mutex_clear (mutex : Pointer); cdecl; external MyHTMLLib;
 procedure mcsync_mutex_destroy (mutex : Pointer); cdecl; external MyHTMLLib;
 {$ENDIF}{MyCORE_BUILD_WITHOUT_THREADS}
 
+(*mycore/utils/mchar_async.h***************************************************)
 
+type
+  pmchar_async_cache_node_t = ^mchar_async_cache_node_t;
+  mchar_async_cache_node_t = record
+    value : Pointer;
+    size : QWord;
+
+    left : QWord;
+    right : QWord;
+    parent : QWord;
+  end;
+
+  ppmchar_async_chunk_t = ^pmchar_async_chunk_t;
+  pmchar_async_chunk_t = ^mchar_async_chunk_t;
+  mchar_async_chunk_t = record
+    start : PChar;
+    length : QWord;
+    size : QWord;
+
+    next : pmchar_async_chunk_t;
+    prev : pmchar_async_chunk_t;
+  end;
+
+  pmchar_async_cache_t = ^mchar_async_cache_t;
+  mchar_async_cache_t = record
+    nodes : pmchar_async_cache_node_t;
+    nodes_size : QWord;
+    nodes_length : QWord;
+    nodes_root : QWord;
+    count : QWord;
+    index : PQWord;
+    index_length : QWord;
+    index_size : QWord;
+  end;
+
+  pmchar_async_node_t = ^mchar_async_node_t;
+  mchar_async_node_t = record
+    chunk : pmchar_async_chunk_t;
+    cache : mchar_async_cache_t;
+  end;
+
+  pmchar_async_t = ^mchar_async_t;
+  mchar_async_t = record
+    origin_size : QWord;
+
+    chunks : ppmchar_async_chunk_t;
+    chunks_pos_size : QWord;
+    chunks_pos_length : QWord;
+    chunks_size : QWord;
+    chunks_length : QWord;
+
+    chunk_cache : mchar_async_cache_t;
+
+    nodes : pmchar_async_node_t;
+    nodes_length : QWord;
+    nodes_size : QWord;
+
+    nodes_cache : PQWord;
+    nodes_cache_length : QWord;
+    nodes_cache_size : QWord;
+
+    mcsync : pmcsync_t;
+  end;
+
+function mchar_async_create : pmchar_async_t; cdecl; external MyHTMLLib;
+function mchar_async_init (mchar_async : pmchar_async_t; chunk_len : QWord;
+  char_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+function mchar_async_clean (mchar_async : pmchar_async_t) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mchar_async_destroy (mchar_async : pmchar_async_t; destroy_self :
+  Integer) : pmchar_async_t; cdecl; external MyHTMLLib;
+function mchar_async_malloc (mchar_async : pmchar_async_t; node_idx : QWord;
+  size : QWord) : PChar; cdecl; external MyHTMLLib;
+function mchar_async_realloc (mchar_async : pmchar_async_t; node_idx : QWord;
+  data : PChar; data_len : QWord; new_size : QWord) : PChar; cdecl;
+  external MyHTMLLib;
+procedure mchar_async_free (mchar_async : pmchar_async_t; node_idx : QWord;
+  entry : PChar); cdecl; external MyHTMLLib;
+function mchar_async_node_add (mchar_async : pmchar_async_t; status :
+  pmystatus_t) : QWord; cdecl; external MyHTMLLib;
+procedure mchar_async_node_clean (mchar_async : pmchar_async_t; node_idx :
+  QWord); cdecl; external MyHTMLLib;
+procedure mchar_async_node_delete (mchar_async : pmchar_async; node_idx :
+  QWord); cdecl; external MyHTMLLib;
+function mchar_async_chunk_malloc (mchar_async : pmchar_async; node :
+  pmchar_async_node_t; length : QWord) : pmchar_async_chunk_t; cdecl;
+  external MyHTMLLib;
+function mchar_async_crop_first_chars (mchar_async : pmchar_async_t; node_idx :
+  QWord; data : PChar; crop_len : QWord) : PChar; cdecl; external MyHTMLLib;
+function mchar_async_crop_first_chars_without_cache (data : PChar; crop_len :
+  QWord) : PChar; cdecl; external MyHTMLLib;
+function mchar_async_get_size_by_data (const data : PChar) : QWord; cdecl;
+  external MyHTMLLib;
+
+// cache
+function mchar_async_cache_init (cache : pmchar_async_cache_t) : mystatus_t;
+  cdecl; external MyHTMLLib;
+function mchar_async_cache_destroy (cache : pmchar_async_cache_t; self_destroy :
+  Boolean) : pmchar_async_cache_t; cdecl; external MyHTMLLib;
+procedure mchar_async_cache_clean (cache : pmchar_async_cache_t); cdecl;
+  external MyHTMLLib;
+procedure mchar_async_cache_add (cache : pmchar_async_cache_t; value : Pointer;
+  size : QWord); cdecl; external MyHTMLLib;
+function mchar_async_cache_delete (cache : pmchar_async_cache_t; size : QWord) :
+  QWord; cdecl; external MyHTMLLib;
 
 (*mycore/myosi.h***************************************************************)
 
