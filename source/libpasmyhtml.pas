@@ -1254,6 +1254,31 @@ type
     MyCORE_STATUS_ERROR_NO_FREE_SLOT                                    = $0062
   );
 
+  mycore_callback_serialize_f = function (const buffer : PChar; size : QWord;
+    ctx : Pointer) : mystatus_t of object;
+
+function mycore_malloc (size : QWord) : Pointer; cdecl; external MyHTMLLib;
+function mycore_realloc (dst : Pointer; size : QWord) : Pointer; cdecl;
+  external MyHTMLLib;
+function mycore_calloc (num : QWord; size : QWord) : Pointer; cdecl;
+  external MyHTMLLib;
+function mycore_free (dst : Pointer) : Pointer; cdecl; external MyHTMLLib;
+
+(* io *)
+function mycore_fopen (const filename : PChar; const mode : PChar) : Pointer;
+  cdecl; external MyHTMLLib;
+function mycore_fclose (stream : Pointer) : Integer; cdecl; external MyHTMLLib;
+function mycore_fread (buffer : Pointer; size : QWord; count : QWord; stream :
+  Pointer) : QWord; cdecl; external MyHTMLLib;
+function mycore_fwrite (const buffer : Pointer; size : QWord; count : QWord;
+  stream : Pointer) : QWord; cdecl; external MyHTMLLib;
+function mycore_fflush (stream : Pointer) : Integer; cdecl; external MyHTMLLib;
+function mycore_fseek (stream : Pointer; offset : Longint; origin : Integer) :
+  Integer; cdecl; external MyHTMLLib;
+function mycore_ftell (stream : Pointer) : Longint; cdecl; external MyHTMLLib;
+function mycore_ferror (stream : Pointer) : Integer; cdecl; external MyHTMLLib;
+procedure mycore_setbuf (stream : Pointer; buffer : PChar); cdecl;
+  external MyHTMLLib;
 
 (*mycore/perf.h****************************************************************)
 
@@ -1271,15 +1296,69 @@ function mycore_perf_clock : QWord; cdecl; external MyHTMLLib;
 function mycore_perf_frequency : QWord; cdecl; external MyHTMLLib;
 {$ENDIF}{MyHTML_WITH_PERF}
 
+(*myencoding/myosi.h***********************************************************)
+
+type
+  (* encoding *)
+  pmyencoding_t = ^myencoding_t;
+  myencoding_t = (
+    MyENCODING_DEFAULT                                                  = $0000,
+    MyENCODING_UTF_8                                                    = $0000,
+   {MyENCODING_AUTO                                                     = $0001,}
+    MyENCODING_NOT_DETERMINED                                           = $0002,
+    MyENCODING_UTF_16LE                                                 = $0004,
+    MyENCODING_UTF_16BE                                                 = $0005,
+    MyENCODING_X_USER_DEFINED                                           = $0006,
+    MyENCODING_BIG5                                                     = $0007,
+    MyENCODING_EUC_JP                                                   = $0008,
+    MyENCODING_EUC_KR                                                   = $0009,
+    MyENCODING_GB18030                                                  = $000a,
+    MyENCODING_GBK                                                      = $000b,
+    MyENCODING_IBM866                                                   = $000c,
+    MyENCODING_ISO_2022_JP                                              = $000d,
+    MyENCODING_ISO_8859_10                                              = $000e,
+    MyENCODING_ISO_8859_13                                              = $000f,
+    MyENCODING_ISO_8859_14                                              = $0010,
+    MyENCODING_ISO_8859_15                                              = $0011,
+    MyENCODING_ISO_8859_16                                              = $0012,
+    MyENCODING_ISO_8859_2                                               = $0013,
+    MyENCODING_ISO_8859_3                                               = $0014,
+    MyENCODING_ISO_8859_4                                               = $0015,
+    MyENCODING_ISO_8859_5                                               = $0016,
+    MyENCODING_ISO_8859_6                                               = $0017,
+    MyENCODING_ISO_8859_7                                               = $0018,
+    MyENCODING_ISO_8859_8                                               = $0019,
+    MyENCODING_ISO_8859_8_I                                             = $001a,
+    MyENCODING_KOI8_R                                                   = $001b,
+    MyENCODING_KOI8_U                                                   = $001c,
+    MyENCODING_MACINTOSH                                                = $001d,
+    MyENCODING_SHIFT_JIS                                                = $001e,
+    MyENCODING_WINDOWS_1250                                             = $001f,
+    MyENCODING_WINDOWS_1251                                             = $0020,
+    MyENCODING_WINDOWS_1252                                             = $0021,
+    MyENCODING_WINDOWS_1253                                             = $0022,
+    MyENCODING_WINDOWS_1254                                             = $0023,
+    MyENCODING_WINDOWS_1255                                             = $0024,
+    MyENCODING_WINDOWS_1256                                             = $0025,
+    MyENCODING_WINDOWS_1257                                             = $0026,
+    MyENCODING_WINDOWS_1258                                             = $0027,
+    MyENCODING_WINDOWS_874                                              = $0028,
+    MyENCODING_X_MAC_CYRILLIC                                           = $0029,
+
+    MyENCODING_LAST_ENTRY                                               = $002a
+  );
+
+  myencoding_status_t = (
+    MyENCODING_STATUS_OK                                                = $0000,
+    MyENCODING_STATUS_ERROR                                             = $0001,
+    MyENCODING_STATUS_CONTINUE                                          = $0002,
+    MyENCODING_STATUS_DONE                                              = $0004
+  );
 
 
 
 
-
-
-
-
-
+(******************************************************************************)
 
   (* tree *)
   myhtml_tree_flags = (
