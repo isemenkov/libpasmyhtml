@@ -50,6 +50,9 @@ type
   pmystatus_t = ^mystatus_t;
   mystatus_t = type Cardinal;
 
+  pmythread_id_t = ^mythread_id_t;
+  mythread_id_t = type QWord;
+
 (*mycore/utils.h***************************************************************)
 
 function mycore_power (t : QWord; k : QWord) : QWord; cdecl; external MyHTMLLib;
@@ -938,6 +941,279 @@ function mycore_string_crop_whitespace_from_begin (target : pmycore_string_t) :
   QWord; cdecl; external MyHTMLLib;
 function mycore_string_whitespace_from_begin (target : pmycore_string_t) :
   QWord; cdecl; external MyHTMLLib;
+
+(*mycore/mythread.h***************************************************************)
+
+type
+{$IFDEF MyCORE_BUILD_WITHOUT_THREADS}
+  pmythread_t = ^mythread_t;
+  mythread_t = record
+    sys_last_error : Integer;
+  end;
+{$ELSE}
+  ppmythread_t = ^pmythread_t;
+  pmythread_t = ^mythread_t;
+  mythread_t = record;
+
+  pmythread_entry_t = ^mythread_entry_t;
+  mythread_entry_t = record;
+
+  mythread_callback_before_entry_join_f = procedure (mythread : pmythread_t;
+    entry : pmythread_entry_t; ctx : Pointer) of object;
+  mythread_process_f = function (arg : Pointer) : Pointer of object;
+  mythread_work_f = procedure (thread_id : mythread_id_t; arg : Pointer) of
+    object;
+
+  pmythread_thread_opt_t = ^mythread_thread_opt_t;
+  mythread_thread_opt_t = (
+    MyTHREAD_OPT_UNDEF                                                  = $0000,
+    MyTHREAD_OPT_WAIT                                                   = $0001,
+    MyTHREAD_OPT_QUIT                                                   = $0002,
+    MyTHREAD_OPT_STOP                                                   = $0004,
+    MyTHREAD_OPT_DONE                                                   = $0008
+  );
+
+  pmythread_type_t = ^mythread_type_t;
+  mythread_type_t = (
+    MyTHREAD_TYPE_STREAM                                                = $0000,
+    MyTHREAD_TYPE_BATCH                                                 = $0001
+  );
+
+  (* thread *)
+  pmythread_context_t = ^mythread_context_t;
+  mythread_context_t = record
+    id : mythread_id_t;
+    func : mythread_work_f;
+
+    count : QWord;
+    opt : mythread_thread_opt_t;
+
+    status : mystatus_t;
+
+    mutex : Pointer;
+    timespec : Pointer;
+    mythread : mythread_t;
+  end;
+
+  pmythread_entry_t = ^mythread_entry_t;
+  mythread_entry_t = record
+    thread : Pointer;
+
+    context : mythread_context_t;
+    process_func : mythread_process_f;
+  end;
+
+  mythread_t = record
+    entries : pmythread_entry_t;
+    entries_length : QWord;
+    entries_size : QWord;
+    id_increase : QWord;
+
+    context : Pointer;
+    attr : Pointer;
+    timespec : Pointer;
+
+    sys_last_error : Interger;
+
+    thread_type : mythread_type_t;
+    opt : mythread_thread_opt_t;
+  end;
+
+function mythread_create : pmythread_t; cdecl; external MyHTMLLib;
+function mythread_init (mythread : pmythread_t; thread_type : mythread_type_t;
+  threads_count : QWord; id_increase : QWord) : mystatus_t; cdecl;
+  external MyHTMLLib;
+procedure mythread_clean (mythread : pmythread_t); cdecl; external MyHTMLLib;
+function mythread_destroy (mythread : pmythread_t; before_join :
+  mythread_callback_before_entry_join_f; ctx : Pointer; self_destroy : Boolean)
+  : pmythread_t; cdecl; external MyHTMLLib;
+function mythread_increase_id_by_entry_id (mythread : pmythread_t; thread_id :
+  mythread_id_t) : mythread_id_t; cdecl; external MyHTMLLib;
+
+(* set for all threads *)
+function mythread_join (mythread : pmythread_t; before_join :
+  mythread_callback_before_entry_join_f; ctx : Pointer) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_quit (mythread : pmythread_t; before_join :
+  mythread_callback_before_entry_join_f; ctx : Pointer) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_stop (mythread : pmythread_t) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_resume (mythread : pmythread_t; send_opt :
+  mythread_thread_opt_t) : mystatus_t; cdecl; external MyHTMLLib;
+function mythread_suspend (mythread : pmythread_t) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_check_status (mythread : pmythread_t) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_option (mythread : pmythread_t) : mythread_thread_opt_t;
+  cdecl; external MyHTMLLib;
+procedure mythread_option_set (mythread : pmythread_t; opt :
+  mythread_thread_opt_t); cdecl; external MyHTMLLib;
+
+(* Entries *)
+function mythread_entry_create (mythread : pmythread_t; process_func :
+  mythread_process_f; func : mythread_work_f; opt : mythread_thread_opt_t) :
+  mystatus_t; cdecl; external MyHTMLLib;
+function mythread_entry_join (entry : pmythread_entry_t; before_join :
+  mythread_callback_before_entry_join_f; ctx : Pointer) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_entry_quit (entry : pmythread_entry_t; before_join :
+  mythread_callback_before_entry_join_f; ctx : Pointer) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_entry_stop (entry : pmythread_entry_t) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_entry_resume (entry : pmythread_entry_t; send_opt :
+  mythread_thread_opt_t) : mystatus_t; cdecl; external MyHTMLLib;
+function mythread_entry_suspend (entry : pmythread_entry_t) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_entry_status (entry : pmythread_entry_t) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_entry_mythread (entry : pmythread_entry_t) : pmythread_t;
+  cdecl; external MyHTMLLib;
+
+(* API for ports *)
+function mythread_thread_create (mythread : pmythread_t; process_func :
+  mythread_process_f; ctx : Pointer) : Pointer; cdecl; external MyHTMLLib;
+function mythread_thread_join (mythread : pmythread_t; thread : Pointer) :
+  mystatus_t; cdecl; external MyHTMLLib;
+function mythread_thread_cancel (mythread : pmythread_t; thread : Pointer) :
+  mystatus_t; cdecl; external MyHTMLLib;
+function mythread_thread_destroy (mythread : pmythread_t; thread : Pointer) :
+  mystatus_t; cdecl; external MyHTMLLib;
+function mythread_thread_attr_init (mythread : pmythread_t) : Pointer; cdecl;
+  external MyHTMLLib;
+procedure mythread_thread_attr_clean (mythread : pmythread_t; attr : Pointer);
+  cdecl; external MyHTMLLib;
+procedure mythread_thread_attr_destroy (mythread : pmythread_t; attr : Pointer);
+  cdecl; external MyHTMLLib;
+function mythread_mutex_create (mythread : pmythread_t) : Pointer; cdecl;
+  external MyHTMLLib;
+function mythread_mutex_post (mythread : pmythread_t; mutex : Pointer) :
+  mystatus_t; cdecl; external MyHTMLLib;
+function mythread_mutex_wait (mythread : pmythread_t; mutex : Pointer) :
+  mystatus_t; cdecl; external MyHTMLLib;
+procedure mythread_mutex_close (mythread : pmythread_t; mutex : Pointer); cdecl;
+  external MyHTMLLib;
+function mythread_nanosleep_create (mythread : pmythread_t) : Pointer; cdecl;
+  external MyHTMLLib;
+procedure mythread_nanosleep_clean (timespec : Pointer); cdecl;
+  external MyHTMLLib;
+procedure mythread_nanosleep_destroy (timespec : Pointer); cdecl;
+  external MyHTMLLib;
+function mythread_nanosleep_sleep (timespec : Pointer) : mystatus_t; cdecl;
+  external MyHTMLLib;
+
+(* callback *)
+procedure mythread_callback_quit (mythread : pmythread_t; entry :
+  pmythread_entry_t; ctx : Pointer); cdecl; external MyHTMLLib;
+{$ENDIF}{MyCORE_BUILD_WITHOUT_THREADS}
+
+(*mycore/thread_queue.h********************************************************)
+
+type
+  (* queue *)
+  ppmythread_queue_node_t = ^pmythread_queue_node_t;
+  pmthread_queue_node_t = ^mythread_queue_node_t;
+  mythread_queue_node_t = record
+    context : Pointer;
+    args : Pointer;
+
+    prev : pmythread_queue_node_t;
+  end;
+
+  pmythread_queue_t = ^mythread_queue_t;
+  mythread_queue_t = record
+    nodes : ppmythread_queue_node_t;
+
+    nodes_pos : QWord;
+    nodes_pos_size : QWord;
+    nodes_length : QWord;
+
+    nodes_uses : QWord;
+    nodes_size : QWord;
+    nodes_root : QWord;
+  end;
+
+  pmythread_queue_thread_param_t = ^mythread_queue_thread_param_t;
+  mythread_queue_thread_param_t = record
+    use : QWord;
+  end;
+
+  pmythread_queue_list_entry_t = ^mythread_queue_list_entry_t;
+  mythread_queue_list_entry_t = record
+    queue : pmythread_queue_t;
+    thread_param : pmythread_queue_thread_param_t;
+    thread_param_size : QWord;
+
+    next : pmythread_queue_list_entry_t;
+    prev : pmythread_queue_list_entry_t;
+  end;
+
+  pmythread_queue_list_t = ^mythread_queue_list_t;
+  mythread_queue_list_t = record
+    first : pmythread_queue_list_entry_t;
+    last : pmythread_queue_list_entry_t;
+
+    count : QWord;
+  end;
+
+function mythread_queue_create : pmythread_queue_t; cdecl; external MyHTMLLib;
+function mythread_queue_init (queue : pmythread_queue_t; size : QWord) :
+  mystatus_t; cdecl; external MyHTMLLib;
+procedure mythread_queue_clean (queue : pmythread_queue_t); cdecl;
+  external MyHTMLLib;
+function mythread_queue_destroy (token : pmythread_queue_t) : pmythread_queue_t;
+  cdecl; external MyHTMLLib;
+procedure mythread_queue_node_clean (qnode : pmythread_queue_node_t); cdecl;
+  external MyHTMLLib;
+function mythread_queue_count_used_node (queue : pmythread_queue_t) : QWord;
+  cdecl; external MyHTMLLib;
+function mythread_queue_get_first_node (queue : pmythread_queue_t) :
+  pmythread_queue_node_t; cdecl; external MyHTMLLib;
+function mythread_queue_get_prev_node (qnode : pmythread_queue_node_t) :
+  pmythread_queue_node_t; cdecl; external MyHTMLLib;
+function mythread_queue_get_current_node (queue : pmythread_queue_t) :
+  pmythread_queue_node_t; cdecl; external MyHTMLLib;
+function mythread_queue_node_malloc (mythread : pmythread_t; queue :
+  pmythread_queue_t; status : pmystatus_t) : pmythread_queue_node_t; cdecl;
+  external MyHTMLLib;
+function mythread_queue_node_malloc_limit (mythread : pmythread_t; queue :
+  pmythread_queue_t; limit : QWord; status : pmystatus_t) :
+  pmythread_queue_node_t; cdecl; external MyHTMLLib;
+{$IFNDEF MyCORE_BUILD_WITHOUT_THREADS}
+function mythread_queue_node_malloc_round (mythread : pmythread_t; entry :
+  pmythread_queue_list_entry_t) : pmythread_queue_node_t; cdecl;
+  external MyHTMLLib;
+function mythread_queue_list_create (status : pmystatus_t) :
+  pmythread_queue_list_t; cdecl; external MyHTMLLib;
+procedure mythread_queue_list_destroy (queue_list : pmythread_queue_list);
+  cdecl; external MyHTMLLib;
+function mythread_queue_list_get_count (queue_list : pmythread_queue_list_t) :
+  QWord; cdecl; external MyHTMLLib;
+procedure mythread_queue_list_wait_for_done (mythread : pmythread_t;
+  queue_list : pmythread_queue_list_t); cdecl; external MyHTMLLib;
+function mythread_queue_list_see_for_done (mythread : pmythread_t;
+  queue_list : pmythread_queue_list_t) : Boolean; cdecl; external MyHTMLLib;
+function mythread_queue_list_see_for_done_by_thread (mythread : pmythread_t;
+  queue_list : pmythread_queue_list_t; thread_id : mythread_id_t) : Boolean;
+  cdecl; external MyHTMLLib;
+function mythread_queue_list_entry_push (mythread_list : ppmythread_t;
+  list_size : QWord; queue_list : pmythread_queue_list_t; queue :
+  pmythread_queue_t; thread_param_size : QWord; status : pmystatus_t) :
+  pmythread_queue_list_t; cdecl; external MyHTMLLib;
+function mythread_queue_list_entry_delete (mythread_list : ppmythread_t;
+  list_size : QWord; queue_list : pmythread_queue_list_t; entry :
+  pmythread_queue_list_entry_t; destroy_queue : Boolean) :
+  pmythread_queue_list_entry_t; cdecl; external MyHTMLLib;
+procedure mythread_queue_list_entry_clean (entry :
+  pmythread_queue_list_entry_t); cdecl; external MyHTMLLib;
+procedure mythread_queue_list_entry_wait_for_done (mythread : pmythread_t;
+  entry : pmythread_queue_list_entry_t); cdecl; external MyHTMLLib;
+procedure mythread_queue_list_entry_make_batch (mythread : pmythread_t;
+  entry : pmythread_queue_list_entry_t); cdecl; external MyHTMLLib;
+procedure mythread_queue_list_entry_make_stream (mythread : pmythread_t;
+  entry : pmythread_queue_list_entry_t); cdecl; external MyHTMLLib;
+{$ENDIF}{MyCORE_BUILD_WITHOUT_THREADS}
 
 (*mycore/myosi.h***************************************************************)
 
