@@ -44,6 +44,9 @@ uses
   const MyHTMLLib = 'libmyhtml.so';
 {$ENDIF}
 
+type
+  PPChar = ^PChar;
+
 (*mycore/myosi.h***************************************************************)
 
 type
@@ -519,299 +522,6 @@ function mctree_search (mctree : pmctree_t; const key : PChar; key_size : QWord)
   : mctree_index_t; cdecl; external MyHTMLLib;
 function mctree_search_lowercase (mctree : pmctree_t; const key : PChar;
   key_size : QWord) : mctree_index_t; cdecl; external MyHTMLLib;
-
-(*mycore/utils/resources.h*****************************************************)
-
-const
-  MyCORE_STRING_MAP_CHAR_OTHER                                          = #$000;
-  MyCORE_STRING_MAP_CHAR_A_Z_a_z                                        = #$001;
-  MyCORE_STRING_MAP_CHAR_WHITESPACE                                     = #$002;
-
-  mycore_string_chars_num_map : array [0 .. 255] of Byte = (
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $00,  $01,  $02,  $03,  $04,  $05,
-    $06,  $07,  $08,  $09,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff
-  );
-
-  mycore_string_chars_hex_map : array [0 .. 255] of Byte = (
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $00,  $01,  $02,  $03,  $04,  $05,
-    $06,  $07,  $08,  $09,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $0a,  $0b,  $0c,  $0d,  $0e,  $0f,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $0a,  $0b,
-    $0c,  $0d,  $0e,  $0f,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff
-  );
-
-  mycore_string_chars_lowercase_map : array [0 .. 255] of Byte = (
-    $00,  $01,  $02,  $03,  $04,  $05,  $06,  $07,  $08,
-    $09,  $0a,  $0b,  $0c,  $0d,  $0e,  $0f,  $10,  $11,
-    $12,  $13,  $14,  $15,  $16,  $17,  $18,  $19,  $1a,
-    $1b,  $1c,  $1d,  $1e,  $1f,  $20,  $21,  $22,  $23,
-    $24,  $25,  $26,  $27,  $28,  $29,  $2a,  $2b,  $2c,
-    $2d,  $2e,  $2f,  $30,  $31,  $32,  $33,  $34,  $35,
-    $36,  $37,  $38,  $39,  $3a,  $3b,  $3c,  $3d,  $3e,
-    $3f,  $40,  $61,  $62,  $63,  $64,  $65,  $66,  $67,
-    $68,  $69,  $6a,  $6b,  $6c,  $6d,  $6e,  $6f,  $70,
-    $71,  $72,  $73,  $74,  $75,  $76,  $77,  $78,  $79,
-    $7a,  $5b,  $5c,  $5d,  $5e,  $5f,  $60,  $61,  $62,
-    $63,  $64,  $65,  $66,  $67,  $68,  $69,  $6a,  $6b,
-    $6c,  $6d,  $6e,  $6f,  $70,  $71,  $72,  $73,  $74,
-    $75,  $76,  $77,  $78,  $79,  $7a,  $7b,  $7c,  $7d,
-    $7e,  $7f,  $80,  $81,  $82,  $83,  $84,  $85,  $86,
-    $87,  $88,  $89,  $8a,  $8b,  $8c,  $8d,  $8e,  $8f,
-    $90,  $91,  $92,  $93,  $94,  $95,  $96,  $97,  $98,
-    $99,  $9a,  $9b,  $9c,  $9d,  $9e,  $9f,  $a0,  $a1,
-    $a2,  $a3,  $a4,  $a5,  $a6,  $a7,  $a8,  $a9,  $aa,
-    $ab,  $ac,  $ad,  $ae,  $af,  $b0,  $b1,  $b2,  $b3,
-    $b4,  $b5,  $b6,  $b7,  $b8,  $b9,  $ba,  $bb,  $bc,
-    $bd,  $be,  $bf,  $c0,  $c1,  $c2,  $c3,  $c4,  $c5,
-    $c6,  $c7,  $c8,  $c9,  $ca,  $cb,  $cc,  $cd,  $ce,
-    $cf,  $d0,  $d1,  $d2,  $d3,  $d4,  $d5,  $d6,  $d7,
-    $d8,  $d9,  $da,  $db,  $dc,  $dd,  $de,  $df,  $e0,
-    $e1,  $e2,  $e3,  $e4,  $e5,  $e6,  $e7,  $e8,  $e9,
-    $ea,  $eb,  $ec,  $ed,  $ee,  $ef,  $f0,  $f1,  $f2,
-    $f3,  $f4,  $f5,  $f6,  $f7,  $f8,  $f9,  $fa,  $fb,
-    $fc,  $fd,  $fe,  $ff
-  );
-
-  mycore_string_chars_uppercase_map : array [0 .. 255] of Byte = (
-    $00,  $01,  $02,  $03,  $04,  $05,  $06,  $07,  $08,
-    $09,  $0a,  $0b,  $0c,  $0d,  $0e,  $0f,  $10,  $11,
-    $12,  $13,  $14,  $15,  $16,  $17,  $18,  $19,  $1a,
-    $1b,  $1c,  $1d,  $1e,  $1f,  $20,  $21,  $22,  $23,
-    $24,  $25,  $26,  $27,  $28,  $29,  $2a,  $2b,  $2c,
-    $2d,  $2e,  $2f,  $30,  $31,  $32,  $33,  $34,  $35,
-    $36,  $37,  $38,  $39,  $3a,  $3b,  $3c,  $3d,  $3e,
-    $3f,  $40,  $41,  $42,  $43,  $44,  $45,  $46,  $47,
-    $48,  $49,  $4a,  $4b,  $4c,  $4d,  $4e,  $4f,  $50,
-    $51,  $52,  $53,  $54,  $55,  $56,  $57,  $58,  $59,
-    $5a,  $5b,  $5c,  $5d,  $5e,  $5f,  $60,  $41,  $42,
-    $43,  $44,  $45,  $46,  $47,  $48,  $49,  $4a,  $4b,
-    $4c,  $4d,  $4e,  $4f,  $50,  $51,  $52,  $53,  $54,
-    $55,  $56,  $57,  $58,  $59,  $5a,  $7b,  $7c,  $7d,
-    $7e,  $7f,  $80,  $81,  $82,  $83,  $84,  $85,  $86,
-    $87,  $88,  $89,  $8a,  $8b,  $8c,  $8d,  $8e,  $8f,
-    $90,  $91,  $92,  $93,  $94,  $95,  $96,  $97,  $98,
-    $99,  $9a,  $9b,  $9c,  $9d,  $9e,  $9f,  $a0,  $a1,
-    $a2,  $a3,  $a4,  $a5,  $a6,  $a7,  $a8,  $a9,  $aa,
-    $ab,  $ac,  $ad,  $ae,  $af,  $b0,  $b1,  $b2,  $b3,
-    $b4,  $b5,  $b6,  $b7,  $b8,  $b9,  $ba,  $bb,  $bc,
-    $bd,  $be,  $bf,  $c0,  $c1,  $c2,  $c3,  $c4,  $c5,
-    $c6,  $c7,  $c8,  $c9,  $ca,  $cb,  $cc,  $cd,  $ce,
-    $cf,  $d0,  $d1,  $d2,  $d3,  $d4,  $d5,  $d6,  $d7,
-    $d8,  $d9,  $da,  $db,  $dc,  $dd,  $de,  $df,  $e0,
-    $e1,  $e2,  $e3,  $e4,  $e5,  $e6,  $e7,  $e8,  $e9,
-    $ea,  $eb,  $ec,  $ed,  $ee,  $ef,  $f0,  $f1,  $f2,
-    $f3,  $f4,  $f5,  $f6,  $f7,  $f8,  $f9,  $fa,  $fb,
-    $fc,  $fd,  $fe,  $ff
-  );
-
-  replacement_character : array [0 .. 159] of QWord = (
-    65535,      1,      2,      3,      4,      5,      6,      7,      8,
-        9,     10,     11,     12,     13,     14,     15,     16,     17,
-       18,     19,     20,     21,     22,     23,     24,     25,     26,
-       27,     28,     29,     30,     31,     32,     33,     34,     35,
-       36,     37,     38,     39,     40,     41,     42,     43,     44,
-       45,     46,     47,     48,     49,     50,     51,     52,     53,
-       54,     55,     56,     57,     58,     59,     60,     61,     62,
-       63,     64,     65,     66,     67,     68,     69,     70,     71,
-       72,     73,     74,     75,     76,     77,     78,     79,     80,
-       81,     82,     83,     84,     85,     86,     87,     88,     89,
-       90,     91,     92,     93,     94,     95,     96,     97,     98,
-       99,    100,    101,    102,    103,    104,    105,    106,    107,
-      108,    109,    110,    111,    112,    113,    114,    115,    116,
-      117,    118,    119,    120,    121,    122,    123,    124,    125,
-      126,    127,   8364,    129,   8218,    402,   8222,   8230,   8224,
-     8225,    710,   8240,    352,   8249,    338,    141,    381,    143,
-      144,   8216,   8217,   8220,   8221,   8226,   8211,   8212,    732,
-     8482,    353,   8250,    339,    157,    382,    376
-  );
-
-  mycore_string_alphanumeric_character : array [0 .. 255] of Byte = (
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $00,  $01,  $02,  $03,  $04,  $05,
-    $06,  $07,  $08,  $09,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $0a,  $0b,  $0c,  $0d,  $0e,  $0f,  $0a,
-    $0b,  $0c,  $0d,  $0e,  $0f,  $0a,  $0b,  $0c,  $0d,
-    $0e,  $0f,  $0a,  $0b,  $0c,  $0d,  $0e,  $0f,  $0a,
-    $0b,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $0c,  $0d,
-    $0e,  $0f,  $0a,  $0b,  $0c,  $0d,  $0e,  $0f,  $0a,
-    $0b,  $0c,  $0d,  $0e,  $0f,  $0a,  $0b,  $0c,  $0d,
-    $0e,  $0f,  $0a,  $0b,  $0c,  $0d,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff
-  );
-
-  mycore_string_alpha_character : array [0 .. 255] of Byte = (
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $0a,  $0b,  $0c,  $0d,  $0e,  $0f,  $0a,
-    $0b,  $0c,  $0d,  $0e,  $0f,  $0a,  $0b,  $0c,  $0d,
-    $0e,  $0f,  $0a,  $0b,  $0c,  $0d,  $0e,  $0f,  $0a,
-    $0b,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $0c,  $0d,
-    $0e,  $0f,  $0a,  $0b,  $0c,  $0d,  $0e,  $0f,  $0a,
-    $0b,  $0c,  $0d,  $0e,  $0f,  $0a,  $0b,  $0c,  $0d,
-    $0e,  $0f,  $0a,  $0b,  $0c,  $0d,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,  $ff,
-    $ff,  $ff,  $ff,  $ff
-  );
-
-  mycore_tokenizer_chars_map : array [0 .. 255] of Byte = (
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $02,  $02,  $00,  $02,  $02,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $02,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $01,  $01,  $01,  $01,  $01,  $01,  $01,
-    $01,  $01,  $01,  $01,  $01,  $01,  $01,  $01,  $01,
-    $01,  $01,  $01,  $01,  $01,  $01,  $01,  $01,  $01,
-    $01,  $00,  $00,  $00,  $00,  $00,  $00,  $01,  $01,
-    $01,  $01,  $01,  $01,  $01,  $01,  $01,  $01,  $01,
-    $01,  $01,  $01,  $01,  $01,  $01,  $01,  $01,  $01,
-    $01,  $01,  $01,  $01,  $01,  $01,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,  $00,
-    $00,  $00,  $00,  $00
-  );
-
-  mycore_string_hex_to_char_map : array [0 .. 16] of Byte = (
-    $30,  $31,  $32,  $33,  $34,  $35,  $36,  $37,  $38,
-    $39,  $41,  $42,  $43,  $44,  $45,  $46,  $00
-  );
-
-  mycore_string_char_to_two_hex_value : array [0 .. 256 ] of PChar = (
-    '00', '01', '02', '03', '04', '05', '06', '07',
-    '08', '09', '0A', 'OB', '0C', '0D', '0E', '0F',
-    '10', '11', '12', '13', '14', '15', '16', '17',
-    '18', '19', '1A', '1B', '1C', '1D', '1E', '1F',
-    '20', '21', '22', '23', '24', '25', '26', '27',
-    '28', '29', '2A', '2B', '2C', '2D', '2E', '2F',
-    '30', '31', '32', '33', '34', '35', '36', '37',
-    '38', '39', '3A', '3B', '3C', '3D', '3E', '3F',
-    '40', '41', '42', '43', '44', '45', '46', '47',
-    '48', '49', '4A', '4B', '4C', '4D', '4E', '4F',
-    '50', '51', '52', '53', '54', '55', '56', '57',
-    '58', '59', '5A', '5B', '5C', '5D', '5E', '5F',
-    '60', '61', '62', '63', '64', '65', '66', '67',
-    '68', '69', '6A', '6B', '6C', '6D', '6E', '6F',
-    '70', '71', '72', '73', '74', '75', '76', '77',
-    '78', '79', '7A', '7B', '7C', '7D', '7E', '7F',
-    '80', '81', '82', '83', '84', '85', '86', '87',
-    '88', '89', '8A', '8B', '8C', '8D', '8E', '8F',
-    '90', '91', '92', '93', '94', '95', '96', '97',
-    '98', '99', '9A', '9B', '9C', '9D', '9E', '9F',
-    'A0', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7',
-    'A8', 'A9', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF',
-    'B0', 'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7',
-    'B8', 'B9', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF',
-    'C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7',
-    'C8', 'C9', 'CA', 'CB', 'CC', 'CD', 'CE', 'CF',
-    'D0', 'D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7',
-    'D8', 'D9', 'DA', 'DB', 'DC', 'DD', 'DE', 'DF',
-    'E0', 'E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7',
-    'E8', 'E9', 'EA', 'EB', 'EC', 'ED', 'EE', 'EF',
-    'F0', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7',
-    'F8', 'F9', 'FA', 'FB', 'FC', 'FD', 'FE', 'FF',
-    Pointer(0)
-  );
 
 (*mycore/incoming.h************************************************************)
 
@@ -1355,8 +1065,218 @@ type
     MyENCODING_STATUS_DONE                                              = $0004
   );
 
+(*myencoding/encoding.h********************************************************)
 
+type
+  pmyencoding_result_t = ^myencoding_result_t;
+  myencoding_result_t = record
+    first : Cardinal;
+    second : Cardinal;
+    third : Cardinal;
+    result : Cardinal;
+    result_aux : Cardinal;
+    flag : Cardinal;
+  end;
 
+  pmyencoding_trigram_t = ^myencoding_trigram_t;
+  myencoding_trigram_t = record
+    trigram : array [0 .. 2] of Byte;
+    value : QWord;
+  end;
+
+  pmyencoding_trigram_result_t = ^myencoding_trigram_result_t;
+  myencoding_trigram_result_t = record
+    count : QWord;
+    vaule : QWord;
+  end;
+
+  pmyencoding_unicode_result_t = ^myencoding_unicode_result_t;
+  myencoding_unicode_result_t = record
+    count_ascii : QWord;
+    count_good : QWord;
+    count_bad : QWord;
+  end;
+
+  pmyencoding_detect_name_entry_t = ^myencoding_detect_name_entry_t;
+  myencoding_detect_name_entry_t = record
+    name : PChar;
+    name_length : QWord;
+    label_name : PChar;
+    label_length : QWord;
+
+    encoding : myencoding_t;
+
+    next : QWord;
+    curr : QWord;
+  end;
+
+  pmyencoding_detect_attr_t = ^myencoding_detect_attr_t;
+  myencoding_detect_attr_t = record
+    key_begin : QWord;
+    key_length : QWord;
+    value_begin : QWord;
+    value_length : QWord;
+
+    next : pmyencoding_detect_attr_t;
+  end;
+
+  pmyencoding_entry_name_index_t = ^myencoding_entry_name_index_t;
+  myencdoing_entry_name_index_t = record
+    name : PChar;
+    length : QWord;
+  end;
+
+  muencoding_custom_f = function (const data : Byte; res : pmyencoding_result_t)
+    : myencoding_status_t of object;
+
+function myencoding_get_function_by_id (idx : myencoding_t) :
+  myencoding_custom_f; cdecl; external MyHTMLLib;
+function myencoding_decode_utf_8 (const data : Byte; res : pmyencoding_result_t)
+  : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_ibm866 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_2 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_3 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_4 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_5 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_6 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_7 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_8 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_8_i (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_10 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_13 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_14 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_15 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_16 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_koi8_r (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_koi8_u (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_macintosh (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_874 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1250 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1251 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1252 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1253 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1254 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1255 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1256 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1257 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1258 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_x_mac_cyrillic (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_gbk (const data : Byte; res : pmyencoding_result_t)
+  : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_gb18030 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_big5 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_euc_jp (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_2022_jp (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_shift_jis (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_euc_kr (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_shared_utf_16 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_utf_16be (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_utf_16le (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_x_user_defined (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_codepoint_ascii_length (codepoint : QWord) :  QWord; cdecl;
+  external MyHTMLLib;
+function myencoding_ascii_utf_8_length (const data : Byte) : QWord; cdecl;
+  external MyHTMLLib;
+function myencoding_codepoint_to_ascii_utf_8 (codepoint : QWord; data : PChar) :
+  QWord; cdecl; external MyHTMLLib;
+function myencoding_codepoint_to_lowercase_ascii_utf_8 (codepoint : QWord;
+  data : PChar) : QWord; cdecl; external MyHTMLLib;
+function myencoding_codepoint_to_ascii_utf_16 (codepoint : QWord; data : PChar)
+  : QWord; cdecl; external MyHTMLLib;
+function myencoding_ascii_utf_8_to_codepoint (const data : PByte; codepoint :
+  PQWord) : QWord; cdecl; external MyHTMLLib;
+procedure myencoding_result_clean (res : pmyencoding_result_t); cdecl;
+  external MyHTMLLib;
+function myencoding_detect (const text : PChar; length : QWord; encoding :
+  pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
+function myencoding_detect_russian (const text : PChar; length : QWord;
+  encoding : pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
+function myencoding_detect_unicode (const text : PChar; length : QWord;
+  encoding : pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
+function myencoding_detect_bom (const text : PChar; length : QWord;
+  encoding : pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
+function myencoding_detect_and_cut_bom (const text : PChar; length : PChar;
+  encoding : pmyencoding_t; const new_text : PPChar; new_size : QWord) :
+  Boolean; cdecl; external MyHTMLLib;
+function myencoding_convert_to_ascii_utf_8 (raw_str : pmycore_string_raw_t;
+  const buff : PChar; length : QWord; encoding : myencoding_t) : QWord; cdecl;
+  external MyHTMLLib;
+function myencoding_name_entry_by_name (const name : PChar; length : QWord) :
+  pmyencoding_detect_name_entry_t; cdecl; external MyHTMLLib;
+function myencoding_by_name (const name : PChar; length : QWord; encoding :
+  pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
+function myencoding_name_by_id (encoding : myencoding_t; length : PQWord) :
+  PChar; cdecl; external MyHTMLLib;
+function myencoding_extracting_character_encoding_from_charset (const data :
+  PChar; data_size : QWord; encoding : pmyencoding_t) : Boolean; cdecl;
+  external MyHTMLLib;
+function myencoding_prescan_stream_to_determine_encoding (const data : PChar;
+  data_size : QWord) : myencoding_t; cdecl; external MyHTMLLib;
+function myencoding_extracting_character_encoding_from_charset_with_found (
+  const data : PChar; data_size : QWord; encoding : pmyencoding_t; const found :
+  PPChar; found_length : PQWord) : Boolean; cdecl; external MyHTMLLib;
+function myencoding_prescan_stream_to_determine_encoding_with_found (
+  const data : PChar; data_size : QWord; const found : PPChar; found_length :
+  PQWord) : myencoding_t; cdecl; external MyHTMLLib;
+
+(*myencoding/mystring.h********************************************************)
+
+procedure myencoding_string_append (str : pmycore_string_t; const buff :
+  PChar; length : QWord; encoding : myencoding_t); cdecl; external MyHTMLLib;
+
+(* append with convert encoding *)
+procedure myencoding_string_append_chunk (str : pmycore_string_t; res :
+  pmyencoding_result_t; const buff : PChar; length : QWord; encoding :
+  myencoding_t); cdecl; external MyHTMLLib;
+procedure myencoding_string_append_one (str : pmycore_string_t; res :
+  pmyencoding_result_t; const data : Char; encoding : myencoding_t); cdecl;
+  external MyHTMLLib;
+
+(* append with convert encoding lowercase *)
+procedure myencoding_string_append_lowercase_ascii (str : pmycore_string_t;
+  const buff : PChar; length : QWord; encoding : myencoding_t); cdecl;
+  external MyHTMLLib;
+procedure myencoding_string_append_chunk_lowercase_ascii (str :
+  pmycore_string_t; res : pmyencoding_result_t; const buff : PChar; length :
+  QWord; encoding : myencoding_t); cdecl; external MyHTMLLib;
 
 (******************************************************************************)
 
