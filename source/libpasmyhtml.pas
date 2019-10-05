@@ -1278,8 +1278,9 @@ procedure myencoding_string_append_chunk_lowercase_ascii (str :
   pmycore_string_t; res : pmyencoding_result_t; const buff : PChar; length :
   QWord; encoding : myencoding_t); cdecl; external MyHTMLLib;
 
-(******************************************************************************)
+(*myhtml/myosi.h*****************************************************************)
 
+type
   (* tree *)
   myhtml_tree_flags = (
     MyHTML_TREE_FLAGS_CLEAN                                             = $0000,
@@ -1293,6 +1294,7 @@ procedure myencoding_string_append_chunk_lowercase_ascii (str :
     MyHTML_TREE_FLAGS_PARSE_FLAG_EMIT_NEWLINE                           = $0080
   );
 
+  pmyhtml_tree_parse_flags_t = ^myhtml_tree_parse_flags_t;
   myhtml_tree_parse_flags_t = (
     MyHTML_TREE_PARSE_FLAGS_CLEAN                                       = $0000,
     MyHTML_TREE_PARSE_FLAGS_WITHOUT_BUILD_TREE                          = $0001,
@@ -1302,8 +1304,8 @@ procedure myencoding_string_append_chunk_lowercase_ascii (str :
     MyHTML_TREE_PARSE_FLAGS_WITHOUT_DOCTYPE_IN_TREE                     = $0008
   );
 
-  (* token *)
-  myhtml_token_type = (
+  pmyhtml_token_type_t = ^myhtml_token_type_t;
+  myhtml_token_type_t = (
     MyHTML_TOKEN_TYPE_OPEN                                              = $0000,
     MyHTML_TOKEN_TYPE_CLOSE                                             = $0001,
     MyHTML_TOKEN_TYPE_CLOSE_SELF                                        = $0002,
@@ -1319,8 +1321,15 @@ procedure myencoding_string_append_chunk_lowercase_ascii (str :
     MyHTML_TOKEN_TYPE_NULL                                              = $0800
   );
 
+  pmyhtml_token_index_t = ^myhtml_token_index_t;
+  myhtml_token_index_t = type QWord;
+
+  pmyhtml_token_attr_index_t = ^myhtml_token_attr_index_t;
+  myhtml_token_attr_index_t = type QWord;
+
   (* tags *)
-  myhtml_tag_categories = (
+  pmyhtml_tag_categories_t = ^myhtml_tag_categories_t;
+  myhtml_tag_categories_t = (
     MyHTML_TAG_CATEGORIES_UNDEF                                         = $0000,
     MyHTML_TAG_CATEGORIES_ORDINARY                                      = $0001,
     MyHTML_TAG_CATEGORIES_SPECIAL                                       = $0002,
@@ -1332,8 +1341,12 @@ procedure myencoding_string_append_chunk_lowercase_ascii (str :
     MyHTML_TAG_CATEGORIES_SCOPE_SELECT                                  = $0080
   );
 
+  pmyhtml_tag_id_t = ^myhtml_tag_id_t;
+  myhtml_tag_id_t = type QWord;
+
   (* parse *)
-  myhtml_tokenizer_state = (
+  pmyhtml_tokenizer_state_t = ^myhtml_tokenizer_state_t;
+  myhtml_tokenizer_state_t = (
     MyHTML_TOKENIZER_STATE_DATA                                         = $0000,
     MyHTML_TOKENIZER_STATE_CHARACTER_REFERENCE_IN_DATA                  = $0001,
     MyHTML_TOKENIZER_STATE_RCDATA                                       = $0002,
@@ -1409,7 +1422,8 @@ procedure myencoding_string_append_chunk_lowercase_ascii (str :
     MyHTML_TOKENIZER_STATE_LAST_ENTRY                                   = $0046
   );
 
-  myhtml_insertion_mode = (
+  pmyhtml_insertion_mode_t = ^myhtml_insertion_mode_t;
+  myhtml_insertion_mode_t = (
     MyHTML_INSERTION_MODE_INITIAL                                       = $0000,
     MyHTML_INSERTION_MODE_BEFORE_HTML                                   = $0001,
     MyHTML_INSERTION_MODE_BEFORE_HEAD                                   = $0002,
@@ -1438,6 +1452,7 @@ procedure myencoding_string_append_chunk_lowercase_ascii (str :
   );
 
   (* base *)
+  pmyhtml_status_t = ^myhtml_status_t;
   myhtml_status_t = (
     MyHTML_STATUS_OK                                                    = $0000,
     MyHTML_STATUS_ERROR                                                 = $0001,
@@ -1465,6 +1480,7 @@ procedure myencoding_string_append_chunk_lowercase_ascii (str :
     MyHTML_STATUS_STREAM_BUFFER_ERROR_ADD_ENTRY                         = $9304
   );
 
+  pmyhtml_namespace_t = ^myhtml_namespace_t;
   myhtml_namespace_t = (
     MyHTML_NAMESPACE_UNDEF                                              = $0000,
     MyHTML_NAMESPACE_HTML                                               = $0001,
@@ -1478,20 +1494,347 @@ procedure myencoding_string_append_chunk_lowercase_ascii (str :
     MyHTML_NAMESPACE_LAST_ENTRY                                         = $0007
   {%H-});
 
-  myhtml_options = (
+  pmyhtml_options_t = ^myhtml_options_t;
+  myhtml_options_t = (
     MyHTML_OPTIONS_DEFAULT                                              = $0000,
     MyHTML_OPTIONS_PARSE_MODE_SINGLE                                    = $0001,
     MyHTML_OPTIONS_PARSE_MODE_ALL_IN_ONE                                = $0002,
     MyHTML_OPTIONS_PARSE_MODE_SEPARATELY                                = $0004
   );
 
+  pmyhtml_position_t = ^myhtml_position_t;
+  myhtml_position_t = record
+    start : QWord;
+    length : QWord;
+  end;
+
+  pmyhtml_version_t = ^myhtml_version_t;
+  myhtml_version_t = record
+    major : Integer;
+    minor : Integer;
+    patch : Integer;
+  end;
 
 
 
+(*myhtml/api.h*****************************************************************)
 
+type
+  pmyhtml_tags = ^myhtml_tags;
+  myhtml_tags = (
+    MyHTML_TAG__UNDEF                                                   = $0000,
+    MyHTML_TAG__TEXT                                                    = $0001,
+    MyHTML_TAG__COMMENT                                                 = $0002,
+    MyHTML_TAG__DOCTYPE                                                 = $0003,
+    MyHTML_TAG_A                                                        = $0004,
+    MyHTML_TAG_ABBR                                                     = $0005,
+    MyHTML_TAG_ACRONYM                                                  = $0006,
+    MyHTML_TAG_ADDRESS                                                  = $0007,
+    MyHTML_TAG_ANNOTATION_XML                                           = $0008,
+    MyHTML_TAG_APPLET                                                   = $0009,
+    MyHTML_TAG_AREA                                                     = $000a,
+    MyHTML_TAG_ARTICLE                                                  = $000b,
+    MyHTML_TAG_ASIDE                                                    = $000c,
+    MyHTML_TAG_AUDIO                                                    = $000d,
+    MyHTML_TAG_B                                                        = $000e,
+    MyHTML_TAG_BASE                                                     = $000f,
+    MyHTML_TAG_BASEFONT                                                 = $0010,
+    MyHTML_TAG_BDI                                                      = $0011,
+    MyHTML_TAG_BDO                                                      = $0012,
+    MyHTML_TAG_BGSOUND                                                  = $0013,
+    MyHTML_TAG_BIG                                                      = $0014,
+    MyHTML_TAG_BLINK                                                    = $0015,
+    MyHTML_TAG_BLOCKQUOTE                                               = $0016,
+    MyHTML_TAG_BODY                                                     = $0017,
+    MyHTML_TAG_BR                                                       = $0018,
+    MyHTML_TAG_BUTTON                                                   = $0019,
+    MyHTML_TAG_CANVAS                                                   = $001a,
+    MyHTML_TAG_CAPTION                                                  = $001b,
+    MyHTML_TAG_CENTER                                                   = $001c,
+    MyHTML_TAG_CITE                                                     = $001d,
+    MyHTML_TAG_CODE                                                     = $001e,
+    MyHTML_TAG_COL                                                      = $001f,
+    MyHTML_TAG_COLGROUP                                                 = $0020,
+    MyHTML_TAG_COMMAND                                                  = $0021,
+    MyHTML_TAG_COMMENT                                                  = $0022,
+    MyHTML_TAG_DATALIST                                                 = $0023,
+    MyHTML_TAG_DD                                                       = $0024,
+    MyHTML_TAG_DEL                                                      = $0025,
+    MyHTML_TAG_DETAILS                                                  = $0026,
+    MyHTML_TAG_DFN                                                      = $0027,
+    MyHTML_TAG_DIALOG                                                   = $0028,
+    MyHTML_TAG_DIR                                                      = $0029,
+    MyHTML_TAG_DIV                                                      = $002a,
+    MyHTML_TAG_DL                                                       = $002b,
+    MyHTML_TAG_DT                                                       = $002c,
+    MyHTML_TAG_EM                                                       = $002d,
+    MyHTML_TAG_EMBED                                                    = $002e,
+    MyHTML_TAG_FIELDSET                                                 = $002f,
+    MyHTML_TAG_FIGCAPTION                                               = $0030,
+    MyHTML_TAG_FIGURE                                                   = $0031,
+    MyHTML_TAG_FONT                                                     = $0032,
+    MyHTML_TAG_FOOTER                                                   = $0033,
+    MyHTML_TAG_FORM                                                     = $0034,
+    MyHTML_TAG_FRAME                                                    = $0035,
+    MyHTML_TAG_FRAMESET                                                 = $0036,
+    MyHTML_TAG_H1                                                       = $0037,
+    MyHTML_TAG_H2                                                       = $0038,
+    MyHTML_TAG_H3                                                       = $0039,
+    MyHTML_TAG_H4                                                       = $003a,
+    MyHTML_TAG_H5                                                       = $003b,
+    MyHTML_TAG_H6                                                       = $003c,
+    MyHTML_TAG_HEAD                                                     = $003d,
+    MyHTML_TAG_HEADER                                                   = $003e,
+    MyHTML_TAG_HGROUP                                                   = $003f,
+    MyHTML_TAG_HR                                                       = $0040,
+    MyHTML_TAG_HTML                                                     = $0041,
+    MyHTML_TAG_I                                                        = $0042,
+    MyHTML_TAG_IFRAME                                                   = $0043,
+    MyHTML_TAG_IMAGE                                                    = $0044,
+    MyHTML_TAG_IMG                                                      = $0045,
+    MyHTML_TAG_INPUT                                                    = $0046,
+    MyHTML_TAG_INS                                                      = $0047,
+    MyHTML_TAG_ISINDEX                                                  = $0048,
+    MyHTML_TAG_KBD                                                      = $0049,
+    MyHTML_TAG_KEYGEN                                                   = $004a,
+    MyHTML_TAG_LABEL                                                    = $004b,
+    MyHTML_TAG_LEGEND                                                   = $004c,
+    MyHTML_TAG_LI                                                       = $004d,
+    MyHTML_TAG_LINK                                                     = $004e,
+    MyHTML_TAG_LISTING                                                  = $004f,
+    MyHTML_TAG_MAIN                                                     = $0050,
+    MyHTML_TAG_MAP                                                      = $0051,
+    MyHTML_TAG_MARK                                                     = $0052,
+    MyHTML_TAG_MARQUEE                                                  = $0053,
+    MyHTML_TAG_MENU                                                     = $0054,
+    MyHTML_TAG_MENUITEM                                                 = $0055,
+    MyHTML_TAG_META                                                     = $0056,
+    MyHTML_TAG_METER                                                    = $0057,
+    MyHTML_TAG_MTEXT                                                    = $0058,
+    MyHTML_TAG_NAV                                                      = $0059,
+    MyHTML_TAG_NOBR                                                     = $005a,
+    MyHTML_TAG_NOEMBED                                                  = $005b,
+    MyHTML_TAG_NOFRAMES                                                 = $005c,
+    MyHTML_TAG_NOSCRIPT                                                 = $005d,
+    MyHTML_TAG_OBJECT                                                   = $005e,
+    MyHTML_TAG_OL                                                       = $005f,
+    MyHTML_TAG_OPTGROUP                                                 = $0060,
+    MyHTML_TAG_OPTION                                                   = $0061,
+    MyHTML_TAG_OUTPUT                                                   = $0062,
+    MyHTML_TAG_P                                                        = $0063,
+    MyHTML_TAG_PARAM                                                    = $0064,
+    MyHTML_TAG_PLAINTEXT                                                = $0065,
+    MyHTML_TAG_PRE                                                      = $0066,
+    MyHTML_TAG_PROGRESS                                                 = $0067,
+    MyHTML_TAG_Q                                                        = $0068,
+    MyHTML_TAG_RB                                                       = $0069,
+    MyHTML_TAG_RP                                                       = $006a,
+    MyHTML_TAG_RT                                                       = $006b,
+    MyHTML_TAG_RTC                                                      = $006c,
+    MyHTML_TAG_RUBY                                                     = $006d,
+    MyHTML_TAG_S                                                        = $006e,
+    MyHTML_TAG_SAMP                                                     = $006f,
+    MyHTML_TAG_SCRIPT                                                   = $0070,
+    MyHTML_TAG_SECTION                                                  = $0071,
+    MyHTML_TAG_SELECT                                                   = $0072,
+    MyHTML_TAG_SMALL                                                    = $0073,
+    MyHTML_TAG_SOURCE                                                   = $0074,
+    MyHTML_TAG_SPAN                                                     = $0075,
+    MyHTML_TAG_STRIKE                                                   = $0076,
+    MyHTML_TAG_STRONG                                                   = $0077,
+    MyHTML_TAG_STYLE                                                    = $0078,
+    MyHTML_TAG_SUB                                                      = $0079,
+    MyHTML_TAG_SUMMARY                                                  = $007a,
+    MyHTML_TAG_SUP                                                      = $007b,
+    MyHTML_TAG_SVG                                                      = $007c,
+    MyHTML_TAG_TABLE                                                    = $007d,
+    MyHTML_TAG_TBODY                                                    = $007e,
+    MyHTML_TAG_TD                                                       = $007f,
+    MyHTML_TAG_TEMPLATE                                                 = $0080,
+    MyHTML_TAG_TEXTAREA                                                 = $0081,
+    MyHTML_TAG_TFOOT                                                    = $0082,
+    MyHTML_TAG_TH                                                       = $0083,
+    MyHTML_TAG_THEAD                                                    = $0084,
+    MyHTML_TAG_TIME                                                     = $0085,
+    MyHTML_TAG_TITLE                                                    = $0086,
+    MyHTML_TAG_TR                                                       = $0087,
+    MyHTML_TAG_TRACK                                                    = $0088,
+    MyHTML_TAG_TT                                                       = $0089,
+    MyHTML_TAG_U                                                        = $008a,
+    MyHTML_TAG_UL                                                       = $008b,
+    MyHTML_TAG_VAR                                                      = $008c,
+    MyHTML_TAG_VIDEO                                                    = $008d,
+    MyHTML_TAG_WBR                                                      = $008e,
+    MyHTML_TAG_XMP                                                      = $008f,
+    MyHTML_TAG_ALTGLYPH                                                 = $0090,
+    MyHTML_TAG_ALTGLYPHDEF                                              = $0091,
+    MyHTML_TAG_ALTGLYPHITEM                                             = $0092,
+    MyHTML_TAG_ANIMATE                                                  = $0093,
+    MyHTML_TAG_ANIMATECOLOR                                             = $0094,
+    MyHTML_TAG_ANIMATEMOTION                                            = $0095,
+    MyHTML_TAG_ANIMATETRANSFORM                                         = $0096,
+    MyHTML_TAG_CIRCLE                                                   = $0097,
+    MyHTML_TAG_CLIPPATH                                                 = $0098,
+    MyHTML_TAG_COLOR_PROFILE                                            = $0099,
+    MyHTML_TAG_CURSOR                                                   = $009a,
+    MyHTML_TAG_DEFS                                                     = $009b,
+    MyHTML_TAG_DESC                                                     = $009c,
+    MyHTML_TAG_ELLIPSE                                                  = $009d,
+    MyHTML_TAG_FEBLEND                                                  = $009e,
+    MyHTML_TAG_FECOLORMATRIX                                            = $009f,
+    MyHTML_TAG_FECOMPONENTTRANSFER                                      = $00a0,
+    MyHTML_TAG_FECOMPOSITE                                              = $00a1,
+    MyHTML_TAG_FECONVOLVEMATRIX                                         = $00a2,
+    MyHTML_TAG_FEDIFFUSELIGHTING                                        = $00a3,
+    MyHTML_TAG_FEDISPLACEMENTMAP                                        = $00a4,
+    MyHTML_TAG_FEDISTANTLIGHT                                           = $00a5,
+    MyHTML_TAG_FEDROPSHADOW                                             = $00a6,
+    MyHTML_TAG_FEFLOOD                                                  = $00a7,
+    MyHTML_TAG_FEFUNCA                                                  = $00a8,
+    MyHTML_TAG_FEFUNCB                                                  = $00a9,
+    MyHTML_TAG_FEFUNCG                                                  = $00aa,
+    MyHTML_TAG_FEFUNCR                                                  = $00ab,
+    MyHTML_TAG_FEGAUSSIANBLUR                                           = $00ac,
+    MyHTML_TAG_FEIMAGE                                                  = $00ad,
+    MyHTML_TAG_FEMERGE                                                  = $00ae,
+    MyHTML_TAG_FEMERGENODE                                              = $00af,
+    MyHTML_TAG_FEMORPHOLOGY                                             = $00b0,
+    MyHTML_TAG_FEOFFSET                                                 = $00b1,
+    MyHTML_TAG_FEPOINTLIGHT                                             = $00b2,
+    MyHTML_TAG_FESPECULARLIGHTING                                       = $00b3,
+    MyHTML_TAG_FESPOTLIGHT                                              = $00b4,
+    MyHTML_TAG_FETILE                                                   = $00b5,
+    MyHTML_TAG_FETURBULENCE                                             = $00b6,
+    MyHTML_TAG_FILTER                                                   = $00b7,
+    MyHTML_TAG_FONT_FACE                                                = $00b8,
+    MyHTML_TAG_FONT_FACE_FORMAT                                         = $00b9,
+    MyHTML_TAG_FONT_FACE_NAME                                           = $00ba,
+    MyHTML_TAG_FONT_FACE_SRC                                            = $00bb,
+    MyHTML_TAG_FONT_FACE_URI                                            = $00bc,
+    MyHTML_TAG_FOREIGNOBJECT                                            = $00bd,
+    MyHTML_TAG_G                                                        = $00be,
+    MyHTML_TAG_GLYPH                                                    = $00bf,
+    MyHTML_TAG_GLYPHREF                                                 = $00c0,
+    MyHTML_TAG_HKERN                                                    = $00c1,
+    MyHTML_TAG_LINE                                                     = $00c2,
+    MyHTML_TAG_LINEARGRADIENT                                           = $00c3,
+    MyHTML_TAG_MARKER                                                   = $00c4,
+    MyHTML_TAG_MASK                                                     = $00c5,
+    MyHTML_TAG_METADATA                                                 = $00c6,
+    MyHTML_TAG_MISSING_GLYPH                                            = $00c7,
+    MyHTML_TAG_MPATH                                                    = $00c8,
+    MyHTML_TAG_PATH                                                     = $00c9,
+    MyHTML_TAG_PATTERN                                                  = $00ca,
+    MyHTML_TAG_POLYGON                                                  = $00cb,
+    MyHTML_TAG_POLYLINE                                                 = $00cc,
+    MyHTML_TAG_RADIALGRADIENT                                           = $00cd,
+    MyHTML_TAG_RECT                                                     = $00ce,
+    MyHTML_TAG_SET                                                      = $00cf,
+    MyHTML_TAG_STOP                                                     = $00d0,
+    MyHTML_TAG_SWITCH                                                   = $00d1,
+    MyHTML_TAG_SYMBOL                                                   = $00d2,
+    MyHTML_TAG_TEXT                                                     = $00d3,
+    MyHTML_TAG_TEXTPATH                                                 = $00d4,
+    MyHTML_TAG_TREF                                                     = $00d5,
+    MyHTML_TAG_TSPAN                                                    = $00d6,
+    MyHTML_TAG_USE                                                      = $00d7,
+    MyHTML_TAG_VIEW                                                     = $00d8,
+    MyHTML_TAG_VKERN                                                    = $00d9,
+    MyHTML_TAG_MATH                                                     = $00da,
+    MyHTML_TAG_MACTION                                                  = $00db,
+    MyHTML_TAG_MALIGNGROUP                                              = $00dc,
+    MyHTML_TAG_MALIGNMARK                                               = $00dd,
+    MyHTML_TAG_MENCLOSE                                                 = $00de,
+    MyHTML_TAG_MERROR                                                   = $00df,
+    MyHTML_TAG_MFENCED                                                  = $00e0,
+    MyHTML_TAG_MFRAC                                                    = $00e1,
+    MyHTML_TAG_MGLYPH                                                   = $00e2,
+    MyHTML_TAG_MI                                                       = $00e3,
+    MyHTML_TAG_MLABELEDTR                                               = $00e4,
+    MyHTML_TAG_MLONGDIV                                                 = $00e5,
+    MyHTML_TAG_MMULTISCRIPTS                                            = $00e6,
+    MyHTML_TAG_MN                                                       = $00e7,
+    MyHTML_TAG_MO                                                       = $00e8,
+    MyHTML_TAG_MOVER                                                    = $00e9,
+    MyHTML_TAG_MPADDED                                                  = $00ea,
+    MyHTML_TAG_MPHANTOM                                                 = $00eb,
+    MyHTML_TAG_MROOT                                                    = $00ec,
+    MyHTML_TAG_MROW                                                     = $00ed,
+    MyHTML_TAG_MS                                                       = $00ee,
+    MyHTML_TAG_MSCARRIES                                                = $00ef,
+    MyHTML_TAG_MSCARRY                                                  = $00f0,
+    MyHTML_TAG_MSGROUP                                                  = $00f1,
+    MyHTML_TAG_MSLINE                                                   = $00f2,
+    MyHTML_TAG_MSPACE                                                   = $00f3,
+    MyHTML_TAG_MSQRT                                                    = $00f4,
+    MyHTML_TAG_MSROW                                                    = $00f5,
+    MyHTML_TAG_MSTACK                                                   = $00f6,
+    MyHTML_TAG_MSTYLE                                                   = $00f7,
+    MyHTML_TAG_MSUB                                                     = $00f8,
+    MyHTML_TAG_MSUP                                                     = $00f9,
+    MyHTML_TAG_MSUBSUP                                                  = $00fa,
+    MyHTML_TAG__END_OF_FILE                                             = $00fb,
 
+    MyHTML_TAG_FIRST_ENTRY                          = Longint(MyHTML_TAG__TEXT),
+    MyHTML_TAG_LAST_ENTRY                                               = $00fc
+  );
 
+(*myhtml/token.h***************************************************************)
 
+type
+  pmyhtml_token_replacement_entry_t = ^myhtml_token_replacement_entry_t;
+  myhtml_token_replacement_entry_t = record
+    from : PChar;
+    from_size : QWord;
+
+    to_str : PChar;
+    to_size : QWord;
+  end;
+
+  pmyhtml_token_namespace_replacement_t = ^myhtml_token_namespace_replacement_t;
+  myhtml_token_namespace_replacement_t = record
+    from : PChar;
+    from_size : QWord;
+
+    to_str : PChar;
+    to_size : QWord;
+
+    ns : myhtml_namespace_t;
+  end;
+
+  pmyhtml_token_attr_t = ^myhtml_token_attr_t;
+  myhtml_token_attr_t = record
+    next : pmyhtml_token_attr_t;
+    prev : pmyhtml_token_attr_t;
+
+    key : mycore_string_t;
+    value : mycore_string_t;
+
+    raw_key_begin : QWord;
+    raw_key_length : QWord;
+    raw_value_begin : QWord;
+    raw_value_length : QWord;
+
+    ns : myhtml_namespace_t;
+  end;
+
+  pmyhtml_token_node = ^myhtml_token_node;
+  myhtml_token_node = record
+    tag_id : myhtml_tag_id_t;
+
+    str : mycore_string_t;
+
+    raw_begin : QWord;
+    raw_length : QWord;
+
+    element_begin : QWord;
+    element_length : QWord;
+
+    attr_first : pmyhtml_token_attr_t;
+    attr_last : pmyhtml_token_attr_t;
+
+    //token_type : myhtml_token_type_t;
+  end;
 
 implementation
 
