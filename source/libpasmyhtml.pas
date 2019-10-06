@@ -1275,9 +1275,20 @@ procedure myencoding_string_append_chunk_lowercase_ascii (str :
   pmycore_string_t; res : pmyencoding_result_t; const buff : PChar; length :
   QWord; encoding : myencoding_t); cdecl; external MyHTMLLib;
 
+(*myhtml/tree.h****************************************************************)
+
+type
+  pmyhtml_tree_t = ^myhtml_tree_t;
+  pmyhtml_tree_node_t = ^myhtml_tree_node_t;
+  pmyhtml_token_node_t = ^myhtml_token_node_t;
+
 (*myhtml/api.h*****************************************************************)
 
 type
+  pmyhtml_t = ^myhtml_t;
+  pmyhtml_token_t = ^myhtml_token_t;
+  pmyhtml_tag_t = ^myhtml_tag_t;
+
   pmyhtml_tag_id_t = ^myhtml_tag_id_t;
   myhtml_tag_id_t = type QWord;
 
@@ -1540,6 +1551,11 @@ type
     MyHTML_TAG_LAST_ENTRY                                               = $00fc
   );
 
+  myhtml_callback_token_f = function (tree : pmyhtml_tree_t; token :
+    pmyhtml_token_node_t; ctx : Pointer) : Pointer of object;
+  myhtml_callback_tree_node_f = procedure (tree : pmyhtml_tree_t; node :
+    pmyhtml_tree_node_t; ctx : Pointer) of object;
+
 (*myhtml/myosi.h***************************************************************)
 
 type
@@ -1774,59 +1790,6 @@ type
     patch : Integer;
   end;
 
-(*myhtml/tree.h****************************************************************)
-
-type
-  pmyhtml_tree_node_type = ^myhtml_tree_node_type;
-  myhtml_tree_node_type = (
-    MyHTML_TYPE_NONE                                                    = 0,
-    MyHTML_TYPE_BLOCK                                                   = 1,
-    MyHTML_TYPE_INLINE                                                  = 2,
-    MyHTML_TYPE_TABLE                                                   = 3,
-    MyHTML_TYPE_META                                                    = 4,
-    MyHTML_TYPE_COMMENT                                                 = 5
-  );
-
-  pmyhtml_close_type_t = ^myhtml_close_type_t;
-  myhtml_close_type_t = (
-    MyHTML_CLOSE_TYPE_NONE                                              = 0,
-    MyHTML_CLOSE_TYPE_NOW                                               = 1,
-    MyHTML_CLOSE_TYPE_SELF                                              = 2,
-    MyHTML_CLOSE_TYPE_BLOCK                                             = 3
-  );
-
-  pmyhtml_tree_node_flags_t = ^myhtml_tree_node_flags_t;
-  myhtml_tree_node_flags_t = (
-    MyHTML_TREE_NODE_UNDEF                                              = 0,
-    MyHTML_TREE_NODE_PARSER_INSERTED                                    = 1,
-    MyHTML_TREE_NODE_BLOCKING                                           = 2
-  );
-
-  //pmyhtml_tree_t = ^myhtml_tree_t;
-
-  //pmyhtml_token_node_t = ^myhtml_token_node_t;
-
-  pmyhtml_tree_node_t = ^myhtml_tree_node_t;
-  myhtml_tree_node_t = record
-    flags : myhtml_tree_node_flags_t;
-
-    tag_id : myhtml_tag_id_t;
-    ns : myhtml_namespace_t;
-
-    prev : pmyhtml_tree_node_t;
-    next : pmyhtml_tree_node_t;
-    child : pmyhtml_tree_node_t;
-    parent : pmyhtml_tree_node_t;
-
-    last_child : pmyhtml_tree_node_t;
-
-    //token : pmyhtml_token_node_t;
-    data : Pointer;
-
-    //tree : pmyhtml_tree_t;
-  end;
-
-
 (*myhtml/token.h***************************************************************)
 
 type
@@ -1880,8 +1843,272 @@ type
     attr_first : pmyhtml_token_attr_t;
     attr_last : pmyhtml_token_attr_t;
 
-    //token_type : myhtml_token_type_t;
+    token_type : pmyhtml_token_type_t;
   end;
+
+(*myhtml/stream.h**************************************************************)
+
+type
+  pmyhtml_stream_buffer_entry_t = ^myhtml_stream_buffer_entry_t;
+  myhtml_stream_buffer_t = record
+    data : PChar;
+    length : QWord;
+    size : QWord;
+  end;
+
+  pmyhtml_stream_buffer_t = ^myhtml_stream_buffer_t;
+  myhtml_stream_buffer_t = record
+    entries : pmyhtml_stream_buffer_entry_t;
+    length : QWord;
+    size : QWord;
+
+    res : myencoding_result_t;
+  end;
+
+function myhtml_stream_buffer_create : pmyhtml_stream_buffer_t; cdecl;
+  external MyHTMLLib;
+function myhtml_stream_buffer_init (stream_buffer : pmyhtml_stream_buffer_t;
+  entries_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+procedure myhtml_stream_buffer_clean (stream_buffer : pmyhtml_stream_buffer_t);
+  cdecl; external MyHTMLLib;
+function myhtml_stream_buffer_destroy (stream_buffer : pmyhtml_stream_buffer_t;
+  self_destroy : Boolean) : pmyhtml_stream_buffer_t; cdecl; external MyHTMLLib;
+function myhtml_stream_buffer_add_entry (stream_buffer :
+  pmyhtml_stream_buffer_t; entry_data_size : QWord) :
+  pmyhtml_stream_buffer_entry_t; cdecl; external MyHTMLLib;
+function myhtml_stream_buffer_current_entry (stream_buffer :
+  pmyhtml_stream_buffer_t) : pmyhtml_stream_buffer_entry_t; cdecl;
+  external MyHTMLLib;
+function myhtml_stream_buffer_entry_init (stream_buffer_entry :
+  pmyhtml_stream_buffer_entry_t; size : QWord) : mystatus_t; cdecl;
+  external MyHTMLLib;
+procedure myhtml_stream_buffer_entry_clean (stream_buffer_entry :
+  pmyhtml_stream_buffer_entry_t); cdecl; external MyHTMLLib;
+function myhtml_stream_buffer_entry_destroy (stream_buffer_entry :
+  pmyhtml_stream_buffer_entry_t; self_destroy : Boolean) :
+  pmyhtml_stream_buffer_entry_t; cdecl; external MyHTMLLib;
+
+(*myhtml/tree.h****************************************************************)
+
+type
+  pmyhtml_tree_node_type = ^myhtml_tree_node_type;
+  myhtml_tree_node_type = (
+    MyHTML_TYPE_NONE                                                    = 0,
+    MyHTML_TYPE_BLOCK                                                   = 1,
+    MyHTML_TYPE_INLINE                                                  = 2,
+    MyHTML_TYPE_TABLE                                                   = 3,
+    MyHTML_TYPE_META                                                    = 4,
+    MyHTML_TYPE_COMMENT                                                 = 5
+  );
+
+  pmyhtml_close_type_t = ^myhtml_close_type_t;
+  myhtml_close_type_t = (
+    MyHTML_CLOSE_TYPE_NONE                                              = 0,
+    MyHTML_CLOSE_TYPE_NOW                                               = 1,
+    MyHTML_CLOSE_TYPE_SELF                                              = 2,
+    MyHTML_CLOSE_TYPE_BLOCK                                             = 3
+  );
+
+  pmyhtml_tree_node_flags_t = ^myhtml_tree_node_flags_t;
+  myhtml_tree_node_flags_t = (
+    MyHTML_TREE_NODE_UNDEF                                              = 0,
+    MyHTML_TREE_NODE_PARSER_INSERTED                                    = 1,
+    MyHTML_TREE_NODE_BLOCKING                                           = 2
+  );
+
+  ppmyhtml_tree_node_t = ^pmyhtml_tree_node_t;
+  myhtml_tree_node_t = record
+    flags : myhtml_tree_node_flags_t;
+
+    tag_id : myhtml_tag_id_t;
+    ns : myhtml_namespace_t;
+
+    prev : pmyhtml_tree_node_t;
+    next : pmyhtml_tree_node_t;
+    child : pmyhtml_tree_node_t;
+    parent : pmyhtml_tree_node_t;
+
+    last_child : pmyhtml_tree_node_t;
+
+    token : pmyhtml_token_node_t;
+    data : Pointer;
+
+    tree : pmyhtml_tree_t;
+  end;
+
+  pmyhtml_tree_compat_mode_t = ^myhtml_tree_compat_mode_t;
+  myhtml_tree_compat_mode_t = (
+    MyHTML_TREE_COMPAT_MODE_NO_QUIRKS                                   = $0000,
+    MyHTML_TREE_COMPAT_MODE_QUIRKS                                      = $0001,
+    MyHTML_TREE_COMPAT_MODE_LIMITED_QUIRKS                              = $0002
+  );
+
+  pmyhtml_tree_doctype_id_t = ^myhtml_tree_doctype_id_t;
+  myhtml_tree_doctype_id_t = (
+    MyHTML_TREE_DOCTYPE_ID_NAME                                         = $0000,
+    MyHTML_TREE_DOCTYPE_ID_SYSTEM                                       = $0001,
+    MyHTML_TREE_DOCTYPE_ID_PUBLIC                                       = $0002
+  );
+
+  pmyhtml_tree_insertion_mode_t = ^myhtml_tree_insertion_mode_t;
+  myhtml_tree_insertion_mode_t = (
+    MyHTML_TREE_INSERTION_MODE_DEFAULT                                  = $0000,
+    MyHTML_TREE_INSERTION_MODE_BEFORE                                   = $0001,
+    MyHTML_TREE_INSERTION_MODE_AFTER                                    = $0002
+  );
+
+  pmyhtml_async_args_t = ^myhtml_async_args_t;
+  myhtml_async_args_t = record
+    mchar_node_id : QWord;
+  end;
+
+  pmyhtml_tree_doctype_t = ^myhtml_tree_doctype_t;
+  myhtml_tree_doctype_t = record
+    is_html : Boolean;
+    attr_name : PChar;
+    attr_public : PChar;
+    attr_system : PChar;
+  end;
+
+  pmyhtml_tree_list_t = ^myhtml_tree_list_t;
+  myhtml_tree_list_t = record
+    list : ppmyhtml_tree_node_t;
+    length : QWord;
+    size : QWord;
+  end;
+
+  pmyhtml_tree_token_list_t = ^myhtml_tree_token_list_t;
+  myhtml_tree_token_list_t = record
+    list : ppmyhtml_token_node_t;
+    length : QWord;
+    size : QWord;
+  end;
+
+  pmyhtml_tree_insertion_list_t = ^myhtml_tree_insertion_list_t;
+  myhtml_tree_insertion_list_t = record
+    list : pmyhtml_insertion_mode_t;
+    length : QWord;
+    size : QWord;
+  end;
+
+  ppmyhtml_tree_temp_tag_name_t = ^pmyhtml_tree_temp_tag_name_t;
+  pmyhtml_tree_temp_tag_name_t = ^myhtml_tree_temp_tag_name_t;
+  myhtml_tree_tag_name = record
+    data : PChar;
+    length : QWord;
+    size : QWord;
+  end;
+
+  pmyhtml_tree_special_token_t = ^myhtml_tree_special_token_t;
+  myhtml_tree_special_token_t = record
+    token : pmyhtml_token_node_t;
+    ns : myhtml_namespace_t;
+  end;
+
+  pmyhtml_tree_special_token_list_t = ^myhtml_tree_special_token_list_t;
+  myhtml_tree_special_token_list_t = record
+    list : pmyhtml_tree_special_token_t;
+    length : QWord;
+    size : QWord;
+  end;
+
+  pmyhtml_tree_temp_stream_t = ^myhtml_tree_stream_t;
+  myhtml_tree_stream_t = record
+    data : ppmyhtml_tree_temp_tag_name_t;
+    length : QWord;
+    size : QWord;
+
+    res : myencoding_result_t;
+    current : pmyhtml_tree_temp_tag_name_t;
+  end;
+
+  pmyhtml_tree_t = ^myhtml_tree_t;
+  myhtml_tree_t = record
+    (* ref *)
+    myhtml : pmyhtml_t;
+    mchar : pmchar_async_t;
+    token : pmyhtml_token_t;
+    tree_obj : pmcobject_async_t;
+    sync : pmcsync_t;
+    queue_entry : pmythread_queue_list_entry_t;
+    queue : pmythread_queue_t;
+    tags : pmyhtml_tag_t;
+    modest : Pointer;
+    context : Pointer;
+
+    (* init id's *)
+    mcasync_rules_token_id : QWord;
+    mcasync_rules_attr_id : QWord;
+    mcasync_tree_id : QWord;
+
+    (* mchar_node_id *)
+    (* for rules, or if single mode. *)
+    (* or for main thread only after parsing *)
+    mchar_node_id : QWord;
+    attr_current : pmyhtml_token_attr_t;
+    tmp_tag_id : myhtml_tag_id_t;
+    current_token_node : pmyhtml_token_node_t;
+    current_qnode : pmythread_queue_node_t;
+
+    mcobject_incoming_buf : pmcobject_t;
+    incoming_buf : pmycore_incoming_buffer_t;
+    incoming_buf_first : pmycore_incoming_buffer_t;
+
+    (* ref for nodes *)
+    document : pmyhtml_tree_node_t;
+    fragment : pmyhtml_tree_node_t;
+    node_head : pmyhtml_tree_node_t;
+    node_html : pmyhtml_tree_node_t;
+    node_body : pmyhtml_tree_node_t;
+    node_form : pmyhtml_tree_node_t;
+    doctype : myhtml_tree_doctype_t;
+
+    (* for build tree *)
+    active_formatting : pmyhtml_tree_list_t;
+    open_elements : pmyhtml_tree_list_t;
+    other_elements : pmyhtml_tree_list_t;
+    token_list : pmyhtml_tree_token_list_t;
+    template_insertion : pmyhtml_tree_insertion_list_t;
+    async_args : pmyhtml_async_args_t;
+    stream_buffer : pmyhtml_stream_buffer_t;
+    token_last_done : pmyhtml_token_node_t;
+
+    (* for detect namespace out of tree builder *)
+    token_namespace : pmyhtml_token_node_t;
+
+    (* tree params *)
+    state : myhtml_tokenizer_state_t;
+    state_of_builder : myhtml_tokenizer_state_t;
+    insert_mode : myhtml_insertion_mode_t;
+    orig_insert_mode : myhtml_insertion_mode_t;
+    compat_mode : myhtml_tree_compat_mode_t;
+    flags : myhtml_tree_flags;
+    parse_flags : myhtml_tree_parse_flags_t;
+    foster_parenting : Boolean;
+    global_offset : QWord;
+    tokenizer_status : mystatus_t;
+
+    encoding : myencoding_t;
+    encoding_usereq : myencoding_t;
+    temp_tag_name : pmyhtml_tree_temp_tag_name_t;
+
+    (* callback *)
+    callback_before_token : myhtml_callback_token_f;
+    callback_after_token : myhtml_callback_token_f;
+
+    callback_before_token_ctx : Pointer;
+    callback_after_token_ctx : Pointer;
+
+    callback_tree_node_insert : myhtml_callback_tree_node_f;
+    callback_tree_node_remove : myhtml_callback_tree_node_f;
+
+    callback_tree_node_insert_ctx : Pointer;
+    callback_tree_node_remove_ctx : Pointer;
+  end;
+
+(* base *)
+function myhtml_tree_create : pmyhtml_tree_t; cdecl; external MyHTMLLib;
+
 
 implementation
 
