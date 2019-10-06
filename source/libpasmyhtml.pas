@@ -178,7 +178,7 @@ procedure mcsimple_init (mcsimple : pmcsimple_t; pos_size : QWord;
 procedure mcsimple_clean (mcsimple : pmcsimple_t); cdecl; external MyHTMLLib;
 function mcsimple_destroy (mcsimple : pmcsimple_t; destroy_self : Boolean)
   : pmcsimple_t; cdecl; external MyHTMLLib;
-function mcsimple_init_list_entries (mcsimple : pmcimple_t; pos : QWord)
+function mcsimple_init_list_entries (mcsimple : pmcsimple_t; pos : QWord)
   : PByte; cdecl; external MyHTMLLib;
 function mcsimple_malloc (mcsimple : pmcsimple_t) : Pointer; cdecl;
   external MyHTMLLib;
@@ -404,9 +404,9 @@ function mchar_async_node_add (mchar_async : pmchar_async_t; status :
   pmystatus_t) : QWord; cdecl; external MyHTMLLib;
 procedure mchar_async_node_clean (mchar_async : pmchar_async_t; node_idx :
   QWord); cdecl; external MyHTMLLib;
-procedure mchar_async_node_delete (mchar_async : pmchar_async; node_idx :
+procedure mchar_async_node_delete (mchar_async : pmchar_async_t; node_idx :
   QWord); cdecl; external MyHTMLLib;
-function mchar_async_chunk_malloc (mchar_async : pmchar_async; node :
+function mchar_async_chunk_malloc (mchar_async : pmchar_async_t; node :
   pmchar_async_node_t; length : QWord) : pmchar_async_chunk_t; cdecl;
   external MyHTMLLib;
 function mchar_async_crop_first_chars (mchar_async : pmchar_async_t; node_idx :
@@ -652,7 +652,7 @@ function mycore_string_crop_whitespace_from_begin (target : pmycore_string_t) :
 function mycore_string_whitespace_from_begin (target : pmycore_string_t) :
   QWord; cdecl; external MyHTMLLib;
 
-(*mycore/mythread.h***************************************************************)
+(*mycore/mythread.h************************************************************)
 
 type
 {$IFDEF MyCORE_BUILD_WITHOUT_THREADS}
@@ -663,10 +663,8 @@ type
 {$ELSE}
   ppmythread_t = ^pmythread_t;
   pmythread_t = ^mythread_t;
-  mythread_t = record;
 
   pmythread_entry_t = ^mythread_entry_t;
-  mythread_entry_t = record;
 
   mythread_callback_before_entry_join_f = procedure (mythread : pmythread_t;
     entry : pmythread_entry_t; ctx : Pointer) of object;
@@ -702,10 +700,9 @@ type
 
     mutex : Pointer;
     timespec : Pointer;
-    mythread : mythread_t;
+    mythread : pmythread_t;
   end;
 
-  pmythread_entry_t = ^mythread_entry_t;
   mythread_entry_t = record
     thread : Pointer;
 
@@ -723,7 +720,7 @@ type
     attr : Pointer;
     timespec : Pointer;
 
-    sys_last_error : Interger;
+    sys_last_error : Integer;
 
     thread_type : mythread_type_t;
     opt : mythread_thread_opt_t;
@@ -823,7 +820,7 @@ procedure mythread_callback_quit (mythread : pmythread_t; entry :
 type
   (* queue *)
   ppmythread_queue_node_t = ^pmythread_queue_node_t;
-  pmthread_queue_node_t = ^mythread_queue_node_t;
+  pmythread_queue_node_t = ^mythread_queue_node_t;
   mythread_queue_node_t = record
     context : Pointer;
     args : Pointer;
@@ -896,7 +893,7 @@ function mythread_queue_node_malloc_round (mythread : pmythread_t; entry :
   external MyHTMLLib;
 function mythread_queue_list_create (status : pmystatus_t) :
   pmythread_queue_list_t; cdecl; external MyHTMLLib;
-procedure mythread_queue_list_destroy (queue_list : pmythread_queue_list);
+procedure mythread_queue_list_destroy (queue_list : pmythread_queue_list_t);
   cdecl; external MyHTMLLib;
 function mythread_queue_list_get_count (queue_list : pmythread_queue_list_t) :
   QWord; cdecl; external MyHTMLLib;
@@ -1013,7 +1010,7 @@ type
   pmyencoding_t = ^myencoding_t;
   myencoding_t = (
     MyENCODING_DEFAULT                                                  = $0000,
-    MyENCODING_UTF_8                                                    = $0000,
+    MyENCODING_UTF_8                                                    = $0000{%H-},
    {MyENCODING_AUTO                                                     = $0001,}
     MyENCODING_NOT_DETERMINED                                           = $0002,
     MyENCODING_UTF_16LE                                                 = $0004,
@@ -1121,12 +1118,12 @@ type
   end;
 
   pmyencoding_entry_name_index_t = ^myencoding_entry_name_index_t;
-  myencdoing_entry_name_index_t = record
+  myencoding_entry_name_index_t = record
     name : PChar;
     length : QWord;
   end;
 
-  muencoding_custom_f = function (const data : Byte; res : pmyencoding_result_t)
+  myencoding_custom_f = function (const data : Byte; res : pmyencoding_result_t)
     : myencoding_status_t of object;
 
 function myencoding_get_function_by_id (idx : myencoding_t) :
@@ -1278,248 +1275,12 @@ procedure myencoding_string_append_chunk_lowercase_ascii (str :
   pmycore_string_t; res : pmyencoding_result_t; const buff : PChar; length :
   QWord; encoding : myencoding_t); cdecl; external MyHTMLLib;
 
-(*myhtml/myosi.h*****************************************************************)
-
-type
-  (* tree *)
-  myhtml_tree_flags = (
-    MyHTML_TREE_FLAGS_CLEAN                                             = $0000,
-    MyHTML_TREE_FLAGS_SCRIPT                                            = $0001,
-    MyHTML_TREE_FLAGS_FRAMESET_OK                                       = $0002,
-    MyHTML_TREE_FLAGS_IFRAME_SRCDOC                                     = $0004,
-    MyHTML_TREE_FLAGS_ALREADY_STARTED                                   = $0008,
-    MyHTML_TREE_FLAGS_SINGLE_MODE                                       = $0010,
-    MyHTML_TREE_FLAGS_PARSE_END                                         = $0020,
-    MyHTML_TREE_FLAGS_PARSE_FLAG                                        = $0040,
-    MyHTML_TREE_FLAGS_PARSE_FLAG_EMIT_NEWLINE                           = $0080
-  );
-
-  pmyhtml_tree_parse_flags_t = ^myhtml_tree_parse_flags_t;
-  myhtml_tree_parse_flags_t = (
-    MyHTML_TREE_PARSE_FLAGS_CLEAN                                       = $0000,
-    MyHTML_TREE_PARSE_FLAGS_WITHOUT_BUILD_TREE                          = $0001,
-    MyHTML_TREE_PARSE_FLAGS_WITHOUT_PROCESS_TOKEN                       = $0003,
-    (* skip ws token, but not for RCDATA, RAWTEXT, CDATA and PLAINTEXT *)
-    MyHTML_TREE_PARSE_FLAGS_SKIP_WHITESPACE_TOKEN                       = $0004,
-    MyHTML_TREE_PARSE_FLAGS_WITHOUT_DOCTYPE_IN_TREE                     = $0008
-  );
-
-  pmyhtml_token_type_t = ^myhtml_token_type_t;
-  myhtml_token_type_t = (
-    MyHTML_TOKEN_TYPE_OPEN                                              = $0000,
-    MyHTML_TOKEN_TYPE_CLOSE                                             = $0001,
-    MyHTML_TOKEN_TYPE_CLOSE_SELF                                        = $0002,
-    MyHTML_TOKEN_TYPE_DONE                                              = $0004,
-    MyHTML_TOKEN_TYPE_WHITESPACE                                        = $0008,
-    MyHTML_TOKEN_TYPE_RCDATA                                            = $0010,
-    MyHTML_TOKEN_TYPE_RAWTEXT                                           = $0020,
-    MyHTML_TOKEN_TYPE_SCRIPT                                            = $0040,
-    MyHTML_TOKEN_TYPE_PLAINTEXT                                         = $0080,
-    MyHTML_TOKEN_TYPE_CDATA                                             = $0100,
-    MyHTML_TOKEN_TYPE_DATA                                              = $0200,
-    MyHTML_TOKEN_TYPE_COMMENT                                           = $0400,
-    MyHTML_TOKEN_TYPE_NULL                                              = $0800
-  );
-
-  pmyhtml_token_index_t = ^myhtml_token_index_t;
-  myhtml_token_index_t = type QWord;
-
-  pmyhtml_token_attr_index_t = ^myhtml_token_attr_index_t;
-  myhtml_token_attr_index_t = type QWord;
-
-  (* tags *)
-  pmyhtml_tag_categories_t = ^myhtml_tag_categories_t;
-  myhtml_tag_categories_t = (
-    MyHTML_TAG_CATEGORIES_UNDEF                                         = $0000,
-    MyHTML_TAG_CATEGORIES_ORDINARY                                      = $0001,
-    MyHTML_TAG_CATEGORIES_SPECIAL                                       = $0002,
-    MyHTML_TAG_CATEGORIES_FORMATTING                                    = $0004,
-    MyHTML_TAG_CATEGORIES_SCOPE                                         = $0008,
-    MyHTML_TAG_CATEGORIES_SCOPE_LIST_ITEM                               = $0010,
-    MyHTML_TAG_CATEGORIES_SCOPE_BUTTON                                  = $0020,
-    MyHTML_TAG_CATEGORIES_SCOPE_TABLE                                   = $0040,
-    MyHTML_TAG_CATEGORIES_SCOPE_SELECT                                  = $0080
-  );
-
-  pmyhtml_tag_id_t = ^myhtml_tag_id_t;
-  myhtml_tag_id_t = type QWord;
-
-  (* parse *)
-  pmyhtml_tokenizer_state_t = ^myhtml_tokenizer_state_t;
-  myhtml_tokenizer_state_t = (
-    MyHTML_TOKENIZER_STATE_DATA                                         = $0000,
-    MyHTML_TOKENIZER_STATE_CHARACTER_REFERENCE_IN_DATA                  = $0001,
-    MyHTML_TOKENIZER_STATE_RCDATA                                       = $0002,
-    MyHTML_TOKENIZER_STATE_CHARACTER_REFERENCE_IN_RCDATA                = $0003,
-    MyHTML_TOKENIZER_STATE_RAWTEXT                                      = $0004,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA                                  = $0005,
-    MyHTML_TOKENIZER_STATE_PLAINTEXT                                    = $0006,
-    MyHTML_TOKENIZER_STATE_TAG_OPEN                                     = $0007,
-    MyHTML_TOKENIZER_STATE_END_TAG_OPEN                                 = $0008,
-    MyHTML_TOKENIZER_STATE_TAG_NAME                                     = $0009,
-    MyHTML_TOKENIZER_STATE_RCDATA_LESS_THAN_SIGN                        = $000a,
-    MyHTML_TOKENIZER_STATE_RCDATA_END_TAG_OPEN                          = $000b,
-    MyHTML_TOKENIZER_STATE_RCDATA_END_TAG_NAME                          = $000c,
-    MyHTML_TOKENIZER_STATE_RAWTEXT_LESS_THAN_SIGN                       = $000d,
-    MyHTML_TOKENIZER_STATE_RAWTEXT_END_TAG_OPEN                         = $000e,
-    MyHTML_TOKENIZER_STATE_RAWTEXT_END_TAG_NAME                         = $000f,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_LESS_THAN_SIGN                   = $0010,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_END_TAG_OPEN                     = $0011,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_END_TAG_NAME                     = $0012,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPE_START                     = $0013,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPE_START_DASH                = $0014,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED                          = $0015,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_DASH                     = $0016,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_DASH_DASH                = $0017,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN           = $0018,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_END_TAG_OPEN             = $0019,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_END_TAG_NAME             = $001a,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPE_START              = $001b,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPED                   = $001c,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPED_DASH              = $001d,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH         = $001e,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN    = $001f,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPE_END                = $0020,
-    MyHTML_TOKENIZER_STATE_BEFORE_ATTRIBUTE_NAME                        = $0021,
-    MyHTML_TOKENIZER_STATE_ATTRIBUTE_NAME                               = $0022,
-    MyHTML_TOKENIZER_STATE_AFTER_ATTRIBUTE_NAME                         = $0023,
-    MyHTML_TOKENIZER_STATE_BEFORE_ATTRIBUTE_VALUE                       = $0024,
-    MyHTML_TOKENIZER_STATE_ATTRIBUTE_VALUE_DOUBLE_QUOTED                = $0025,
-    MyHTML_TOKENIZER_STATE_ATTRIBUTE_VALUE_SINGLE_QUOTED                = $0026,
-    MyHTML_TOKENIZER_STATE_ATTRIBUTE_VALUE_UNQUOTED                     = $0027,
-    MyHTML_TOKENIZER_STATE_CHARACTER_REFERENCE_IN_ATTRIBUTE_VALUE       = $0028,
-    MyHTML_TOKENIZER_STATE_AFTER_ATTRIBUTE_VALUE_QUOTED                 = $0029,
-    MyHTML_TOKENIZER_STATE_SELF_CLOSING_START_TAG                       = $002a,
-    MyHTML_TOKENIZER_STATE_BOGUS_COMMENT                                = $002b,
-    MyHTML_TOKENIZER_STATE_MARKUP_DECLARATION_OPEN                      = $002c,
-    MyHTML_TOKENIZER_STATE_COMMENT_START                                = $002d,
-    MyHTML_TOKENIZER_STATE_COMMENT_START_DASH                           = $002e,
-    MyHTML_TOKENIZER_STATE_COMMENT                                      = $002f,
-    MyHTML_TOKENIZER_STATE_COMMENT_END_DASH                             = $0030,
-    MyHTML_TOKENIZER_STATE_COMMENT_END                                  = $0031,
-    MyHTML_TOKENIZER_STATE_COMMENT_END_BANG                             = $0032,
-    MyHTML_TOKENIZER_STATE_DOCTYPE                                      = $0033,
-    MyHTML_TOKENIZER_STATE_BEFORE_DOCTYPE_NAME                          = $0034,
-    MyHTML_TOKENIZER_STATE_DOCTYPE_NAME                                 = $0035,
-    MyHTML_TOKENIZER_STATE_AFTER_DOCTYPE_NAME                           = $0036,
-    MyHTML_TOKENIZER_STATE_AFTER_DOCTYPE_PUBLIC_KEYWORD                 = $0037,
-    MyHTML_TOKENIZER_STATE_BEFORE_DOCTYPE_PUBLIC_IDENTIFIER             = $0038,
-    MyHTML_TOKENIZER_STATE_DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED      = $0039,
-    MyHTML_TOKENIZER_STATE_DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED      = $003a,
-    MyHTML_TOKENIZER_STATE_AFTER_DOCTYPE_PUBLIC_IDENTIFIER              = $003b,
-    MyHTML_TOKENIZER_STATE_BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS= $003c,
-    MyHTML_TOKENIZER_STATE_AFTER_DOCTYPE_SYSTEM_KEYWORD                 = $003d,
-    MyHTML_TOKENIZER_STATE_BEFORE_DOCTYPE_SYSTEM_IDENTIFIER             = $003e,
-    MyHTML_TOKENIZER_STATE_DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED      = $003f,
-    MyHTML_TOKENIZER_STATE_DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED      = $0040,
-    MyHTML_TOKENIZER_STATE_AFTER_DOCTYPE_SYSTEM_IDENTIFIER              = $0041,
-    MyHTML_TOKENIZER_STATE_BOGUS_DOCTYPE                                = $0042,
-    MyHTML_TOKENIZER_STATE_CDATA_SECTION                                = $0043,
-    MyHTML_TOKENIZER_STATE_CUSTOM_AFTER_DOCTYPE_NAME_A_Z                = $0044,
-    MyHTML_TOKENIZER_STATE_PARSE_ERROR_STOP                             = $0045,
-
-    MyHTML_TOKENIZER_STATE_FIRST_ENTRY = Longint(MyHTML_TOKENIZER_STATE_DATA){%H-},
-    MyHTML_TOKENIZER_STATE_LAST_ENTRY                                   = $0046
-  );
-
-  pmyhtml_insertion_mode_t = ^myhtml_insertion_mode_t;
-  myhtml_insertion_mode_t = (
-    MyHTML_INSERTION_MODE_INITIAL                                       = $0000,
-    MyHTML_INSERTION_MODE_BEFORE_HTML                                   = $0001,
-    MyHTML_INSERTION_MODE_BEFORE_HEAD                                   = $0002,
-    MyHTML_INSERTION_MODE_IN_HEAD                                       = $0003,
-    MyHTML_INSERTION_MODE_IN_HEAD_NOSCRIPT                              = $0004,
-    MyHTML_INSERTION_MODE_AFTER_HEAD                                    = $0005,
-    MyHTML_INSERTION_MODE_IN_BODY                                       = $0006,
-    MyHTML_INSERTION_MODE_TEXT                                          = $0007,
-    MyHTML_INSERTION_MODE_IN_TABLE                                      = $0008,
-    MyHTML_INSERTION_MODE_IN_TABLE_TEXT                                 = $0009,
-    MyHTML_INSERTION_MODE_IN_CAPTION                                    = $000a,
-    MyHTML_INSERTION_MODE_IN_COLUMN_GROUP                               = $000b,
-    MyHTML_INSERTION_MODE_IN_TABLE_BODY                                 = $000c,
-    MyHTML_INSERTION_MODE_IN_ROW                                        = $000d,
-    MyHTML_INSERTION_MODE_IN_CELL                                       = $000e,
-    MyHTML_INSERTION_MODE_IN_SELECT                                     = $000f,
-    MyHTML_INSERTION_MODE_IN_SELECT_IN_TABLE                            = $0010,
-    MyHTML_INSERTION_MODE_IN_TEMPLATE                                   = $0011,
-    MyHTML_INSERTION_MODE_AFTER_BODY                                    = $0012,
-    MyHTML_INSERTION_MODE_IN_FRAMESET                                   = $0013,
-    MyHTML_INSERTION_MODE_AFTER_FRAMESET                                = $0014,
-    MyHTML_INSERTION_MODE_AFTER_AFTER_BODY                              = $0015,
-    MyHTML_INSERTION_MODE_AFTER_AFTER_FRAMESET                          = $0016,
-
-    MyHTML_INSERTION_MODE_LAST_ENTRY                                    = $0017
-  );
-
-  (* base *)
-  pmyhtml_status_t = ^myhtml_status_t;
-  myhtml_status_t = (
-    MyHTML_STATUS_OK                                                    = $0000,
-    MyHTML_STATUS_ERROR                                                 = $0001,
-    MyHTML_STATUS_ERROR_MEMORY_ALLOCATION                               = $0002,
-    MyHTML_STATUS_RULES_ERROR_MEMORY_ALLOCATION                         = $9064,
-    MyHTML_STATUS_TOKENIZER_ERROR_MEMORY_ALLOCATION                     = $912c,
-    MyHTML_STATUS_TOKENIZER_ERROR_FRAGMENT_INIT                         = $912d,
-    MyHTML_STATUS_TAGS_ERROR_MEMORY_ALLOCATION                          = $9190,
-    MyHTML_STATUS_TAGS_ERROR_MCOBJECT_CREATE                            = $9191,
-    MyHTML_STATUS_TAGS_ERROR_MCOBJECT_MALLOC                            = $9192,
-    MyHTML_STATUS_TAGS_ERROR_MCOBJECT_CREATE_NODE                       = $9193,
-    MyHTML_STATUS_TAGS_ERROR_CACHE_MEMORY_ALLOCATION                    = $9194,
-    MyHTML_STATUS_TAGS_ERROR_INDEX_MEMORY_ALLOCATION                    = $9195,
-    MyHTML_STATUS_TREE_ERROR_MEMORY_ALLOCATION                          = $91f4,
-    MyHTML_STATUS_TREE_ERROR_MCOBJECT_CREATE                            = $91f5,
-    MyHTML_STATUS_TREE_ERROR_MCOBJECT_INIT                              = $91f6,
-    MyHTML_STATUS_TREE_ERROR_MCOBJECT_CREATE_NODE                       = $91f7,
-    MyHTML_STATUS_TREE_ERROR_INCOMING_BUFFER_CREATE                     = $91f8,
-    MyHTML_STATUS_ATTR_ERROR_ALLOCATION                                 = $9258,
-    MyHTML_STATUS_ATTR_ERROR_CREATE                                     = $9259,
-    MyHTML_STATUS_STREAM_BUFFER_ERROR_CREATE                            = $9300,
-    MyHTML_STATUS_STREAM_BUFFER_ERROR_INIT                              = $9301,
-    MyHTML_STATUS_STREAM_BUFFER_ENTRY_ERROR_CREATE                      = $9302,
-    MyHTML_STATUS_STREAM_BUFFER_ENTRY_ERROR_INIT                        = $9303,
-    MyHTML_STATUS_STREAM_BUFFER_ERROR_ADD_ENTRY                         = $9304
-  );
-
-  pmyhtml_namespace_t = ^myhtml_namespace_t;
-  myhtml_namespace_t = (
-    MyHTML_NAMESPACE_UNDEF                                              = $0000,
-    MyHTML_NAMESPACE_HTML                                               = $0001,
-    MyHTML_NAMESPACE_MATHML                                             = $0002,
-    MyHTML_NAMESPACE_SVG                                                = $0003,
-    MyHTML_NAMESPACE_XLINK                                              = $0004,
-    MyHTML_NAMESPACE_XML                                                = $0005,
-    MyHTML_NAMESPACE_XMLNS                                              = $0006,
-    MyHTML_NAMESPACE_ANY                                                = $0007,
-
-    MyHTML_NAMESPACE_LAST_ENTRY                                         = $0007
-  {%H-});
-
-  pmyhtml_options_t = ^myhtml_options_t;
-  myhtml_options_t = (
-    MyHTML_OPTIONS_DEFAULT                                              = $0000,
-    MyHTML_OPTIONS_PARSE_MODE_SINGLE                                    = $0001,
-    MyHTML_OPTIONS_PARSE_MODE_ALL_IN_ONE                                = $0002,
-    MyHTML_OPTIONS_PARSE_MODE_SEPARATELY                                = $0004
-  );
-
-  pmyhtml_position_t = ^myhtml_position_t;
-  myhtml_position_t = record
-    start : QWord;
-    length : QWord;
-  end;
-
-  pmyhtml_version_t = ^myhtml_version_t;
-  myhtml_version_t = record
-    major : Integer;
-    minor : Integer;
-    patch : Integer;
-  end;
-
-
-
 (*myhtml/api.h*****************************************************************)
 
 type
+  pmyhtml_tag_id_t = ^myhtml_tag_id_t;
+  myhtml_tag_id_t = type QWord;
+
   pmyhtml_tags = ^myhtml_tags;
   myhtml_tags = (
     MyHTML_TAG__UNDEF                                                   = $0000,
@@ -1775,9 +1536,296 @@ type
     MyHTML_TAG_MSUBSUP                                                  = $00fa,
     MyHTML_TAG__END_OF_FILE                                             = $00fb,
 
-    MyHTML_TAG_FIRST_ENTRY                          = Longint(MyHTML_TAG__TEXT),
+    MyHTML_TAG_FIRST_ENTRY                          = Longint(MyHTML_TAG__TEXT){%H-},
     MyHTML_TAG_LAST_ENTRY                                               = $00fc
   );
+
+(*myhtml/myosi.h***************************************************************)
+
+type
+  (* tree *)
+  myhtml_tree_flags = (
+    MyHTML_TREE_FLAGS_CLEAN                                             = $0000,
+    MyHTML_TREE_FLAGS_SCRIPT                                            = $0001,
+    MyHTML_TREE_FLAGS_FRAMESET_OK                                       = $0002,
+    MyHTML_TREE_FLAGS_IFRAME_SRCDOC                                     = $0004,
+    MyHTML_TREE_FLAGS_ALREADY_STARTED                                   = $0008,
+    MyHTML_TREE_FLAGS_SINGLE_MODE                                       = $0010,
+    MyHTML_TREE_FLAGS_PARSE_END                                         = $0020,
+    MyHTML_TREE_FLAGS_PARSE_FLAG                                        = $0040,
+    MyHTML_TREE_FLAGS_PARSE_FLAG_EMIT_NEWLINE                           = $0080
+  );
+
+  pmyhtml_tree_parse_flags_t = ^myhtml_tree_parse_flags_t;
+  myhtml_tree_parse_flags_t = (
+    MyHTML_TREE_PARSE_FLAGS_CLEAN                                       = $0000,
+    MyHTML_TREE_PARSE_FLAGS_WITHOUT_BUILD_TREE                          = $0001,
+    MyHTML_TREE_PARSE_FLAGS_WITHOUT_PROCESS_TOKEN                       = $0003,
+    (* skip ws token, but not for RCDATA, RAWTEXT, CDATA and PLAINTEXT *)
+    MyHTML_TREE_PARSE_FLAGS_SKIP_WHITESPACE_TOKEN                       = $0004,
+    MyHTML_TREE_PARSE_FLAGS_WITHOUT_DOCTYPE_IN_TREE                     = $0008
+  );
+
+  pmyhtml_token_type_t = ^myhtml_token_type_t;
+  myhtml_token_type_t = (
+    MyHTML_TOKEN_TYPE_OPEN                                              = $0000,
+    MyHTML_TOKEN_TYPE_CLOSE                                             = $0001,
+    MyHTML_TOKEN_TYPE_CLOSE_SELF                                        = $0002,
+    MyHTML_TOKEN_TYPE_DONE                                              = $0004,
+    MyHTML_TOKEN_TYPE_WHITESPACE                                        = $0008,
+    MyHTML_TOKEN_TYPE_RCDATA                                            = $0010,
+    MyHTML_TOKEN_TYPE_RAWTEXT                                           = $0020,
+    MyHTML_TOKEN_TYPE_SCRIPT                                            = $0040,
+    MyHTML_TOKEN_TYPE_PLAINTEXT                                         = $0080,
+    MyHTML_TOKEN_TYPE_CDATA                                             = $0100,
+    MyHTML_TOKEN_TYPE_DATA                                              = $0200,
+    MyHTML_TOKEN_TYPE_COMMENT                                           = $0400,
+    MyHTML_TOKEN_TYPE_NULL                                              = $0800
+  );
+
+  pmyhtml_token_index_t = ^myhtml_token_index_t;
+  myhtml_token_index_t = type QWord;
+
+  pmyhtml_token_attr_index_t = ^myhtml_token_attr_index_t;
+  myhtml_token_attr_index_t = type QWord;
+
+  (* tags *)
+  pmyhtml_tag_categories_t = ^myhtml_tag_categories_t;
+  myhtml_tag_categories_t = (
+    MyHTML_TAG_CATEGORIES_UNDEF                                         = $0000,
+    MyHTML_TAG_CATEGORIES_ORDINARY                                      = $0001,
+    MyHTML_TAG_CATEGORIES_SPECIAL                                       = $0002,
+    MyHTML_TAG_CATEGORIES_FORMATTING                                    = $0004,
+    MyHTML_TAG_CATEGORIES_SCOPE                                         = $0008,
+    MyHTML_TAG_CATEGORIES_SCOPE_LIST_ITEM                               = $0010,
+    MyHTML_TAG_CATEGORIES_SCOPE_BUTTON                                  = $0020,
+    MyHTML_TAG_CATEGORIES_SCOPE_TABLE                                   = $0040,
+    MyHTML_TAG_CATEGORIES_SCOPE_SELECT                                  = $0080
+  );
+
+  (* parse *)
+  pmyhtml_tokenizer_state_t = ^myhtml_tokenizer_state_t;
+  myhtml_tokenizer_state_t = (
+    MyHTML_TOKENIZER_STATE_DATA                                         = $0000,
+    MyHTML_TOKENIZER_STATE_CHARACTER_REFERENCE_IN_DATA                  = $0001,
+    MyHTML_TOKENIZER_STATE_RCDATA                                       = $0002,
+    MyHTML_TOKENIZER_STATE_CHARACTER_REFERENCE_IN_RCDATA                = $0003,
+    MyHTML_TOKENIZER_STATE_RAWTEXT                                      = $0004,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA                                  = $0005,
+    MyHTML_TOKENIZER_STATE_PLAINTEXT                                    = $0006,
+    MyHTML_TOKENIZER_STATE_TAG_OPEN                                     = $0007,
+    MyHTML_TOKENIZER_STATE_END_TAG_OPEN                                 = $0008,
+    MyHTML_TOKENIZER_STATE_TAG_NAME                                     = $0009,
+    MyHTML_TOKENIZER_STATE_RCDATA_LESS_THAN_SIGN                        = $000a,
+    MyHTML_TOKENIZER_STATE_RCDATA_END_TAG_OPEN                          = $000b,
+    MyHTML_TOKENIZER_STATE_RCDATA_END_TAG_NAME                          = $000c,
+    MyHTML_TOKENIZER_STATE_RAWTEXT_LESS_THAN_SIGN                       = $000d,
+    MyHTML_TOKENIZER_STATE_RAWTEXT_END_TAG_OPEN                         = $000e,
+    MyHTML_TOKENIZER_STATE_RAWTEXT_END_TAG_NAME                         = $000f,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_LESS_THAN_SIGN                   = $0010,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_END_TAG_OPEN                     = $0011,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_END_TAG_NAME                     = $0012,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPE_START                     = $0013,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPE_START_DASH                = $0014,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED                          = $0015,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_DASH                     = $0016,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_DASH_DASH                = $0017,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN           = $0018,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_END_TAG_OPEN             = $0019,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_END_TAG_NAME             = $001a,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPE_START              = $001b,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPED                   = $001c,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPED_DASH              = $001d,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH         = $001e,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN    = $001f,
+    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPE_END                = $0020,
+    MyHTML_TOKENIZER_STATE_BEFORE_ATTRIBUTE_NAME                        = $0021,
+    MyHTML_TOKENIZER_STATE_ATTRIBUTE_NAME                               = $0022,
+    MyHTML_TOKENIZER_STATE_AFTER_ATTRIBUTE_NAME                         = $0023,
+    MyHTML_TOKENIZER_STATE_BEFORE_ATTRIBUTE_VALUE                       = $0024,
+    MyHTML_TOKENIZER_STATE_ATTRIBUTE_VALUE_DOUBLE_QUOTED                = $0025,
+    MyHTML_TOKENIZER_STATE_ATTRIBUTE_VALUE_SINGLE_QUOTED                = $0026,
+    MyHTML_TOKENIZER_STATE_ATTRIBUTE_VALUE_UNQUOTED                     = $0027,
+    MyHTML_TOKENIZER_STATE_CHARACTER_REFERENCE_IN_ATTRIBUTE_VALUE       = $0028,
+    MyHTML_TOKENIZER_STATE_AFTER_ATTRIBUTE_VALUE_QUOTED                 = $0029,
+    MyHTML_TOKENIZER_STATE_SELF_CLOSING_START_TAG                       = $002a,
+    MyHTML_TOKENIZER_STATE_BOGUS_COMMENT                                = $002b,
+    MyHTML_TOKENIZER_STATE_MARKUP_DECLARATION_OPEN                      = $002c,
+    MyHTML_TOKENIZER_STATE_COMMENT_START                                = $002d,
+    MyHTML_TOKENIZER_STATE_COMMENT_START_DASH                           = $002e,
+    MyHTML_TOKENIZER_STATE_COMMENT                                      = $002f,
+    MyHTML_TOKENIZER_STATE_COMMENT_END_DASH                             = $0030,
+    MyHTML_TOKENIZER_STATE_COMMENT_END                                  = $0031,
+    MyHTML_TOKENIZER_STATE_COMMENT_END_BANG                             = $0032,
+    MyHTML_TOKENIZER_STATE_DOCTYPE                                      = $0033,
+    MyHTML_TOKENIZER_STATE_BEFORE_DOCTYPE_NAME                          = $0034,
+    MyHTML_TOKENIZER_STATE_DOCTYPE_NAME                                 = $0035,
+    MyHTML_TOKENIZER_STATE_AFTER_DOCTYPE_NAME                           = $0036,
+    MyHTML_TOKENIZER_STATE_AFTER_DOCTYPE_PUBLIC_KEYWORD                 = $0037,
+    MyHTML_TOKENIZER_STATE_BEFORE_DOCTYPE_PUBLIC_IDENTIFIER             = $0038,
+    MyHTML_TOKENIZER_STATE_DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED      = $0039,
+    MyHTML_TOKENIZER_STATE_DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED      = $003a,
+    MyHTML_TOKENIZER_STATE_AFTER_DOCTYPE_PUBLIC_IDENTIFIER              = $003b,
+    MyHTML_TOKENIZER_STATE_BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS= $003c,
+    MyHTML_TOKENIZER_STATE_AFTER_DOCTYPE_SYSTEM_KEYWORD                 = $003d,
+    MyHTML_TOKENIZER_STATE_BEFORE_DOCTYPE_SYSTEM_IDENTIFIER             = $003e,
+    MyHTML_TOKENIZER_STATE_DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED      = $003f,
+    MyHTML_TOKENIZER_STATE_DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED      = $0040,
+    MyHTML_TOKENIZER_STATE_AFTER_DOCTYPE_SYSTEM_IDENTIFIER              = $0041,
+    MyHTML_TOKENIZER_STATE_BOGUS_DOCTYPE                                = $0042,
+    MyHTML_TOKENIZER_STATE_CDATA_SECTION                                = $0043,
+    MyHTML_TOKENIZER_STATE_CUSTOM_AFTER_DOCTYPE_NAME_A_Z                = $0044,
+    MyHTML_TOKENIZER_STATE_PARSE_ERROR_STOP                             = $0045,
+
+    MyHTML_TOKENIZER_STATE_FIRST_ENTRY = Longint(MyHTML_TOKENIZER_STATE_DATA){%H-},
+    MyHTML_TOKENIZER_STATE_LAST_ENTRY                                   = $0046
+  );
+
+  pmyhtml_insertion_mode_t = ^myhtml_insertion_mode_t;
+  myhtml_insertion_mode_t = (
+    MyHTML_INSERTION_MODE_INITIAL                                       = $0000,
+    MyHTML_INSERTION_MODE_BEFORE_HTML                                   = $0001,
+    MyHTML_INSERTION_MODE_BEFORE_HEAD                                   = $0002,
+    MyHTML_INSERTION_MODE_IN_HEAD                                       = $0003,
+    MyHTML_INSERTION_MODE_IN_HEAD_NOSCRIPT                              = $0004,
+    MyHTML_INSERTION_MODE_AFTER_HEAD                                    = $0005,
+    MyHTML_INSERTION_MODE_IN_BODY                                       = $0006,
+    MyHTML_INSERTION_MODE_TEXT                                          = $0007,
+    MyHTML_INSERTION_MODE_IN_TABLE                                      = $0008,
+    MyHTML_INSERTION_MODE_IN_TABLE_TEXT                                 = $0009,
+    MyHTML_INSERTION_MODE_IN_CAPTION                                    = $000a,
+    MyHTML_INSERTION_MODE_IN_COLUMN_GROUP                               = $000b,
+    MyHTML_INSERTION_MODE_IN_TABLE_BODY                                 = $000c,
+    MyHTML_INSERTION_MODE_IN_ROW                                        = $000d,
+    MyHTML_INSERTION_MODE_IN_CELL                                       = $000e,
+    MyHTML_INSERTION_MODE_IN_SELECT                                     = $000f,
+    MyHTML_INSERTION_MODE_IN_SELECT_IN_TABLE                            = $0010,
+    MyHTML_INSERTION_MODE_IN_TEMPLATE                                   = $0011,
+    MyHTML_INSERTION_MODE_AFTER_BODY                                    = $0012,
+    MyHTML_INSERTION_MODE_IN_FRAMESET                                   = $0013,
+    MyHTML_INSERTION_MODE_AFTER_FRAMESET                                = $0014,
+    MyHTML_INSERTION_MODE_AFTER_AFTER_BODY                              = $0015,
+    MyHTML_INSERTION_MODE_AFTER_AFTER_FRAMESET                          = $0016,
+
+    MyHTML_INSERTION_MODE_LAST_ENTRY                                    = $0017
+  );
+
+  (* base *)
+  pmyhtml_status_t = ^myhtml_status_t;
+  myhtml_status_t = (
+    MyHTML_STATUS_OK                                                    = $0000,
+    MyHTML_STATUS_ERROR                                                 = $0001,
+    MyHTML_STATUS_ERROR_MEMORY_ALLOCATION                               = $0002,
+    MyHTML_STATUS_RULES_ERROR_MEMORY_ALLOCATION                         = $9064,
+    MyHTML_STATUS_TOKENIZER_ERROR_MEMORY_ALLOCATION                     = $912c,
+    MyHTML_STATUS_TOKENIZER_ERROR_FRAGMENT_INIT                         = $912d,
+    MyHTML_STATUS_TAGS_ERROR_MEMORY_ALLOCATION                          = $9190,
+    MyHTML_STATUS_TAGS_ERROR_MCOBJECT_CREATE                            = $9191,
+    MyHTML_STATUS_TAGS_ERROR_MCOBJECT_MALLOC                            = $9192,
+    MyHTML_STATUS_TAGS_ERROR_MCOBJECT_CREATE_NODE                       = $9193,
+    MyHTML_STATUS_TAGS_ERROR_CACHE_MEMORY_ALLOCATION                    = $9194,
+    MyHTML_STATUS_TAGS_ERROR_INDEX_MEMORY_ALLOCATION                    = $9195,
+    MyHTML_STATUS_TREE_ERROR_MEMORY_ALLOCATION                          = $91f4,
+    MyHTML_STATUS_TREE_ERROR_MCOBJECT_CREATE                            = $91f5,
+    MyHTML_STATUS_TREE_ERROR_MCOBJECT_INIT                              = $91f6,
+    MyHTML_STATUS_TREE_ERROR_MCOBJECT_CREATE_NODE                       = $91f7,
+    MyHTML_STATUS_TREE_ERROR_INCOMING_BUFFER_CREATE                     = $91f8,
+    MyHTML_STATUS_ATTR_ERROR_ALLOCATION                                 = $9258,
+    MyHTML_STATUS_ATTR_ERROR_CREATE                                     = $9259,
+    MyHTML_STATUS_STREAM_BUFFER_ERROR_CREATE                            = $9300,
+    MyHTML_STATUS_STREAM_BUFFER_ERROR_INIT                              = $9301,
+    MyHTML_STATUS_STREAM_BUFFER_ENTRY_ERROR_CREATE                      = $9302,
+    MyHTML_STATUS_STREAM_BUFFER_ENTRY_ERROR_INIT                        = $9303,
+    MyHTML_STATUS_STREAM_BUFFER_ERROR_ADD_ENTRY                         = $9304
+  );
+
+  pmyhtml_namespace_t = ^myhtml_namespace_t;
+  myhtml_namespace_t = (
+    MyHTML_NAMESPACE_UNDEF                                              = $0000,
+    MyHTML_NAMESPACE_HTML                                               = $0001,
+    MyHTML_NAMESPACE_MATHML                                             = $0002,
+    MyHTML_NAMESPACE_SVG                                                = $0003,
+    MyHTML_NAMESPACE_XLINK                                              = $0004,
+    MyHTML_NAMESPACE_XML                                                = $0005,
+    MyHTML_NAMESPACE_XMLNS                                              = $0006,
+    MyHTML_NAMESPACE_ANY                                                = $0007,
+
+    MyHTML_NAMESPACE_LAST_ENTRY                                         = $0007
+  {%H-});
+
+  pmyhtml_options_t = ^myhtml_options_t;
+  myhtml_options_t = (
+    MyHTML_OPTIONS_DEFAULT                                              = $0000,
+    MyHTML_OPTIONS_PARSE_MODE_SINGLE                                    = $0001,
+    MyHTML_OPTIONS_PARSE_MODE_ALL_IN_ONE                                = $0002,
+    MyHTML_OPTIONS_PARSE_MODE_SEPARATELY                                = $0004
+  );
+
+  pmyhtml_position_t = ^myhtml_position_t;
+  myhtml_position_t = record
+    start : QWord;
+    length : QWord;
+  end;
+
+  pmyhtml_version_t = ^myhtml_version_t;
+  myhtml_version_t = record
+    major : Integer;
+    minor : Integer;
+    patch : Integer;
+  end;
+
+(*myhtml/tree.h****************************************************************)
+
+type
+  pmyhtml_tree_node_type = ^myhtml_tree_node_type;
+  myhtml_tree_node_type = (
+    MyHTML_TYPE_NONE                                                    = 0,
+    MyHTML_TYPE_BLOCK                                                   = 1,
+    MyHTML_TYPE_INLINE                                                  = 2,
+    MyHTML_TYPE_TABLE                                                   = 3,
+    MyHTML_TYPE_META                                                    = 4,
+    MyHTML_TYPE_COMMENT                                                 = 5
+  );
+
+  pmyhtml_close_type_t = ^myhtml_close_type_t;
+  myhtml_close_type_t = (
+    MyHTML_CLOSE_TYPE_NONE                                              = 0,
+    MyHTML_CLOSE_TYPE_NOW                                               = 1,
+    MyHTML_CLOSE_TYPE_SELF                                              = 2,
+    MyHTML_CLOSE_TYPE_BLOCK                                             = 3
+  );
+
+  pmyhtml_tree_node_flags_t = ^myhtml_tree_node_flags_t;
+  myhtml_tree_node_flags_t = (
+    MyHTML_TREE_NODE_UNDEF                                              = 0,
+    MyHTML_TREE_NODE_PARSER_INSERTED                                    = 1,
+    MyHTML_TREE_NODE_BLOCKING                                           = 2
+  );
+
+  //pmyhtml_tree_t = ^myhtml_tree_t;
+
+  //pmyhtml_token_node_t = ^myhtml_token_node_t;
+
+  pmyhtml_tree_node_t = ^myhtml_tree_node_t;
+  myhtml_tree_node_t = record
+    flags : myhtml_tree_node_flags_t;
+
+    tag_id : myhtml_tag_id_t;
+    ns : myhtml_namespace_t;
+
+    prev : pmyhtml_tree_node_t;
+    next : pmyhtml_tree_node_t;
+    child : pmyhtml_tree_node_t;
+    parent : pmyhtml_tree_node_t;
+
+    last_child : pmyhtml_tree_node_t;
+
+    //token : pmyhtml_token_node_t;
+    data : Pointer;
+
+    //tree : pmyhtml_tree_t;
+  end;
+
 
 (*myhtml/token.h***************************************************************)
 
@@ -1818,8 +1866,7 @@ type
     ns : myhtml_namespace_t;
   end;
 
-  pmyhtml_token_node = ^myhtml_token_node;
-  myhtml_token_node = record
+  myhtml_token_node_t = record
     tag_id : myhtml_tag_id_t;
 
     str : mycore_string_t;
