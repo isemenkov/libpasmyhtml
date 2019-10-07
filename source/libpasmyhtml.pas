@@ -2108,6 +2108,279 @@ type
 
 (* base *)
 function myhtml_tree_create : pmyhtml_tree_t; cdecl; external MyHTMLLib;
+function myhtml_tree_init (tree : pmyhtml_tree_t; myhtml : pmyhtml_t) :
+  mystatus_t; cdecl; external MyHTMLLib;
+procedure myhtml_tree_clean (tree : pmyhtml_tree_t); cdecl; external MyHTMLLib;
+procedure myhtml_tree_clean_all (tree : pmyhtml_tree_t); cdecl;
+  external MyHTMLLib;
+function myhtml_tree_destroy (tree : myhtml_tree_t) : pmyhtml_tree_t; cdecl;
+  external MyHTMLLib;
+
+(* parse flags *)
+function myhtml_tree_parse_flags (tree : pmyhtml_tree_t) :
+  myhtml_tree_parse_flags_t; cdecl; external MyHTMLLib;
+procedure myhtml_tree_parse_flags_set (tree : pmyhtml_tree_t; flags :
+  myhtml_tree_parse_flags_t); cdecl; external MyHTMLLib;
+
+function myhtml_tree_get_html (tree : pmyhtml_tree_t) : pmyhtml_t; cdecl;
+  external MyHTMLLib;
+function myhtml_tree_get_tag (tree : pmyhtml_tree_t) : pmyhtml_tag_t; cdecl;
+  external MyHTMLLib;
+function myhtml_tree_get_document (tree : pmyhtml_tree_t) : pmyhtml_tree_node_t;
+  cdecl; external MyHTMLLib;
+function myhtml_tree_get_node_html (tree : pmyhtml_tree_t) :
+  pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+function myhtml_tree_get_node_head (tree : pmyhtml_tree_t) :
+  pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+function myhtml_tree_get_node_body (tree : pmyhtml_tree_t) :
+  pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+
+function myhtml_tree_get_mchar (tree : pmyhtml_tree_t) : pmchar_async_t; cdecl;
+  external MyHTMLLib;
+function myhtml_tree_get_mchar_node_id (tree : pmyhtml_tree_t) : QWord; cdecl;
+  external MyHTMLLib;
+
+(* list *)
+function myhtml_tree_list_init : pmyhtml_tree_list_t; cdecl; external MyHTMLLib;
+procedure myhtml_tree_list_clean (list : pmyhtml_tree_list_t); cdecl;
+  external MyHTMLLib;
+function myhtml_tree_list_destroy (list : pmyhtml_tree_list_t; destroy_self :
+  Boolean) : pmyhtml_tree_list_t; cdecl; external MyHTMLLib;
+procedure myhtml_tree_list_append (list : pmyhtml_tree_list_t; node :
+  pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
+procedure myhtml_tree_list_append_after_index (list : pmyhtml_tree_list_t;
+  node : pmyhtml_tree_node_t; index : QWord); cdecl; external MyHTMLLib;
+procedure myhtml_tree_list_insert_by_index (list : pmyhtml_tree_list_t;
+  node : pmyhtml_tree_node_t; index : QWord); cdecl; external MyHTMLLib;
+function myhtml_tree_list_current_node (list : pmyhtml_tree_list_t) :
+  pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+
+(* token list *)
+function myhtml_tree_token_list_init : pmyhtml_tree_token_list_t; cdecl;
+  external MyHTMLLib;
+procedure myhtml_tree_token_list_clean (list : pmyhtml_tree_token_list_t);
+  cdecl; external MyHTMLLib;
+function myhtml_tree_token_list_destroy (list : pmyhtml_tree_token_list_t;
+  destroy_self : Boolean) : pmyhtml_tree_token_list_t; cdecl;
+  external MyHTMLLib;
+procedure myhtml_tree_token_list_append (list : pmyhtml_tree_token_list_t;
+  token : pmyhtml_token_node_t); cdecl; external MyHTMLLib;
+procedure myhtml_tree_token_list_append_after_index (list :
+  pmyhtml_tree_token_list_t; token : pmyhtml_token_node_t; index : QWord);
+  cdecl; external MyHTMLLib;
+function myhtml_tree_token_list_current_node (list : pmyhtml_tree_token_list_t)
+  : pmyhtml_token_node_t; cdecl; external MyHTMLLib;
+
+(* active formatting *)
+function myhtml_tree_active_formatting_init (tree : pmyhtml_tree_t) :
+  pmyhtml_tree_list_t; cdecl; external MyHTMLLib;
+procedure myhtml_tree_active_formatting_clean (tree : pmyhtml_tree_t); cdecl;
+  external MyHTMLLib;
+function myhtml_tree_active_formatting_destroy (tree : pmyhtml_tree_t) :
+  pmyhtml_tree_list_t; cdecl; external MyHTMLLib;
+function myhtml_tree_active_formatting_is_marker (tree : pmyhtml_tree_t; idx :
+  pmyhtml_tree_node_t) : Boolean; cdecl; external MyHTMLLib;
+function myhtml_tree_active_formatting_between_last_marker (tree :
+  pmyhtml_tree_t; tag_idx : myhtml_tag_id_t; return_idx : PQWord) :
+  pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+procedure myhtml_tree_active_formatting_append (tree : pmyhtml_tree_t;
+  node : pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
+procedure myhtml_tree_active_formatting_append_with_check (tree :
+  pmyhtml_tree_t; node : pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
+procedure myhtml_tree_active_formatting_pop (tree : pmyhtml_tree_t); cdecl;
+  external MyHTMLLib;
+procedure myhtml_tree_active_formatting_remove (tree : pmyhtml_tree_t; node :
+  pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
+procedure myhtml_tree_active_formatting_remove_by_index (tree :pmyhtml_tree_t;
+  idx : QWord); cdecl; external MyHTMLLib;
+procedure myhtml_tree_active_formatting_reconstruction (tree : pmyhtml_tree_t);
+  cdecl; external MyHTMLLib;
+procedure myhtml_tree_active_formatting_up_to_last_marker (tree :
+  pmyhtml_tree_t); cdecl; external MyHTMLLib;
+function myhtml_tree_active_formatting_find (tree : pmyhtml_tree_t; idx :
+  pmyhtml_tree_node_t; return_idx : PQWord) : Boolean; cdecl;
+  external MyHTMLLib;
+function myhtml_tree_active_formatting_current_node (tree : pmyhtml_tree_t) :
+  pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+
+(* open elements *)
+function myhtml_tree_open_elements_init (tree : pmyhtml_tree_t) :
+  pmyhtml_tree_list_t; cdecl; external MyHTMLLib;
+procedure myhtml_tree_open_elements_clean (tree : pmyhtml_tree_t); cdecl;
+  external MyHTMLLib;
+function myhtml_tree_open_elements_destroy (tree : pmyhtml_tree_t) :
+  pmyhtml_tree_list_t; cdecl; external MyHTMLLib;
+function myhtml_tree_current_node (tree : pmyhtml_tree_t) : pmyhtml_tree_node_t;
+  cdecl; external MyHTMLLib;
+function myhtml_tree_adjusted_current_node (tree : pmyhtml_tree_t) :
+  pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+procedure myhtml_tree_open_elements_append (tree : pmyhtml_tree_t; node :
+  pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
+procedure myhtml_tree_open_elements_append_after_index (tree : pmyhtml_tree_t;
+  node : pmyhtml_tree_node_t; index : QWord); cdecl; external MyHTMLLib;
+procedure myhtml_tree_open_elements_pop (tree : pmyhtml_tree_t); cdecl;
+  external MyHTMLLib;
+procedure myhtml_tree_open_elements_pop_until (tree : pmyhtml_tree_t; tag_idx :
+  myhtml_tag_id_t; mynamespace : myhtml_namespace_t; is_exclude : Boolean);
+  cdecl; external MyHTMLLib;
+procedure myhtml_tree_open_elements_pop_until_by_node (tree : pmyhtml_tree_t;
+  node_idx : pmyhtml_tree_node_t; is_exclude : Boolean); cdecl;
+  external MyHTMLLib;
+procedure myhtml_tree_open_elements_pop_until_by_index (tree : pmyhtml_tree_t;
+  idx : QWord; is_exclude : Boolean); cdecl; external MyHTMLLib;
+procedure myhtml_tree_open_elements_remove (tree : pmyhtml_tree_t; node :
+  pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
+function myhtml_tree_open_elements_find (tree : pmyhtml_tree_t; idx :
+  pmyhtml_tree_node_t; pos : PQWord) : Boolean; cdecl; external MyHTMLLib;
+function myhtml_tree_open_elements_find_reverse (tree : pmyhtml_tree_t; idx :
+  pmyhtml_tree_node_t; pos : PQWord) : Boolean; cdecl; external MyHTMLLib;
+function myhtml_tree_open_elements_find_by_tag_idx (tree : pmyhtml_tree_t;
+  tag_idx : myhtml_tag_id_t; mynamespace : myhtml_namespace_t; return_index :
+  PQWord) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+function myhtml_tree_open_elements_find_by_tag_idx_reverse (tree :
+  pmyhtml_tree_t; tag_idx : myhtml_tag_id_t; mynamespace : myhtml_namespace_t;
+  return_index : PQWord) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+function myhtml_tree_element_in_scope (tree : pmyhtml_tree_t; tag_idx :
+  myhtml_tag_id_t; mynamespace : myhtml_namespace_t; category :
+  myhtml_tag_categories_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+function myhtml_tree_element_in_scope_by_node (node : pmyhtml_tree_node_t;
+  category : myhtml_tag_categories_t) : Boolean; cdecl; external MyHTMLLib;
+procedure myhtml_tree_generate_implied_end_tags (tree : pmyhtml_tree_t;
+  exclude_tag_idx : myhtml_tag_id_t; mynamespace : myhtml_namespace_t); cdecl;
+  external MyHTMLLib;
+procedure myhtml_tree_generate_all_implied_end_tags (tree : pmyhtml_tree_t;
+  exclude_tag_idx : myhtml_tag_id_t; mynamespace : myhtml_namespace_t); cdecl;
+  external MyHTMLLib;
+function myhtml_tree_appropriate_place_inserting (tree : pmyhtml_tree_t;
+  override_target : pmyhtml_tree_node_t; mode : pmyhtml_tree_insertion_mode_t) :
+  pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+function myhtml_tree_appropriate_place_inserting_in_tree (target :
+  pmyhtml_tree_node_t; mode : pmyhtml_tree_insertion_mode_t) :
+  pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+
+(* template insertion *)
+function myhtml_tree_template_insertion_init (tree : pmyhtml_tree_t) :
+  pmyhtml_tree_insertion_list_t; cdecl; external MyHTMLLib;
+procedure myhtml_tree_template_insertion_clean (tree : pmyhtml_tree_t); cdecl;
+  external MyHTMLLib;
+function myhtml_tree_template_insertion_destroy (tree : pmyhtml_tree_t) :
+  pmyhtml_tree_insertion_list_t; cdecl; external MyHTMLLib;
+procedure myhtml_tree_template_insertion_append (tree : pmyhtml_tree_t;
+  insert_mode : myhtml_insertion_mode_t); cdecl; external MyHTMLLib;
+procedure myhtml_tree_template_insertion_pop (tree : pmyhtml_tree_t); cdecl;
+  external MyHTMLLib;
+procedure myhtml_tree_reset_insertion_mode_appropriately (tree :
+  pmyhtml_tree_t); cdecl; external MyHTMLLib;
+function myhtml_tree_adoption_agency_algorithm (tree : pmyhtml_tree_t; token :
+  pmyhtml_token_node_t; subject_tag_idx : myhtml_tag_id_t) : Boolean; cdecl;
+  external MyHTMLLib;
+function myhtml_tree_template_insertion_length (tree : pmyhtml_tree_t) : QWord;
+  cdecl; external MyHTMLLib;
+
+(* other for a tree *)
+function myhtml_tree_node_create (tree : pmyhtml_tree_t) : pmyhtml_tree_node_t;
+  cdecl; external MyHTMLLib;
+procedure myhtml_tree_node_delete (node : pmyhtml_tree_node_t); cdecl;
+  external MyHTMLLib;
+procedure myhtml_tree_node_delete_recursive (node : pmyhtml_tree_node_t); cdecl;
+  external MyHTMLLib;
+procedure myhtml_tree_node_clean (tree_node : pmyhtml_tree_node_t); cdecl;
+  external MyHTMLLib;
+procedure myhtml_tree_node_free (node : pmyhtml_tree_node_t); cdecl;
+  external MyHTMLLib;
+function myhtml_tree_node_clone (node : pmyhtml_tree_node_t) :
+  pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+procedure myhtml_tree_node_add_child (root : pmyhtml_tree_node_t; node :
+  pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
+procedure myhtml_tree_node_insert_before (root : pmyhtml_tree_node_t; node :
+  pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
+procedure myhtml_tree_node_insert_after (root : pmyhtml_tree_node_t; node :
+  pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
+procedure myhtml_tree_node_insert_by_mode (adjusted_location :
+  pmyhtml_tree_node_t; node : pmyhtml_tree_node_t; mode :
+  myhtml_tree_insertion_mode_t); cdecl; external MyHTMLLib;
+function myhtml_tree_node_remove (node : pmyhtml_tree_node_t) :
+  pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+function myhtml_tree_node_insert_html_element (tree : pmyhtml_tree_t; token :
+  pmyhtml_token_node_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+function myhtml_tree_node_insert_foreign_element (tree : pmyhtml_tree_t; token :
+  pmyhtml_token_node_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+function myhtml_tree_node_insert_by_token (tree : pmyhtml_tree_t; token :
+  pmyhtml_token_node_t; ns : myhtml_namespace_t) : pmyhtml_tree_node_t; cdecl;
+  external MyHTMLLib;
+function myhtml_tree_node_insert (tree : pmyhtml_tree_t; tag_idx :
+  myhtml_tag_id_t; ns : myhtml_namespace_t) : pmyhtml_tree_node_t; cdecl;
+  external MyHTMLLib;
+function myhtml_tree_node_insert_by_node (tree : pmyhtml_tree_t; idx :
+  pmyhtml_tree_node_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+function myhtml_tree_node_insert_comment (tree : pmyhtml_tree_t; token :
+  pmyhtml_token_node_t; parent : pmyhtml_tree_node_t) : pmyhtml_tree_node_t;
+  cdecl; external MyHTMLLib;
+function myhtml_tree_node_insert_doctype (tree : pmyhtml_tree_t; token :
+  pmyhtml_token_node_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+function myhtml_tree_node_insert_root (tree : pmyhtml_tree_t; token :
+  pmyhtml_token_node_t; ns : myhtml_namespace_t) : pmyhtml_tree_node_t; cdecl;
+  external MyHTMLLib;
+function myhtml_tree_node_insert_text (tree : pmyhtml_tree_t; token :
+  pmyhtml_token_node_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+function myhtml_tree_node_find_parent_by_tag_id (node : pmyhtml_tree_node_t;
+  tag_id : myhtml_tag_id_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+
+(* other *)
+procedure myhtml_tree_wait_for_last_done_token (tree : pmyhtml_tree_t;
+  token_for_wait : pmyhtml_token_node_t); cdecl; external MyHTMLLib;
+procedure myhtml_tree_tags_close_p (tree : pmyhtml_tree_t; token :
+  pmyhtml_token_node_t); cdecl; external MyHTMLLib;
+function myhtml_tree_generic_raw_text_element_parsing_algorithm (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t) : pmyhtml_tree_node_t;
+  cdecl; external MyHTMLLib;
+procedure myhtml_tree_clear_stack_back_table_context (tree : pmyhtml_tree_t);
+  cdecl; external MyHTMLLib;
+procedure myhtml_tree_clear_stack_back_table_body_context (tree :
+  pmyhtml_tree_t); cdecl; external MyHTMLLib;
+procedure myhtml_tree_clear_stack_back_table_row_context (tree :
+  pmyhtml_tree_t); cdecl; external MyHTMLLib;
+procedure myhtml_tree_close_cell (tree : pmyhtml_tree_t; tr_or_th_node :
+  pmyhtml_tree_node_t; token : pmyhtml_token_node_t); cdecl; external MyHTMLLib;
+function myhtml_tree_is_mathml_intergation_point (tree : pmyhtml_tree_t; node :
+  pmyhtml_tree_node_t) : Boolean; cdecl; external MyHTMLLib;
+function myhtml_tree_is_html_integration_point (tree : pmyhtml_tree_t; node :
+  pmyhtml_tree_node_t) : Boolean; cdecl; external MyHTMLLib;
+
+(* temp tag name *)
+function myhtml_tree_temp_tag_name_init (temp_tag_name :
+  pmyhtml_tree_temp_tag_name_t) : mystatus_t; cdecl; external MyHTMLLib;
+procedure myhtml_tree_temp_tag_name_clean (temp_tag_name :
+  pmyhtml_tree_temp_tag_name_t); cdecl; external MyHTMLLib;
+function myhtml_tree_temp_tag_name_destroy (temp_tag_name :
+  pmyhtml_tree_temp_tag_name_t; self_destroy : Boolean) :
+  pmyhtml_tree_temp_tag_name_t; cdecl; external MyHTMLLib;
+function myhtml_tree_temp_tag_name_append (temp_tag_name :
+  pmyhtml_tree_temp_tag_name_t; const name : PChar; name_len : QWord) :
+  mystatus_t; cdecl; external MyHTMLLib;
+function myhtml_tree_temp_tag_name_append_one (temp_tag_name :
+  pmyhtml_tree_temp_tag_name_t; const name : Char) : mystatus_t; cdecl;
+  external MyHTMLLib;
+
+(* special token list *)
+function myhtml_tree_special_list_init (special :
+  pmyhtml_tree_special_token_list_t) : mystatus_t; cdecl; external MyHTMLLib;
+function myhtml_tree_special_list_append (special :
+  pmyhtml_tree_special_token_list_t; token : pmyhtml_token_node_t; ns :
+  myhtml_namespace_t) : mystatus_t; cdecl; external MyHTMLLib;
+function myhtml_tree_special_list_length (special :
+  pmyhtml_tree_special_token_list_t) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tree_special_list_get_last (special :
+  pmyhtml_tree_special_token_list_t) : pmyhtml_tree_special_token_t; cdecl;
+  external MyHTMLLib;
+function myhtml_tree_special_list_pop (special :
+  pmyhtml_tree_special_token_list_t) : QWord; cdecl; external MyHTMLLib;
+
+(* incoming buffer *)
+function myhtml_tree_incoming_buffer_first (tree : pmyhtml_tree_t) :
+  pmycore_incoming_buffer_t; cdecl; external MyHTMLLib;
+function myhtml_tree_incoming_buffer_make_data (tree : pmyhtml_tree_t;
+  start : QWord; length : QWord) : PChar; cdecl; external MyHTMLLib;
 
 
 implementation
