@@ -2382,6 +2382,23 @@ function myhtml_tree_incoming_buffer_first (tree : pmyhtml_tree_t) :
 function myhtml_tree_incoming_buffer_make_data (tree : pmyhtml_tree_t;
   start : QWord; length : QWord) : PChar; cdecl; external MyHTMLLib;
 
+(*myhtml/myosi.h***************************************************************)
+
+type
+  (* parser state function *)
+  myhtml_tokenizer_state_f = function (tree : pmyhtml_tree_t; token_node :
+    pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
+    QWord) : QWord of object;
+
+  (* parser insertion mode function *)
+  myhtml_insertion_f = function (tree : pmyhtml_tree_t; token :
+    pmyhtml_token_node_t) : Boolean of object;
+
+  (* char references state *)
+
+
+
+
 
 implementation
 
