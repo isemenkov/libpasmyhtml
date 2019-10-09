@@ -1846,6 +1846,12 @@ type
     token_type : pmyhtml_token_type_t;
   end;
 
+(*myhtml/api.h*****************************************************************)
+
+type
+  pmyhtml_tree_attr_t = ^myhtml_tree_attr_t;
+  myhtml_tree_attr_t = type myhtml_token_attr_t;
+
 (*myhtml/stream.h**************************************************************)
 
 type
@@ -2395,9 +2401,131 @@ type
     pmyhtml_token_node_t) : Boolean of object;
 
   (* char references state *)
+  myhtml_data_process_state_f = function (chref : pmyhtml_data_process_entry_t;
+    str : pmycore_string_t; const data : PChar; offset : QWord; size : QWord) :
+    QWord of object;
 
+  (* callback function *)
+  myhtml_callback_token_f = function (tree : pmyhtml_tree_t; token :
+    pmyhtml_token_node_t; ctx : Pointer) : Pointer of object;
+  myhtml_callback_tree_node_f = procedure (tree : pmyhtml_tree_t; node :
+    pmyhtml_tree_node_t; ctx : Pointer) of object;
 
+  (* find attribute value functions *)
+  myhtml_attribute_value_find_f = function (str_key : pmycore_string_t;
+    const value : PChar; value_len : QWord) : Boolean of object;
 
+(*myhtml/token.h***************************************************************)
+
+type
+  pmyhtml_token_t = ^myhtml_token_t;
+  myhtml_token_t = record
+    tree : pmyhtml_tree_t; { ref }
+
+    nodes_obj : pmcobject_async_t; { myhtml_token_node_t }
+    attr_obj : pmcobject_async_t; { myhtml_token_attr_t }
+
+    (* def thread node_id *)
+    mcasync_token_id : QWord;
+    mcasync_attr_id : QWord;
+
+    is_new_tmp : Boolean;
+  end;
+
+function myhtml_token_create (tree : pmyhtml_tree_t; size : QWord) :
+  pmyhtml_token_t; cdecl; external MyHTMLLib;
+procedure myhtml_token_clean (token : pmyhtml_token_t); cdecl;
+  external MyHTMLLib;
+procedure myhtml_token_clean_all (token : pmyhtml_token_t); cdecl;
+  external MyHTMLLib;
+function myhtml_token_destroy (token : pmyhtml_token_t) : pmyhtml_token_t;
+  cdecl; external MyHTMLLib;
+function myhtml_token_node_tag_id (token_node : pmyhtml_token_node_t) :
+  myhtml_tag_id_t; cdecl; external MyHTMLLib;
+function myhtml_token_node_raw_position (token_node : pmyhtml_token_node_t) :
+  myhtml_position_t; cdecl; external MyHTMLLib;
+function myhtml_token_node_element_position (token_node : pmyhtml_token_node_t)
+  : myhtml_position_t; cdecl; external MyHTMLLib;
+function myhtml_token_node_attribute_first (token_node : pmyhtml_token_node_t) :
+  pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
+function myhtml_token_node_attribute_last (token_node : pmyhtml_token_node_t) :
+  pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
+function myhtml_token_node_text (token_node : pmyhtml_token_node_t; length :
+  PQWord) : PChar; cdecl; external MyHTMLLib;
+function myhtml_token_node_string (token_node : pmyhtml_token_node_t) :
+  pmycore_string_t; cdecl; external MyHTMLLib;
+function myhtml_token_node_is_close (token_node : pmyhtml_token_node_t) :
+  Boolean; cdecl; external MyHTMLLib;
+function myhtml_token_node_is_close_self (token_node : pmyhtml_token_node_t) :
+  Boolean; cdecl; external MyHTMLLib;
+function myhtml_token_node_create (token : pmyhtml_token_t; async_node_id :
+  QWord) : pmyhtml_token_node_t; cdecl; external MyHTMLLib;
+procedure myhtml_token_node_clean (node : pmyhtml_token_node_t); cdecl;
+  external MyHTMLLib;
+function myhtml_token_attr_create (token : pmyhtml_token_t; async_node_id :
+  QWord) : pmyhtml_token_attr_t; cdecl; external MyHTMLLib;
+procedure myhtml_token_attr_clean (attr : pmyhtml_token_attr_t); cdecl;
+  external MyHTMLLib;
+function myhtml_token_attr_remove (node : pmyhtml_token_node_t; attr :
+  pmyhtml_token_attr_t) : pmyhtml_token_attr_t; cdecl; external MyHTMLLib;
+function myhtml_token_attr_remove_by_name (node : pmyhtml_token_node_t;
+  const name : PChar; name_length : QWord) : pmyhtml_token_attr_t; cdecl;
+  external MyHTMLLib;
+procedure myhtml_token_attr_delete_all (token : pmyhtml_token_t; node :
+  pmyhtml_token_node_t); cdecl; external MyHTMLLib;
+procedure myhtml_token_delete (token : pmyhtml_token_t; node :
+  pmyhtml_token_node_t); cdecl; external MyHTMLLib;
+procedure myhtml_token_node_wait_for_done (token : pmyhtml_token_t; node :
+  pmyhtml_token_node_t); cdecl; external MyHTMLLib;
+procedure myhtml_token_set_done (node : pmyhtml_token_node_t); cdecl;
+  external MyHTMLLib;
+function myhtml_token_attr_match (token : myhtml_token_t; target :
+  pmyhtml_token_node_t; const key : PChar; key_size : QWord; const value :
+  PChar; value_size : QWord) : pmyhtml_token_attr_t; cdecl; external MyHTMLLib;
+function myhtml_token_attr_match_case (token : pmyhtml_token_t; target :
+  pmyhtml_token_node_t; const key : PChar; key_size : QWord; const value :
+  PChar; value_size : QWord) : pmyhtml_token_attr_t; cdecl; external MyHTMLLib;
+function myhtml_token_release_and_check_doctype_attributes (token :
+  pmyhtml_token_t; target : pmyhtml_token_node_t; return_doctype :
+  pmyhtml_tree_doctype_t) : Boolean; cdecl; external MyHTMLLib;
+procedure myhtml_token_adjust_mathml_attributes (target : pmyhtml_token_node_t);
+  cdecl; external MyHTMLLib;
+procedure myhtml_token_adjust_svg_attributes (target : pmyhtml_token_node_t);
+  cdecl; external MyHTMLLib;
+procedure myhtml_token_adjust_foreign_attributes (target :
+  pmyhtml_token_node_t); cdecl; external MyHTMLLib;
+function myhtml_token_node_attr_append (token : pmyhtml_token_t; dest :
+  pmyhtml_token_node_t; const key : PChar; key_len : QWord; const value : PChar;
+  value_len : QWord; thread_idx : QWord) : pmyhtml_token_attr_t; cdecl;
+  external MyHTMLLib;
+function myhtml_token_node_attr_append_with_convert_encoding (token :
+  pmyhtml_token_t; dest : pmyhtml_token_node_t; const key : PChar; key_len :
+  QWord; const value : PChar; value_len : QWord; thread_idx : QWord; encoding :
+  myencoding_t) : pmyhtml_token_attr_t; cdecl; external MyHTMLLib;
+procedure myhtml_token_node_text_append (token : pmyhtml_token_t; dest :
+  pmyhtml_token_node_t; const text : PChar; text_len : QWord); cdecl;
+  external MyHTMLLib;
+procedure myhtml_token_node_attr_copy (token : pmyhtml_token_t; target :
+  pmyhtml_token_node_t; dest : pmyhtml_token_node_t; thread_idx : QWord); cdecl;
+  external MyHTMLLib;
+procedure myhtml_token_node_attr_copy_with_check (token : pmyhtml_token_t;
+  target : pmyhtml_token_node_t; dest : pmyhtml_token_node_t; thread_idx :
+  QWord); cdecl; external MyHTMLLib;
+function myhtml_token_node_clone (token : pmyhtml_token_t; node :
+  pmyhtml_token_node_t; token_thread_idx : QWord; attr_thread_idx : QWord) :
+  pmyhtml_token_node_t; cdecl; external MyHTMLLib;
+function myhtml_token_attr_copy (token : pmyhtml_token_t; attr :
+  pmyhtml_token_attr_t; dest : pmyhtml_token_node_t; thread_idx : QWord) :
+  Boolean; cdecl; external MyHTMLLib;
+function myhtml_token_attr_by_name (node : pmyhtml_token_node_t; const name :
+  PChar; name_size : QWord) : pmyhtml_token_attr_t; cdecl; external MyHTMLLib;
+function myhtml_token_attr_compare (target : pmyhtml_token_node_t; dest :
+  pmyhtml_token_node_t) : Boolean; cdecl; external MyHTMLLib;
+function myhtml_token_merge_two_token_string (tree : pmyhtml_tree_t; token_to :
+  pmyhtml_token_node_t; token_from : pmyhtml_token_node_t; cp_reverse :
+  Boolean) : pmyhtml_token_node_t; cdecl; external MyHTMLLib;
+procedure myhtml_token_set_replacement_character_for_null_token (tree :
+  pmyhtml_tree_t; node : pmyhtml_token_node_t); cdecl; external MyHTMLLib;
 
 
 implementation
