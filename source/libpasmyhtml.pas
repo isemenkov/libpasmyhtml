@@ -2527,6 +2527,87 @@ function myhtml_token_merge_two_token_string (tree : pmyhtml_tree_t; token_to :
 procedure myhtml_token_set_replacement_character_for_null_token (tree :
   pmyhtml_tree_t; node : pmyhtml_token_node_t); cdecl; external MyHTMLLib;
 
+(*myhtml/charef.h**************************************************************)
+
+type
+  pcharef_entry_t = ^charef_entry_t;
+  charef_entry_t = record
+    ch : Byte;
+    next : QWord;
+    cur_pos : QWord;
+    codepoints : array [0 .. 1] of QWord;
+    codepoints_len : QWord;
+  end;
+
+  pcharef_entry_result_t = ^charef_entry_result_t;
+  charef_entry_result_t = record
+    curr_entry : pcharef_entry_t;
+    last_entry : pcharef_entry_t;
+    last_offset : QWord;
+    is_done : Integer;
+  end;
+
+function myhtml_charef_find (const start : PChar; offset : PQWord; size :
+  QWord; data_size : PQWord) : pcharef_entry_t; cdecl; external MyHTMLLib;
+function myhtml_charef_find_by_pos (pos : QWord; const start : PChar; offset :
+  PQWord; size : QWord; result : pcharef_entry_result_t) : pcharef_entry_t;
+  cdecl; external MyHTMLLib;
+function myhtml_charef_get_first_position (const start : Char) :
+  pcharef_entry_t; cdecl; external MyHTMLLib;
+
+(*myhtml/data_process.h********************************************************)
+
+type
+  pmyhtml_data_process_entry_t = ^myhtml_data_process_entry_t;
+  myhtml_data_process_entry_t = record
+    (* current state for process data *)
+    state : myhtml_data_process_state_f;
+
+    (* for encoding *)
+    encoding : myencoding_t;
+    res : myencoding_result_t;
+
+    (* temp *)
+    tmp_str_pos_proc : QWord;
+    tmp_str_pos : QWord;
+    tmp_num : QWord;
+
+    (* current result *)
+    charef_res : charef_entry_result_t;
+
+    (* settings *)
+    is_attributes : Boolean;
+    emit_null_char : Boolean;
+  end;
+
+procedure myhtml_data_process_entry_clean (proc_entry :
+  pmyhtml_data_process_entry_t); cdecl; external MyHTMLLib;
+procedure myhtml_data_process (proc_entry : pmyhtml_data_process_entry_t; str :
+  pmycore_string_t; const data : PChar; size : QWord); cdecl;
+  external MyHTMLLib;
+procedure myhtml_data_process_end (proc_entry : pmyhtml_data_process_entry_t;
+  str : pmycore_string_t); cdecl; external MyHTMLLib;
+function myhtml_data_process_state_data (proc_entry :
+  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PChar;
+  offset : QWord; size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_data_process_state_ampersand (proc_entry :
+  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PChar;
+  offset : QWord; size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_data_process_state_ampersand_data (proc_entry :
+  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PChar;
+  offset : QWord; size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_data_process_state_ampersand_hash (proc_entry :
+  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PChar;
+  offset : QWord; size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_data_process_state_ampersand_hash_data (proc_entry :
+  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PChar;
+  offset : QWord; size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_data_process_state_ampersand_hash_x_data (proc_entry :
+  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PChar;
+  offset : QWord; size : QWord) : QWord; cdecl; external MyHTMLLib;
+procedure myhtml_data_process_state_end (proc_entry :
+  pmyhtml_data_process_entry_t; str : pmycore_string_t); cdecl;
+  external MyHTMLLib;
 
 implementation
 
