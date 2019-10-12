@@ -2609,6 +2609,89 @@ procedure myhtml_data_process_state_end (proc_entry :
   pmyhtml_data_process_entry_t; str : pmycore_string_t); cdecl;
   external MyHTMLLib;
 
+(*myhtml/mynamespace.h*********************************************************)
+
+type
+  pmyhtml_namespace_detect_name_entry_t = ^myhtml_namespace_detect_name_entry_t;
+  myhtml_namespace_detect_name_entry_t = record
+    name : PChar;
+    name_length : QWord;
+
+    ns : myhtml_namespace_t;
+
+    next : QWord;
+    curr : QWord;
+  end;
+
+  pmyhtml_namespace_detect_url_entry_t = ^myhtml_namespace_detect_url_entry_t;
+  myhtml_namespace_detect_url_entry_t = record
+    url : PChar;
+    url_length : QWord;
+
+    ns : myhtml_namespace_t;
+  end;
+
+function myhtml_namespace_name_by_id (ns : myhtml_namespace_t; length : PQWord)
+  : PChar; cdecl; external MyHTMLLib;
+function myhtml_namespace_id_by_name (const name : PChar; length : QWord; ns :
+  pmyhtml_namespace_t) : Boolean; cdecl; external MyHTMLLib;
+function myhtml_namespace_url_by_id (ns : myhtml_namespace_t; length : PQWord) :
+  PChar; cdecl; external MyHTMLLib;
+function myhtml_namespace_id_by_url (const url : PChar; length : QWord) :
+  myhtml_namespace_t; cdecl; external MyHTMLLib;
+function myhtml_namespace_name_entry_by_name (const name : PChar; length :
+  QWord) : pmyhtml_namespace_detect_name_entry_t; cdecl; external MyHTMLLib;
+
+(*myhtml/mystring.h************************************************************)
+
+(* append with convert encoding with preprocessing *)
+function myhtml_string_append_with_convert_encoding_with_preprocessing (str :
+  pmycore_string_t; const buff : PChar; length : QWord; encoding : myencoding_t;
+  emit_null_chars : Boolean) : QWord; cdecl; external MyHTMLLib;
+function myhtml_string_append_chunk_with_convert_encoding_with_preprocessing
+  (str : pmycore_string_t; res : pmyencoding_result_t; const buff : PChar;
+  length : QWord; encoding : myencoding_t; emit_null_chars : Boolean) : QWord;
+  cdecl; external MyHTMLLib;
+
+(* append with convert encoding lowercase with preprocessing *)
+function myhtml_string_append_lowercase_with_convert_encoding_with_preprocessing
+  (str : pmycore_string_t; const buff : PChar; length : QWord; encoding :
+  myencoding_t; emit_null_chars : Boolean) : QWord; cdecl; external MyHTMLLib;
+function myhtml_string_append_lowercase_chunk_with_convert_encoding_with_preprocessing
+  (str : pmycore_string_t; res : pmyencoding_result_t; const buff : PChar;
+  length : QWord; encoding : myencoding; emit_null_chars : Boolean) :QWord;
+  cdecl; external MyHTMLLib;
+
+(* append with preprocessing *)
+function myhtml_string_before_append_any_preprocessing (str : pmycore_string_t;
+  const buff : PChar; length : QWord; last_position : QWord) : QWord; cdecl;
+  external MyHTMLLib;
+function myhtml_string_append_with_preprocessing (str : pmycore_string_t;
+  const buff : PChar; length : QWord; emit_null_chars : Boolean) : QWord; cdecl;
+  external MyHTMLLib;
+function myhtml_string_append_lowercase_with_preprocessing (str :
+  pmycore_string_t; const buff : PChar; length : QWord; emit_null_chars :
+  Boolean) : QWord; cdecl; external MyHTMLLib;
+
+(*myhtml/parser.h**************************************************************)
+
+procedure myhtml_parser_stream (thread_id : mythread_id_t; ctx : Pointer);
+  cdecl; external MyHTMLLib;
+procedure myhtml_parser_worker (thread_id : mythread_id_t; ctx : Pointer);
+  cdecl; external MyHTMLLib;
+procedure myhtml_parser_worker_stream (thread_id : mythread_id_t;
+  ctx : Pointer); cdecl; external MyHTMLLib;
+function myhtml_parser_token_data_to_string (tree : pmyhtml_tree_t; str :
+  pmycore_string_t; proc_entry : pmyhtml_data_process_entry_t; start : QWord;
+  length : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_parser_token_data_to_string_lowercase (tree : pmyhtml_tree_t;
+  str : mycore_string_t; proc_entry : pmyhtml_data_process_entry_t; start :
+  QWord; length : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_parser_token_data_to_string_charef (tree : pmyhtml_tree_t; str :
+  mycore_string_t; proc_entry : pmyhtml_data_process_entry_t; start : QWord;
+  length : QWord) : QWord; cdecl; external MyHTMLLib;
+
+
 implementation
 
 end.
