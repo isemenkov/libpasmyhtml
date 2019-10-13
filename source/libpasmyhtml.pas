@@ -2028,7 +2028,6 @@ type
     current : pmyhtml_tree_temp_tag_name_t;
   end;
 
-  pmyhtml_tree_t = ^myhtml_tree_t;
   myhtml_tree_t = record
     (* ref *)
     myhtml : pmyhtml_t;
@@ -2418,7 +2417,6 @@ type
 (*myhtml/token.h***************************************************************)
 
 type
-  pmyhtml_token_t = ^myhtml_token_t;
   myhtml_token_t = record
     tree : pmyhtml_tree_t; { ref }
 
@@ -2790,7 +2788,6 @@ type
     cur : QWord;
   end;
 
-  pmyhtml_tag_t = ^myhtml_tag_t;
   myhtml_tag_t = record
     tree : pmctree_t;
     mcsimple_context : pmcsimple_t;
@@ -3151,6 +3148,887 @@ function myhtml_tokenizer_state_script_data_double_escaped_less_than_sign
 function myhtml_tokenizer_state_script_data_double_escape_end (tree :
   pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
   html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+
+(*myhtml/api.h*****************************************************************)
+
+type
+  pmyhtml_collection_t = ^myhtml_collection_t;
+  myhtml_collection_t = record
+    list : ppmyhtml_tree_node_t;
+    size : QWord;
+    length : QWord;
+  end;
+
+(******************************************************************************)
+(*                                                                            *)
+(* MyHTML                                                                     *)
+(*                                                                            *)
+(******************************************************************************)
+
+(**
+ * Create a MyHTML structure
+ *
+ * @return pmyhtml_t if successful, otherwise an NULL value.
+ *)
+function myhtml_create : pmyhtml_t; cdecl; external MyHTMLLib;
+
+(**
+ * Allocating and Initialization resources for a MyHTML structure
+ *
+ * @param[in] pmyhtml_t
+ * @param[in] work options, how many threads will be.
+ * Default: MyHTML_OPTIONS_PARSE_MODE_SEPARATELY
+ *
+ * @param[in] thread count, it depends on the choice of work options
+ * Default: 1
+ *
+ * @param[in] queue size for a tokens. Dynamically increasing the specified
+ * number here. Default: 4096
+ *
+ * @return MyHTML_STATUS_OK if successful, otherwise an error status value.
+ *)
+function myhtml_init (myhtml : pmyhtml_t; opt : myhtml_options_t; thread_count :
+  QWord; queue_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+
+(**
+ * Clears queue and threads resources
+ *
+ * @param[in] pmyhtml_t
+ *)
+procedure myhtml_clean (myhtml : pmyhtml_t); cdecl; external MyHTMLLib;
+
+(**
+ * Destroy of a MyHTML structure
+ *
+ * @param[in] pmyhtml_t
+ * @return NULL if successful, otherwise an MyHTML structure.
+ *)
+function myhtml_destroy (myhtml : pmyhtml_t) : pmyhtml_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Parsing HTML
+ *
+ * @param[in] previously created structure pmyhtml_tree_t
+ * @param[in] Input character encoding; Default: MyENCODING_UTF_8 or
+ *            MyENCODING_DEFAULT or 0
+ * @param[in] HTML
+ * @param[in] HTML size
+ *
+ * All input character encoding decode to utf-8
+ *
+ * @return MyHTML_STATUS_OK if successful, otherwise an error status
+ *)
+function myhtml_parse (tree : pmyhtml_tree_t; encoding : myencoding_t;
+  const html : PChar; html_size : QWord) : mystatus_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Parsing fragment of HTML
+ *
+ * @param[in] previously created structure pmyhtml_tree_t
+ * @param[in] Input character encoding; Default: MyENCODING_UTF_8 or
+ *            MyENCODING_DEFAULT or 0
+ * @param[in] HTML
+ * @param[in] HTML size
+ * @param[in] fragment base (root) tag id. Default: MyHTML_TAG_DIV if set 0
+ * @param[in] fragment NAMESPACE. Default: MyHTML_NAMESPACE_HTML if set 0
+ *
+ * All input character encoding decode to utf-8
+ *
+ * @return MyHTML_STATUS_OK if successful, otherwise an error status
+ *)
+function myhtml_parse_fragment (tree : pmyhtml_tree_t; encoding : myencoding_t;
+  const html : PChar; html_size : QWord; tag_id : myhtml_tag_id_t; ns :
+  myhtml_namespace_t) : mystatus_t; cdecl; external MyHTMLLib;
+
+(**
+ * Parsing HTML in Single Mode.
+ * No matter what was said during initialization MyHTML
+ *
+ * @param[in] previously created structure pmyhtml_tree_t
+ * @param[in] Input character encoding; Default: MyENCODING_UTF_8 or
+ *            MyENCODING_DEFAULT or 0
+ * @param[in] HTML
+ * @param[in] HTML size
+ *
+ * All input character encoding decode to utf-8
+ *
+ * @return MyHTML_STATUS_OK if successful, otherwise an error status
+ *)
+function myhtml_parse_single (tree : pmyhtml_tree_t; encoding : myencoding_t;
+  const html : PChar; html_size : QWord) : mystatus_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Parsing fragment of HTML in Single Mode.
+ * No matter what was said during initialization MyHTML
+ *
+ * @param[in] previously created structure pmyhtml_tree_t
+ * @param[in] Input character encoding; Default: MyENCODING_UTF_8 or
+ *            MyENCODING_DEFAULT or 0
+ * @param[in] HTML
+ * @param[in] HTML size
+ * @param[in] fragment base (root) tag id. Default: MyHTML_TAG_DIV if set 0
+ * @param[in] fragment NAMESPACE. Default: MyHTML_NAMESPACE_HTML if set 0
+ *
+ * All input character encoding decode to utf-8
+ *
+ * @return MyHTML_STATUS_OK if successful, otherwise an error status
+ *)
+function myhtml_parse_fragment_single (tree : pmyhtml_tree_t; encoding :
+  myencoding_t; const html : PChar; html_size : QWord; tag_id : myhtml_tag_id_t;
+  ns : myhtml_namespace_t) : mystatus_t; cdecl; external MyHTMLLib;
+
+(**
+ * Parsing HTML chunk. For end parsing call myhtml_parse_chunk_end function
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] HTML
+ * @param[in] HTML size
+ *
+ * @return MyHTML_STATUS_OK if successful, otherwise an error status
+ *)
+function myhtml_parse_chunk (tree : pmyhtml_tree_t; const html : PChar;
+  html_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+
+(**
+ * Parsing chunk of fragment HTML. For end parsing call myhtml_parse_chunk_end
+ * function
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] HTML
+ * @param[in] HTML size
+ * @param[in] fragment base (root) tag id. Default: MyHTML_TAG_DIV if set 0
+ * @param[in] fragment NAMESPACE. Default: MyHTML_NAMESPACE_HTML if set 0
+ *
+ * @return MyHTML_STATUS_OK if successful, otherwise an error status
+ *)
+function myhtml_parse_chunk_fragment (tree : pmyhtml_tree_t; const html : PChar;
+  html_size : QWord; tag_id : myhtml_tag_id_t; ns : myhtml_namespace_t) :
+  mystatus_t; cdecl; external MyHTMLLib;
+
+(**
+ * Parsing HTML chunk in Single Mode.
+ * No matter what was said during initialization MyHTML
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] HTML
+ * @param[in] HTML size
+ *
+ * @return MyHTML_STATUS_OK if successful, otherwise an error status
+ *)
+function myhtml_parse_chunk_single (tree : pmyhtml_tree_t; const html : PChar;
+  html_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+
+(**
+ * Parsing chunk of fragment of HTML in Single Mode.
+ * No matter what was said during initialization MyHTML
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] HTML
+ * @param[in] HTML size
+ * @param[in] fragment base (root) tag id. Default: MyHTML_TAG_DIV if set 0
+ * @param[in] fragment NAMESPACE. Default: MyHTML_NAMESPACE_HTML if set 0
+ *
+ * @return MyHTML_STATUS_OK if successful, otherwise an error status
+ *)
+function myhtml_parse_chunk_fragment_single (tree : pmyhtml_tree_t; const html :
+  PChar; html_size : QWord; tag_id : myhtml_tag_id_t; ns : myhtml_namespace_t) :
+  mystatus_t; cdecl; external MyHTMLLib;
+
+(**
+ * End of parsing HTML chunks
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return MyHTML_STATUS_OK if successful, otherwise an error status
+ *)
+function myhtml_parse_chunk_end (tree : pmyhtml_tree_t) : mystatus_t; cdecl;
+  external MyHTMLLib;
+
+(******************************************************************************)
+(*                                                                            *)
+(* MyHTML_TREE                                                                *)
+(*                                                                            *)
+(******************************************************************************)
+
+(**
+ * Create a MyHTML_TREE structure
+ *
+ * @return pmyhtml_tree_t if successful, otherwise an NULL value.
+ *)
+function myhtml_tree_create : pmyhtml_tree_t; cdecl; external MyHTMLLib;
+
+(**
+ * Allocating and Initialization resources for a MyHTML_TREE structure
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] pworkmyhtml_t
+ *
+ * @return MyHTML_STATUS_OK if successful, otherwise an error status
+ *)
+ function myhtml_tree_init (tree : pmyhtml_tree_t; myhtml : pmyhtml_t) :
+   mystatus_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get Parse Flags of Tree
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return myhtml_tree_parse_flags_t
+ *)
+function myhtml_tree_parse_flags (tree : pmyhtml_tree_t) :
+  pmyhtml_tree_parse_flags_t; cdecl; external MyHTMLLib;
+
+(**
+ * Set Parse Flags for Tree
+ * See enum myhtml_tree_parse_flags in this file
+ *
+ * @example myhtml_tree_parse_flags_set(tree,
+ *                            MyHTML_TREE_PARSE_FLAGS_WITHOUT_BUILD_TREE or
+ *                            MyHTML_TREE_PARSE_FLAGS_WITHOUT_DOCTYPE_IN_TREE or
+ *                            MyHTML_TREE_PARSE_FLAGS_SKIP_WHITESPACE_TOKEN);
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] parse flags. You can combine their
+ *)
+procedure myhtml_tree_parse_flags_set (tree : pmyhtml_tree_t; parse_flags :
+  myhtml_tree_parse_flags_t); cdecl; external MyHTMLLib;
+
+(**
+ * Clears resources before new parsing
+ *
+ * @param[in] pmyhtml_tree_t
+ *)
+procedure myhtml_tree_clean (tree : pmyhtml_tree_t); cdecl; external MyHTMLLib;
+
+(**
+ * Add child node to node. If children already exists it will be added to the
+ * last
+ *
+ * @param[in] pmyhtml_tree_node_t The node to which we add child node
+ * @param[in] pmyhtml_tree_node_t The node which adds
+ *)
+procedure myhtml_tree_node_add_child (root : pmyhtml_tree_node_t; node :
+  pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
+
+(**
+ * Add a node immediately before the existing node
+ *
+ * @param[in] pmyhtml_tree_node_t add for this node
+ * @param[in] pmyhtml_tree_node_t add this node
+ *)
+procedure myhtml_tree_node_insert_before (root : pmyhtml_tree_node_t; node :
+  pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
+
+(**
+ * Add a node immediately after the existing node
+ *
+ * @param[in] pmyhtml_tree_node_t add for this node
+ * @param[in] pmyhtml_tree_node_t add this node
+ *)
+procedure myhtml_tree_node_insert_after (root : pmyhtml_tree_node_t; node :
+  pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
+
+(**
+ * Destroy of a MyHTML_TREE structure
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return NULL if successful, otherwise an MyHTML_TREE structure
+ *)
+function myhtml_tree_destroy (tree : pmyhtml_tree_t) : pmyhtml_tree_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Get pmyhtml_t from a pmyhtml_tree_t
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return pmyhtml_t if exists, otherwise a NULL value
+ *)
+function myhtml_tree_get_myhtml (tree : pmyhtml_tree_t) : pmyhtml_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Get pmyhtml_tag_t from a pmyhtml_tree_t
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return pmyhtml_tag_t if exists, otherwise a NULL value
+ *)
+function myhtml_tree_get_tag (tree : pmyhtml_tree_t) : pmyhtml_tag_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Get Tree Document (Root of Tree)
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return pmyhtml_tree_node_t if successful, otherwise a NULL value
+ *)
+function myhtml_tree_get_document (tree : pmyhtml_tree_t) : pmyhtml_tree_node_t;
+  cdecl; external MyHTMLLib;
+
+(**
+ * Get node HTML (Document -> HTML, Root of HTML Document)
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return pmyhtml_tree_node_t if successful, otherwise a NULL value
+ *)
+function myhtml_tree_get_node_html (tree : pmyhtml_tree_t) :
+  pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get node HEAD (Document -> HTML -> HEAD)
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return pmyhtml_tree_node_t if successful, otherwise a NULL value
+ *)
+function myhtml_tree_get_node_head (tree : pmyhtml_tree_t) :
+  pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get node BODY (Document -> HTML -> BODY)
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return pmyhtml_tree_node_t if successful, otherwise a NULL value
+ *)
+ function myhtml_tree_get_node_body (tree : pmyhtml_tree_t) :
+   pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get mchar_async_t object
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return pmchar_async_t if exists, otherwise a NULL value
+ *)
+function myhtml_tree_get_mchar (tree : pmyhtml_tree_t) : pmchar_async_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Get node_id from main thread for mchar_async_t object
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return QWord, node id
+ *)
+function myhtml_tree_get_mchar_node_id (tree : pmyhtml_tree_t) : QWord; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Get first Incoming Buffer
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return pmycore_incoming_buffer_t if successful, otherwise a NULL value
+ *)
+function myhtml_tree_incoming_buffer_first (tree : pmyhtml_tree_t) :
+  pmycore_incoming_buffer_t; cdecl; external MyHTMLLib;
+
+(******************************************************************************)
+(*                                                                            *)
+(* MyHTML_NODE                                                                *)
+(*                                                                            *)
+(******************************************************************************)
+
+(**
+ * Get first (begin) node of tree
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return pmyhtml_tree_node_t if successful, otherwise a NULL value
+ *)
+function myhtml_node_first (tree : pmyhtml_tree_t) : pmyhtml_tree_node_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Get nodes by tag id
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] pmyhtml_collection_t, creates new collection if NULL
+ * @param[in] tag id
+ * @param[out] status of this operation
+ *
+ * @return pmyhtml_collection_t if successful, otherwise an NULL value
+ *)
+function myhtml_get_nodes_by_tag_id (tree : pmyhtml_tree_t; collection :
+  pmyhtml_collection_t; tag_id : pmyhtml_tag_id_t; status : pmystatus_t) :
+  pmyhtml_collection_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get nodes by tag name
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] pmyhtml_collection_t, creates new collection if NULL
+ * @param[in] tag name
+ * @param[in] tag name length
+ * @param[out] status of this operation, optional
+ *
+ * @return pmyhtml_collection_t if successful, otherwise an NULL value
+ *)
+function myhtml_get_nodes_by_name (tree : pmyhtml_tree_t; collection :
+  pmyhtml_collection_t; const name : PChar; length : QWord; status :
+  pmystatus_t) : pmyhtml_collection_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get nodes by attribute key
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
+ * @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
+ * @param[in] find key
+ * @param[in] find key length
+ * @param[out] status of this operation, optional
+ *
+ * @return pmyhtml_collection_t if successful, otherwise an NULL value
+ *)
+function myhtml_get_nodes_by_attributes_key (tree : pmyhtml_tree_t; collection :
+  pmyhtml_collection_t; scope_node : pmyhtml_tree_node_t; const key : PChar;
+  key_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Get nodes by attribute value; exactly equal; like a [foo="bar"]
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
+ * @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
+ * @param[in] case-insensitive if true
+ * @param[in] find in key; if NULL find in all attributes
+ * @param[in] find in key length; if 0 find in all attributes
+ * @param[in] find value
+ * @param[in] find value length
+ * @param[out] status of this operation, optional
+ *
+ * @return pmyhtml_collection_t if successful, otherwise an NULL value
+ *)
+function myhtml_get_nodes_by_attribute_value (tree : pmyhtml_tree_t;
+  collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
+  case_insensitive : Boolean; const key : PChar; key_len : QWord; const value :
+  PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Get nodes by attribute value; whitespace separated; like a [foo~="bar"]
+ *
+ * @example if value="bar" and node attr value="lalala bar bebebe", then this
+ * node is found
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
+ * @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
+ * @param[in] case-insensitive if true
+ * @param[in] find in key; if NULL find in all attributes
+ * @param[in] find in key length; if 0 find in all attributes
+ * @param[in] find value
+ * @param[in] find value length
+ * @param[out] status of this operation, optional
+ *
+ * @return pmyhtml_collection_t if successful, otherwise an NULL value
+ *)
+function myhtml_get_nodes_by_attribute_value_whitespace_separated (tree :
+  pmyhtml_tree_t; collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
+  case_sensitive : Boolean; const key : PChar; key_len : QWord; const value :
+  PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Get nodes by attribute value; value begins exactly with the string; like a
+ * [foo^="bar"]
+ *
+ * @example if value="bar" and node attr value="barmumumu", then this node is
+ * found
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
+ * @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
+ * @param[in] case-insensitive if true
+ * @param[in] find in key; if NULL find in all attributes
+ * @param[in] find in key length; if 0 find in all attributes
+ * @param[in] find value
+ * @param[in] find value length
+ * @param[out] status of this operation, optional
+ *
+ * @return pmyhtml_collection_t if successful, otherwise an NULL value
+ *)
+function myhtml_get_nodes_by_attribute_value_begin (tree : pmyhtml_tree_t;
+  collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
+  case_insensitive : Boolean; const key : PChar; key_len : QWord; const value :
+  PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Get nodes by attribute value; value ends exactly with the string; like a
+ * [foo$="bar"]
+ *
+ * @example if value="bar" and node attr value="mumumubar", then this node is
+ * found
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
+ * @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
+ * @param[in] case-insensitive if true
+ * @param[in] find in key; if NULL find in all attributes
+ * @param[in] find in key length; if 0 find in all attributes
+ * @param[in] find value
+ * @param[in] find value length
+ * @param[out] status of this operation, optional
+ *
+ * @return pmyhtml_collection_t if successful, otherwise an NULL value
+ *)
+function myhtml_get_nodes_by_attribute_value_end (tree : pmyhtml_tree_t;
+  collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
+  case_insensitive : Boolean; const key : PChar; key_len : QWord; const value :
+  PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Get nodes by attribute value; value contains the substring; like a
+ * [foo*="bar"]
+ *
+ * @example if value="bar" and node attr value="bububarmumu", then this node is
+ * found
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
+ * @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
+ * @param[in] case-insensitive if true
+ * @param[in] find in key; if NULL find in all attributes
+ * @param[in] find in key length; if 0 find in all attributes
+ * @param[in] find value
+ * @param[in] find value length
+ * @param[out] status of this operation, optional
+ *
+ * @return pmyhtml_collection_t if successful, otherwise an NULL value
+ *)
+function myhtml_get_nodes_by_attribute_value_contain (tree : pmyhtml_tree_t;
+  collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
+  case_insensitive : Boolean; const key : PChar; key_len : QWord; const value :
+  PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Get nodes by attribute value; attribute value is a hyphen-separated list of
+ * values beginning;
+ * like a [foo|="bar"]
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
+ * @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
+ * @param[in] case-insensitive if true
+ * @param[in] find in key; if NULL find in all attributes
+ * @param[in] find in key length; if 0 find in all attributes
+ * @param[in] find value
+ * @param[in] find value length
+ * @param[out] optional; status of this operation
+ *
+ * @return pmyhtml_collection_t if successful, otherwise an NULL value
+ *)
+function myhtml_get_nodes_by_attribute_value_hyphen_separated (tree :
+  pmyhtml_tree_t; collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
+  case_insensitive : Boolean; const key : PChar; key_len : QWord; const value :
+  PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Get nodes by tag id in node scope
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] pmyhtml_collection_t, creates new collection if NULL
+ * @param[in] node for search tag_id in children nodes
+ * @param[in] tag_id for search
+ * @param[out] status of this operation
+ *
+ * @return pmyhtml_collection_t if successful, otherwise an NULL value
+ *)
+function myhtml_get_nodes_by_tag_id_in_scope (tree : pmyhtml_tree_t; collection
+  : pmyhtml_collection_t; node : pmyhtml_tree_node_t; tag_id : myhtml_tag_id_t;
+  status : pmystatus_t) : pmyhtml_collection_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get nodes by tag name in node scope
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] pmyhtml_collection_t, creates new collection if NULL
+ * @param[in] node for search tag_id in children nodes
+ * @param[in] tag name
+ * @param[in] tag name length
+ * @param[out] status of this operation
+ *
+ * @return pmyhtml_collection_t if successful, otherwise an NULL value
+ *)
+function myhtml_get_nodes_by_name_in_scope (tree : pmyhtml_tree_t; collection :
+  pmyhtml_collection_t; node : pmyhtml_tree_node_t; const html : PChar; length :
+  QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Get next sibling node
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return pmyhtml_tree_node_t if exists, otherwise an NULL value
+ *)
+function myhtml_node_next (node : pmyhtml_tree_node_t) : pmyhtml_tree_node_t;
+  cdecl; external MyHTMLLib;
+
+(**
+ * Get previous sibling node
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return pmyhtml_tree_node_t if exists, otherwise an NULL value
+ *)
+function myhtml_node_prev (node : pmyhtml_tree_node_t) : pmyhtml_tree_node_t;
+  cdecl; external MyHTMLLib;
+
+(**
+ * Get parent node
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return pmyhtml_tree_node_t if exists, otherwise an NULL value
+ *)
+function myhtml_node_parent (node : pmyhtml_tree_node_t) : pmyhtml_tree_node_t;
+  cdecl; external MyHTMLLib;
+
+(**
+ * Get child (first child) of node
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return pmyhtml_tree_node_t if exists, otherwise an NULL value
+ *)
+function myhtml_node_child (node : pmyhtml_tree_node_t) : pmyhtml_tree_node_t;
+  cdecl; external MyHTMLLib;
+
+(**
+ * Get last child of node
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return pmyhtml_tree_node_t if exists, otherwise an NULL value
+ *)
+function myhtml_node_last_child (node : pmyhtml_tree_node_t) :
+  pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+
+(**
+ * Create new node
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] tag id, see enum myhtml_tags
+ * @param[in] enum myhtml_namespace
+ *
+ * @return pmyhtml_tree_node_t if successful, otherwise a NULL value
+ *)
+function myhtml_node_create (tree : pmyhtml_tree_t; tag_id : myhtml_tag_id_t;
+  ns : myhtml_namespace_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+
+(**
+ * Release allocated resources
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *)
+procedure myhtml_node_free (node : pmyhtml_tree_node_t); cdecl;
+  external MyHTMLLib;
+
+(**
+ * Remove node of tree
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return pmyhtml_tree_node_t if successful, otherwise a NULL value
+ *)
+function myhtml_node_remove (node : pmyhtml_tree_node_t) : pmyhtml_tree_node_t;
+  cdecl; external MyHTMLLib;
+
+(**
+ * Remove node of tree and release allocated resources
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *)
+procedure myhtml_node_delete (node : pmyhtml_tree_node_t); cdecl;
+  external MyHTMLLib;
+
+(**
+ * Remove nodes of tree recursively and release allocated resources
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *)
+procedure myhtml_node_delete_recursive (node : pmyhtml_tree_node_t); cdecl;
+  external MyHTMLLib;
+
+(**
+ * The appropriate place for inserting a node. Insertion with validation.
+ * If try insert <a> node to <table> node, then <a> node inserted before <table>
+ * node
+ *
+ * @param[in] target node
+ * @param[in] insertion node
+ *
+ * @return insertion node if successful, otherwise a NULL value
+ *)
+function myhtml_node_insert_to_appropriate_place (target : pmyhtml_tree_node_t;
+  node : pmyhtml_tree_node_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+
+(**
+ * Append to target node as last child. Insertion without validation.
+ *
+ * @param[in] target node
+ * @param[in] insertion node
+ *
+ * @return insertion node if successful, otherwise a NULL value
+ *)
+function myhtml_node_append_child (target : pmyhtml_tree_node_t; node :
+  pmyhtml_tree_node_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+
+(**
+ * Append sibling node after target node. Insertion without validation.
+ *
+ * @param[in] target node
+ * @param[in] insertion node
+ *
+ * @return insertion node if successful, otherwise a NULL value
+ *)
+function myhtml_node_insert_after (target : pmyhtml_tree_node_t; node :
+  pmyhtml_tree_node_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+
+(**
+ * Append sibling node before target node. Insertion without validation.
+ *
+ * @param[in] target node
+ * @param[in] insertion node
+ *
+ * @return insertion node if successful, otherwise a NULL value
+ *)
+function myhtml_node_insert_before (target : pmyhtml_tree_node_t; node :
+  pmyhtml_tree_node_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+
+(**
+ * Add text for a node with convert character encoding.
+ *
+ * @param[in] target node
+ * @param[in] text
+ * @param[in] text length
+ * @param[in] character encoding
+ *
+ * @return pmycore_string_t if successful, otherwise a NULL value
+ *)
+function myhtml_node_text_set (node : pmyhtml_tree_node_t; const text : PChar;
+  length : QWord; encoding : myencoding_t) : pmycore_string_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Add text for a node with convert character encoding.
+ *
+ * @param[in] target node
+ * @param[in] text
+ * @param[in] text length
+ * @param[in] character encoding
+ *
+ * @return pmycore_string_t if successful, otherwise a NULL value
+ *)
+function myhtml_node_text_set_with_charef (node : pmyhtml_tree_node_t;
+  const text : PChar; length : QWord; encoding : myencoding_t) :
+  pmycore_string_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get token node
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return pmyhtml_token_node_t
+ *)
+function myhtml_node_token (node : pmyhtml_tree_node_t) : pmyhtml_token_node_t;
+  cdecl; external MyHTMLLib;
+
+(**
+ * Get node namespace
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return myhtml_namespace_t
+ *)
+function myhtml_node_namespace (node : pmyhtml_tree_node_t) :
+  myhtml_namespace_t; cdecl; external MyHTMLLib;
+
+(**
+ * Set node namespace
+ *
+ * @param[in] pmyhtml_tree_node_t
+ * @param[in] myhtml_namespace_t
+ *)
+procedure myhtml_node_namespace_set (node : pmyhtml_tree_node_t; ns :
+  myhtml_namespace_t); cdecl; external MyHTMLLib;
+
+(**
+ * Get node tag id
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return myhtml_tag_id_t
+ *)
+function myhtml_node_tag_id (node : pmyhtml_tree_node_t) : myhtml_tag_id_t;
+  cdecl; external MyHTMLLib;
+
+(**
+ * Node has self-closing flag?
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return true or false (1 or 0)
+ *)
+function myhtml_node_is_close_self (node : pmyhtml_tree_node_t) : Boolean;
+  cdecl; external MyHTMLLib;
+
+(**
+ * Node is a void element?
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return true or false (1 or 0)
+ *)
+function myhtml_node_is_void_element (node : pmyhtml_tree_node_t) : Boolean;
+  cdecl; external MyHTMLLib;
+
+(**
+ * Get first attribute of a node
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return pmyhtml_tree_attr_t if exists, otherwise an NULL value
+ *)
+function myhtml_node_attribute_first (node : pmyhtml_tree_node_t) :
+  pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get last attribute of a node
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return pmyhtml_tree_attr_t if exists, otherwise an NULL value
+ *)
+function myhtml_node_attribute_last (node : pmyhtml_tree_node_t) :
+  pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get text of a node. Only for a MyHTML_TAG__TEXT or MyHTML_TAG__COMMENT tags
+ *
+ * @param[in] pmyhtml_tree_node_t
+ * @param[out] optional, text length
+ *
+ * @return const char* if exists, otherwise an NULL value
+ *)
+function myhtml_node_text (node : pmyhtml_tree_node_t; length : PQWord) : PChar;
+  cdecl; external MyHTMLLib;
+
+
 
 implementation
 
