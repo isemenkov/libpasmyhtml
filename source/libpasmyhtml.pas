@@ -2903,8 +2903,254 @@ function myhtml_tokenizer_state_bogus_doctype (tree : pmyhtml_tree_t;
   token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
   html_size : QWord) : QWord; cdecl; external MyHTMLLib;
 
+(*myhtml/tokenizer_end.h*******************************************************)
 
+function myhtml_tokenizer_end_state_data (tree : pmyhtml_tree_t; token_node :
+  pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
+  QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_tag_open (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_tag_name (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_end_tag_open (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_self_closing_start_tag (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_markup_declaration_open (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_before_attribute_name (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_attribute_name (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_after_attribute_name (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_before_attribute_value (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_attribute_value_double_quoted (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_attribute_value_single_quoted (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_attribute_value_unquoted (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_after_attribute_value_quoted (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_comment_start (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_comment_start_dash (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_comment (tree : pmyhtml_tree_t; token_node :
+  pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
+  QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_comment_end (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_comment_end_dash (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_comment_end_bang (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_bogus_comment (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_cdata_section (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_rcdata (tree : pmyhtml_tree_t; token_node :
+  pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
+  QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_rcdata_less_than_sign (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_rcdata_end_tag_open (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_rcdata_end_tag_name (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_rawtext (tree : pmyhtml_tree_t; token_node :
+  pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
+  QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_rawtext_less_than_sign (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_rawtext_end_tag_open (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_rawtext_end_tag_name (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_plaintext (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_doctype (tree : pmyhtml_tree_t; token_node :
+  pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
+  QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_before_doctype_name (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_doctype_name (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_after_doctype_name (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_custom_after_doctype_name_a_z (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_before_doctype_public_identifier (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_doctype_public_identifier_double_quoted
+  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_doctype_public_identifier_single_quoted
+  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_after_doctype_public_identifier (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_doctype_system_identifier_double_quoted
+  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_doctype_system_identifier_single_quoted
+  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_after_doctype_system_identifier (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_bogus_doctype (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data_less_than_sign (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data_end_tag_open (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data_end_tag_name (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data_escape_start (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data_escape_start_dash (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data_escaped (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data_escaped_dash (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data_escaped_dash_dash (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data_escaped_less_than_sign (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data_escaped_end_tag_open (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data_escaped_end_tag_name (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data_double_escape_start (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data_double_escaped (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data_double_escaped_dash (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data_double_escaped_dash_dash (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data_double_escaped_less_than_sign
+  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_script_data_double_escape_end (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_end_state_parse_error_stop (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
 
+(*myhtml/tokenizer_script.h****************************************************)
+
+function myhtml_tokenizer_state_script_data (tree : pmyhtml_tree_t; token_node :
+  pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
+  QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_state_script_data_less_than_sign (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_state_script_data_end_tag_open (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_state_script_data_end_tag_name (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_state_script_data_escape_start (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_state_script_data_escape_start_dash (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_state_script_data_escaped (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_state_script_data_escaped_dash (tree : pmyhtml_tree_t;
+  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
+  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_state_script_data_escaped_dash_dash (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_state_script_data_escaped_less_than_sign (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_state_script_data_escaped_end_tag_open (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_state_script_data_escaped_end_tag_name (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_state_script_data_double_escape_start (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_state_script_data_double_escaped (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_state_script_data_double_escaped_dash (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_state_script_data_double_escaped_dash_dash (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_state_script_data_double_escaped_less_than_sign
+  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_state_script_data_double_escape_end (tree :
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
+  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
 
 implementation
 
