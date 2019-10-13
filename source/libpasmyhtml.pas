@@ -4028,6 +4028,999 @@ function myhtml_node_attribute_last (node : pmyhtml_tree_node_t) :
 function myhtml_node_text (node : pmyhtml_tree_node_t; length : PQWord) : PChar;
   cdecl; external MyHTMLLib;
 
+(**
+ * Get mycore_string_t object by Tree node
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return pmycore_string_t if exists, otherwise an NULL value
+ *)
+function myhtml_node_string (node : pmyhtml_tree_node_t) : pmycore_string_t;
+  cdecl; external MyHTMLLib;
+
+(**
+ * Get raw position for Tree Node in Incoming Buffer
+ *
+ * @example <[BEGIN]div[LENGTH] attr=lalala>
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return myhtml_tree_node_t
+ *)
+function myhtml_node_raw_position (node : pmyhtml_tree_node_t) :
+  myhtml_position_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get element position for Tree Node in Incoming Buffer
+ *
+ * @example [BEGIN]<div attr=lalala>[LENGTH]
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return myhtml_tree_node_t
+ *)
+function myhtml_node_element_position (node : pmyhtml_tree_node_t) :
+  myhtml_position_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get data value from tree node
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return Pointer
+ *)
+function myhtml_node_get_data (node : pmyhtml_tree_node_t) : Pointer; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Set data value to tree node
+ *
+ * @param[in] pmyhtml_tree_node_t
+ * @param[in] Pointer
+ *)
+procedure myhtml_node_set_data (node : pmyhtml_tree_node_t; data : Pointer);
+  cdecl; external MyHTMLLib;
+
+(**
+ * Get current tree (pmyhtml_tree_t) from node
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return pmyhtml_tree_t
+ *)
+function myhtml_node_tree (node : pmyhtml_tree_node_t) : pmyhtml_tree_t; cdecl;
+  external MyHTMLLib;
+
+(******************************************************************************)
+(*                                                                            *)
+(* MyHTML_ATTRIBUTE                                                           *)
+(*                                                                            *)
+(******************************************************************************)
+
+(**
+ * Get next sibling attribute of one node
+ *
+ * @param[in] pmyhtml_tree_attr_t
+ *
+ * @return pmyhtml_tree_attr_t if exists, otherwise an NULL value
+ *)
+function myhtml_attribute_next (attr : pmyhtml_tree_attr_t) :
+  pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get previous sibling attribute of one node
+ *
+ * @param[in] pmyhtml_tree_attr_t
+ *
+ * @return pmyhtml_tree_attr_t if exists, otherwise an NULL value
+ *)
+function myhtml_attribute_prev (attr : pmyhtml_tree_attr_t) :
+  pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get attribute namespace
+ *
+ * @param[in] pmyhtml_tree_attr_t
+ *
+ * @return enum myhtml_namespace
+ *)
+function myhtml_attribute_namespace (attr : pmyhtml_tree_attr_t) :
+  myhtml_namespace_t; cdecl; external MyHTMLLib;
+
+(**
+ * Set attribute namespace
+ *
+ * @param[in] pmyhtml_tree_attr_t
+ * @param[in] myhtml_namespace_t
+ *)
+procedure myhtml_attribute_namespace_set (attr : pmyhtml_tree_attr_t; ns :
+  myhtml_namespace_t); cdecl; external MyHTMLLib;
+
+(**
+ * Get attribute key
+ *
+ * @param[in] pmyhtml_tree_attr_t
+ * @param[out] optional, name length
+ *
+ * @return const char* if exists, otherwise an NULL value
+ *)
+function myhtml_attribute_key (attr : pmyhtml_tree_attr_t; length : PQWord) :
+  PChar; cdecl; external MyHTMLLib;
+
+(**
+ * Get attribute value
+ *
+ * @param[in] pmyhtml_tree_attr_t
+ * @param[out] optional, value length
+ *
+ * @return const char* if exists, otherwise an NULL value
+ *)
+function myhtml_attribute_value (attr : pmyhtml_tree_attr_t; length : PQWord) :
+  PChar; cdecl; external MyHTMLLib;
+
+(**
+ * Get attribute key string
+ *
+ * @param[in] pmyhtml_tree_attr_t
+ *
+ * @return pmycore_string_t if exists, otherwise an NULL value
+ *)
+function myhtml_attribute_key_string (attr : pmyhtml_tree_attr_t) :
+  pmycore_string_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get attribute value string
+ *
+ * @param[in] pmyhtml_tree_attr_t
+ *
+ * @return pmycore_string_t if exists, otherwise an NULL value
+ *)
+function myhtml_attribute_value_string (attr : pmyhtml_tree_attr_t) :
+  pmycore_string_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get attribute by key
+ *
+ * @param[in] pmyhtml_tree_node_t
+ * @param[in] attr key name
+ * @param[in] attr key name length
+ *
+ * @return pmyhtml_tree_attr_t if exists, otherwise a NULL value
+ *)
+function myhtml_attribute_by_key (node : pmyhtml_tree_node_t; const key : PChar;
+  key_len : QWord) : pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
+
+(**
+ * Added attribute to tree node
+ *
+ * @param[in] pmyhtml_tree_node_t
+ * @param[in] attr key name
+ * @param[in] attr key name length
+ * @param[in] attr value name
+ * @param[in] attr value name length
+ * @param[in] character encoding; Default: MyENCODING_UTF_8 or
+ *            MyENCODING_DEFAULT or 0
+ *
+ * @return created pmyhtml_tree_attr_t if successful, otherwise a NULL value
+ *)
+function myhtml_attribute_add (node : pmyhtml_tree_node_t; const key : PChar;
+  key_len : QWord; const value : PChar; value_len : QWord; encoding :
+  myencoding_t) : pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
+
+(**
+ * Remove attribute reference. Not release the resources
+ *
+ * @param[in] pmyhtml_tree_node_t
+ * @param[in] pmyhtml_tree_attr_t
+ *
+ * @return pmyhtml_tree_attr_t if successful, otherwise a NULL value
+ *)
+function myhtml_attribute_remove (node : pmyhtml_tree_node_t; attr :
+  pmyhtml_tree_attr_t) : pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
+
+(**
+ * Remove attribute by key reference. Not release the resources
+ *
+ * @param[in] pmyhtml_tree_node_t
+ * @param[in] attr key name
+ * @param[in] attr key name length
+ *
+ * @return pmyhtml_tree_attr_t if successful, otherwise a NULL value
+ *)
+function myhtml_attribute_remove_by_key (node : pmyhtml_tree_node_t; const key :
+  PChar; key_len : QWord) : pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
+
+(**
+ * Remove attribute and release allocated resources
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] pmyhtml_tree_node_t
+ * @param[in] pmyhtml_tree_attr_t
+ *
+ *)
+procedure myhtml_attribute_delete (tree : pmyhtml_tree_t; node :
+  pmyhtml_tree_node_t; attr : pmyhtml_tree_attr_t); cdecl; external MyHTMLLib;
+
+(**
+ * Release allocated resources
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] pmyhtml_tree_attr_t
+ *
+ * @return pmyhtml_tree_attr_t if successful, otherwise a NULL value
+ *)
+procedure myhtml_attribute_free (tree : pmyhtml_tree_t; attr :
+  pmyhtml_tree_attr_t); cdecl; external MyHTMLLib;
+
+(**
+ * Get raw position for Attribute Key in Incoming Buffer
+ *
+ * @param[in] pmyhtml_tree_attr_t
+ *
+ * @return myhtml_position_t
+ *)
+function myhtml_attribute_key_raw_position (attr : pmyhtml_tree_attr_t) :
+  myhtml_position_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get raw position for Attribute Value in Incoming Buffer
+ *
+ * @param[in] pmyhtml_tree_attr_t
+ *
+ * @return myhtml_position_t
+ *)
+function myhtml_attribute_value_raw_position (attr : pmyhtml_tree_attr_t) :
+  myhtml_position_t; cdecl; external MyHTMLLib;
+
+(******************************************************************************)
+(*                                                                            *)
+(* MyHTML_TOKEN_NODE                                                          *)
+(*                                                                            *)
+(******************************************************************************)
+
+(**
+ * Get token node tag id
+ *
+ * @param[in] pmyhtml_token_node_t
+ *
+ * @return myhtml_tag_id_t
+ *)
+function myhtml_token_node_tag_id (token_node : pmyhtml_token_node_t) :
+  myhtml_tag_id_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get raw position for Token Node in Incoming Buffer
+ *
+ * @example <[BEGIN]div[LENGTH] attr=lalala>
+ *
+ * @param[in] pmyhtml_token_node_t
+ *
+ * @return myhtml_position_t
+ *)
+function myhtml_token_node_raw_position (token_node : pmyhtml_token_node_t) :
+  myhtml_position_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get element position for Token Node in Incoming Buffer
+ *
+ * @example [BEGIN]<div attr=lalala>[LENGTH]
+ *
+ * @param[in] pmyhtml_token_node_t
+ *
+ * @return myhtml_position_t
+ *)
+function myhtml_token_node_element_position (token_node : pmyhtml_token_node_t)
+  : myhtml_position_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get first attribute of a token node
+ *
+ * @param[in] pmyhtml_token_node_t
+ *
+ * @return pmyhtml_tree_attr_t if exists, otherwise an NULL value
+ *)
+function myhtml_token_node_attribute_first (token_node : pmyhtml_token_node_t) :
+  pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get last attribute of a token node
+ *
+ * @param[in] pmyhtml_token_node_t
+ *
+ * @return pmyhtml_tree_attr_t if exists, otherwise an NULL value
+ *)
+function myhtml_token_node_attribute_last (token_node : pmyhtml_token_node_t) :
+  pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get text of a token node. Only for a MyHTML_TAG__TEXT or MyHTML_TAG__COMMENT
+ * tags
+ *
+ * @param[in] pmyhtml_token_node_t
+ * @param[out] optional, text length
+ *
+ * @return const char* if exists, otherwise an NULL value
+ *)
+function myhtml_token_node_text (token_node : pmyhtml_token_node_t; length :
+  PQWord) : PChar; cdecl; external MyHTMLLib;
+
+(**
+ * Get mycore_string_t object by token node
+ *
+ * @param[in] pmyhtml_token_node_t
+ *
+ * @return pmycore_string_t if exists, otherwise an NULL value
+ *)
+function myhtml_token_node_string (token_node : pmyhtml_token_node_t) :
+  pmycore_string_t; cdecl; external MyHTMLLib;
+
+(**
+ * Token node has closing flag?
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return true or false
+ *)
+function myhtml_token_node_is_close (token_node : pmyhtml_token_node_t) :
+  Boolean; cdecl; external MyHTMLLib;
+
+(**
+ * Token node has self-closing flag?
+ *
+ * @param[in] pmyhtml_tree_node_t
+ *
+ * @return true or false (1 or 0)
+ *)
+function myhtml_token_node_is_close_self (token_node : pmyhtml_token_node_t) :
+  Boolean; cdecl; external MyHTMLLib;
+
+(**
+ * Wait for process token all parsing stage. Need if you use thread mode
+ *
+ * @param[in] pmyhtml_token_t
+ * @param[in] pmyhtml_token_node_t
+ *)
+procedure myhtml_token_node_wait_for_done (token : pmyhtml_token_t; node :
+  pmyhtml_token_node_t); cdecl; external MyHTMLLib;
+
+(******************************************************************************)
+(*                                                                            *)
+(* MyHTML_TAG                                                                 *)
+(*                                                                            *)
+(******************************************************************************)
+
+(**
+ * Get tag name by tag id
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] tag id
+ * @param[out] optional, name length
+ *
+ * @return const char* if exists, otherwise a NULL value
+ *)
+function myhtml_tag_name_by_id (tree : pmyhtml_tree_t; tag_id : myhtml_tag_id_t;
+  length : PQWord) : PChar; cdecl; external MyHTMLLib;
+
+(**
+ * Get tag id by name
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] tag name
+ * @param[in] tag name length
+ *
+ * @return tag id
+ *)
+function myhtml_tag_id_by_name (tree : pmyhtml_tree_t; const tag_name : PChar;
+  length : QWord) : myhtml_tag_id_t; cdecl; external MyHTMLLib;
+
+(******************************************************************************)
+(*                                                                            *)
+(* MyHTML_COLLECTION                                                          *)
+(*                                                                            *)
+(******************************************************************************)
+
+(**
+ * Create collection
+ *
+ * @param[in] list size
+ * @param[out] optional, status of operation
+ *
+ * @return pmyhtml_collection_t if successful, otherwise an NULL value
+ *)
+function myhtml_collection_create (size : QWord; status : pmystatus_t) :
+  pmyhtml_collection_t; cdecl; external MyHTMLLib;
+
+(**
+ * Clears collection
+ *
+ * @param[in] pmyhtml_collection_t
+ *)
+procedure myhtml_collection_clean (collection : pmyhtml_collection_t); cdecl;
+  external MyHTMLLib;
+
+(**
+ * Destroy allocated resources
+ *
+ * @param[in] pmyhtml_collection_t
+ *
+ * @return NULL if successful, otherwise an pmyhtml_collection_t structure
+ *)
+function myhtml_collection_destroy (collection : pmyhtml_collection_t) :
+  pmyhtml_collection_t; cdecl; external MyHTMLLib;
+
+(**
+ * Check size by length and increase if necessary
+ *
+ * @param[in] pmyhtml_collection_t
+ * @param[in] need nodes
+ * @param[in] upto_length: count for up if nodes not exists
+ *            (current length + need + upto_length + 1)
+ *
+ * @return NULL if successful, otherwise an pmyhtml_collection_t structure
+ *)
+function myhtml_collection_check_size (collection : pmyhtml_collection_t; need :
+  QWord; upto_length : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+
+(******************************************************************************)
+(*                                                                            *)
+(* MyHTML_ENCODING                                                            *)
+(*                                                                            *)
+(******************************************************************************)
+
+(**
+ * Set character encoding for input stream
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] Input character encoding
+ *
+ *)
+procedure myhtml_encoding_set (tree : pmyhtml_tree_t; encoding : myencoding_t);
+  cdecl; external MyHTMLLib;
+
+(**
+ * Get character encoding for current stream
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return myencoding_t
+ *)
+function myhtml_encoding_get (tree : pmyhtml_tree_t) : myencoding_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Convert Unicode Codepoint to UTF-8
+ *
+ * @param[in] Codepoint
+ * @param[in] Data to set characters. Minimum data length is 1 bytes, maximum is
+ * 4 byte data length must be always available 4 bytes
+ *
+ * @return size character set
+ *)
+function myencoding_codepoint_to_ascii_utf8 (codepoint : QWord; data : PChar) :
+  QWord; cdecl; external MyHTMLLib;
+
+(**
+ * Convert Unicode Codepoint to UTF-16LE
+ *
+ * I advise not to use UTF-16! Use UTF-8 and be happy!
+ *
+ * @param[in] Codepoint
+ * @param[in] Data to set characters. Data length is 2 or 4 bytes data length
+ * must be always available 4 bytes
+ *
+ * @return size character set
+ *)
+function myencoding_codepoint_to_ascii_utf16 (codepoint : QWord; data : PChar) :
+  QWord; cdecl; external MyHTMLLib;
+
+(**
+ * Detect character encoding
+ *
+ * Now available for detect UTF-8, UTF-16LE, UTF-16BE
+ * and Russians: windows-1251,  koi8-r, iso-8859-5, x-mac-cyrillic, ibm866
+ * Other in progress
+ *
+ * @param[in]  text
+ * @param[in]  text length
+ * @param[out] detected encoding
+ *
+ * @return true if encoding found, otherwise false
+ *)
+function myencoding_detect (const text : PChar; length : QWord; encoding :
+  pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
+
+(**
+ * Detect Russian character encoding
+ *
+ * Now available for detect windows-1251,  koi8-r, iso-8859-5, x-mac-cyrillic,
+ * ibm866
+ *
+ * @param[in]  text
+ * @param[in]  text length
+ * @param[out] detected encoding
+ *
+ * @return true if encoding found, otherwise false
+ *)
+function myencoding_detect_russian (const text : PChar; length : QWord;
+  encoding : pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
+
+(**
+ * Detect Unicode character encoding
+ *
+ * Now available for detect UTF-8, UTF-16LE, UTF-16BE
+ *
+ * @param[in]  text
+ * @param[in]  text length
+ * @param[out] detected encoding
+ *
+ * @return true if encoding found, otherwise false
+ *)
+function myencoding_detect_unicode (const text : PChar; length : QWord;
+  encoding : pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
+
+(**
+ * Detect Unicode character encoding by BOM
+ *
+ * Now available for detect UTF-8, UTF-16LE, UTF-16BE
+ *
+ * @param[in]  text
+ * @param[in]  text length
+ * @param[out] detected encoding
+ *
+ * @return true if encoding found, otherwise false
+ *)
+function myencoding_detect_bom (const text : PChar; length : QWord;
+  encoding : pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
+
+(**
+ * Detect Unicode character encoding by BOM. Cut BOM if will be found
+ *
+ * Now available for detect UTF-8, UTF-16LE, UTF-16BE
+ *
+ * @param[in]  text
+ * @param[in]  text length
+ * @param[out] detected encoding
+ * @param[out] new text position
+ * @param[out] new size position
+ *
+ * @return true if encoding found, otherwise false
+ *)
+function myencoding_detect_and_cut_bom (const text : PChar; length : QWord;
+  encoding : pmyencoding_t; const new_text : PPChar; new_size : PQWord) :
+  Boolean; cdecl; external MyHTMLLib;
+
+(**
+ * Detect encoding by name
+ * Names like: windows-1258 return MyENCODING_WINDOWS_1258
+ *             cp1251 or windows-1251 return MyENCODING_WINDOWS_1251
+ *
+ * See https://encoding.spec.whatwg.org/#names-and-labels
+ *
+ * @param[in]  name
+ * @param[in]  name length
+ * @param[out] detected encoding
+ *
+ * @return true if encoding found, otherwise false
+ *)
+function myencoding_by_name (const name : PChar; length : QWord; encoding :
+  pmyencoding_t) : Boolean;
+
+(**
+ * Get Encoding name by myencoding_t (by id)
+ *
+ * @param[in]  myencoding_t, encoding id
+ * @param[out] return name length
+ *
+ * @return encoding name, otherwise NULL value
+ *)
+function myencoding_name_by_id (encoding : myencoding_t; length : PQWord) :
+  PChar; cdecl; external MyHTMLLib;
+
+(**
+ * Detect encoding in meta tag (<meta ...>) before start parsing
+ *
+ * See https://html.spec.whatwg.org/multipage/syntax.html#prescan-a-byte-stream-
+ *             to-determine-its-encoding
+ *
+ * @param[in]  html data bytes
+ * @param[in]  html data length
+ *
+ * @return detected encoding if encoding found, otherwise
+ * MyENCODING_NOT_DETERMINED
+ *)
+function myencoding_prescan_stream_to_determine_encoding (const data : PChar;
+  data_size : QWord) : myencoding_t; cdecl; external MyHTMLLib;
+
+(**
+ * Extracting character encoding from string. Find "charset=" and see encoding.
+ * For example: "text/html; charset=windows-1251".
+ * Return MyENCODING_WINDOWS_1251
+ *
+ *
+ * See https://html.spec.whatwg.org/multipage/infrastructure.html#algorithm-for-
+ *             extracting-a-character-encoding-from-a-meta-element
+ *
+ * @param[in]  data
+ * @param[in]  data length
+ * @param[out] return encoding
+ *
+ * @return true if encoding found
+ *)
+function myencoding_extracting_character_encoding_from_charset (const data :
+  PChar; data_size : QWord; encoding : pmyencoding_t) : Boolean; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Detect encoding in meta tag (<meta ...>) before start parsing and return
+ * found raw data
+ *
+ * See https://html.spec.whatwg.org/multipage/syntax.html#prescan-a-byte-stream-
+ *             to-determine-its-encoding
+ *
+ * @param[in]  html data bytes
+ * @param[in]  html data length
+ * @param[out] return raw char data point for find encoding
+ * @param[out] return raw char length
+ *
+ * @return detected encoding if encoding found, otherwise
+ * MyENCODING_NOT_DETERMINED
+ *)
+function myencoding_prescan_stream_to_determine_encoding_with_found
+  (const data : PChar; data_size : QWord; const found : PPChar; found_length :
+  PQWord) : myencoding_t; cdecl; external MyHTMLLib;
+
+(**
+ * Extracting character encoding from string. Find "charset=" and see encoding.
+ * Return found raw data.
+ * For example: "text/html; charset=windows-1251". Return
+ * MyENCODING_WINDOWS_1251
+ *
+ *
+ * See https://html.spec.whatwg.org/multipage/infrastructure.html#algorithm-for-
+ *             extracting-a-character-encoding-from-a-meta-element
+ *
+ * @param[in]  data
+ * @param[in]  data length
+ * @param[out] return encoding
+ * @param[out] return raw char data point for find encoding
+ * @param[out] return raw char length
+ *
+ * @return true if encoding found
+ *)
+function myencoding_extracting_character_encoding_from_character_with_found
+  (const data : PChar; data_size : QWord; encoding : pmyencoding_t;
+  const found : PPChar; found_length : PQWord) : Boolean; cdecl;
+  external MyHTMLLib;
+
+(******************************************************************************)
+(*                                                                            *)
+(* MyHTML_STRING                                                              *)
+(*                                                                            *)
+(******************************************************************************)
+
+(**
+ * Init mycore_string_t structure
+ *
+ * @param[in] pmchar_async_t. It can be obtained from myhtml_tree_t object
+ *  (see myhtml_tree_get_mchar function) or create manualy
+ *  For each Tree creates its object, I recommend to use it
+ * (myhtml_tree_get_mchar).
+ *
+ * @param[in] node_id. For all threads (and Main thread) identifier that is
+ * unique.
+ * if created mchar_async_t object manually you know it, if not then take from
+ * the Tree (see myhtml_tree_get_mchar_node_id)
+ *
+ * @param[in] pmycore_string_t. It can be obtained from myhtml_tree_node_t
+ * object (see myhtml_node_string function) or create manualy
+ *
+ * @param[in] data size. Set the size you want for char*
+ *
+ * @return char* of the size if successful, otherwise a NULL value
+ *)
+function mycore_string_init (mchar : pmchar_async_t; node_id : QWord; str :
+  pmycore_string_t; size : QWord) : PChar; cdecl; external MyHTMLLib;
+
+(**
+ * Increase the current size for mycore_string_t object
+ *
+ * @param[in] pmycore_string_t. See description for mycore_string_init function
+ * @param[in] data size. Set the new size you want for mycore_string_t object
+ *
+ * @return char* of the size if successful, otherwise a NULL value
+ *)
+function mycore_string_realloc (str : pmycore_string_t; new_size : QWord) :
+  PChar; cdecl; external MyHTMLLib;
+
+(**
+ * Clean mycore_string_t object. In reality, data length set to 0
+ * Equivalently: mycore_string_length_set(str, 0);
+ *
+ * @param[in] pmycore_string_t. See description for mycore_string_init function
+ *)
+procedure mycore_string_clean (str : pmycore_string_t); cdecl;
+  external MyHTMLLib;
+
+(**
+ * Clean mycore_string_t object. Equivalently: memset(str, 0,
+ * sizeof(mycore_string_t))
+ *
+ * @param[in] pmycore_string_t. See description for mycore_string_init function
+ *)
+procedure mycore_string_clean_all (str : pmycore_string_t); cdecl;
+  external MyHTMLLib;
+
+(**
+ * Release all resources for mycore_string_t object
+ *
+ * @param[in] pmycore_string_t. See description for mycore_string_init function
+ * @param[in] call free function for current object or not
+ *
+ * @return NULL if destroy_obj set true, otherwise a current mycore_string_t
+ * object
+ *)
+function mycore_string_destroy (str : pmycore_string_t; destroy_obj : Boolean) :
+  pmycore_string_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get data (char * ) from a mycore_string_t object
+ *
+ * @param[in] pmycore_string_t. See description for mycore_string_init function
+ *
+ * @return char* if exists, otherwise a NULL value
+ *)
+function mycore_string_data (str : pmycore_string_t) : PChar; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Get data length from a mycore_string_t object
+ *
+ * @param[in] pmycore_string_t. See description for mycore_string_init function
+ *
+ * @return data length
+ *)
+function mycore_string_length (str : pmycore_string_t) : QWord; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Get data size from a mycore_string_t object
+ *
+ * @param[in] pmycore_string_t. See description for mycore_string_init function
+ *
+ * @return data size
+ *)
+function mycore_string_size (str : pmycore_string_t) : QWord; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Set data (char * ) for a mycore_string_t object.
+ *
+ * Attention!!! Attention!!! Attention!!!
+ *
+ * You can assign only that it has been allocated from functions:
+ * mycore_string_data_alloc
+ * mycore_string_data_realloc
+ * or obtained manually created from mchar_async_t object
+ *
+ * Attention!!! Do not try set chat* from allocated by malloc or realloc!!!
+ *
+ * @param[in] pmycore_string_t. See description for mycore_string_init function
+ * @param[in] you data to want assign
+ *
+ * @return assigned data if successful, otherwise a NULL value
+ *)
+function mycore_string_data_set (str : pmycore_string_t; data : PChar) : PChar;
+  cdecl; external MyHTMLLib;
+
+(**
+ * Set data size for a mycore_string_t object.
+ *
+ * @param[in] pmycore_string_t. See description for mycore_string_init function
+ * @param[in] you size to want assign
+ *
+ * @return assigned size
+ *)
+function mycore_string_size_set (str : pmycore_string_t; size : QWord) : QWord;
+  cdecl; external MyHTMLLib;
+
+(**
+ * Set data length for a mycore_string_t object.
+ *
+ * @param[in] pmycore_string_t. See description for mycore_string_init function
+ * @param[in] you length to want assign
+ *
+ * @return assigned length
+ *)
+function mycore_string_length_set (str : pmycore_string_t; length : QWord) :
+  QWord; cdecl; external MyHTMLLib;
+
+(**
+ * Allocate data (char* ) from a mchar_async_t object
+ *
+ * @param[in] pmchar_async_t. See description for mycore_string_init function
+ * @param[in] node id. See description for mycore_string_init function
+ * @param[in] you size to want assign
+ *
+ * @return data if successful, otherwise a NULL value
+ *)
+function mycore_string_data_alloc (mchar : pmchar_async_t; node_id : QWord;
+  size : QWord) : PChar; cdecl; external MyHTMLLib;
+
+(**
+ * Allocate data (char* ) from a mchar_async_t object
+ *
+ * @param[in] pmchar_async_t. See description for mycore_string_init function
+ * @param[in] node id. See description for mycore_string_init function
+ * @param[in] old data
+ * @param[in] how much data is copied from the old data to new data
+ * @param[in] new size
+ *
+ * @return data if successful, otherwise a NULL value
+ *)
+function mycore_string_data_realloc (mchar : pmchar_async_t; node_id : QWord;
+  data : PChar; len_to_copy : QWord; size : QWord) : PChar; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Release allocated data
+ *
+ * @param[in] pmchar_async_t. See description for mycore_string_init function
+ * @param[in] node id. See description for mycore_string_init function
+ * @param[in] data to release
+ *
+ * @return data if successful, otherwise a NULL value
+ *)
+procedure mycore_string_data_free (mchar : pmchar_async_t; node_id : QWord;
+  data : PChar); cdecl; external MyHTMLLib;
+
+(******************************************************************************)
+(*                                                                            *)
+(* MyHTML_STRING                                                              *)
+(*                                                                            *)
+(* All work with mycore_string_raw_t object occurs through                    *)
+(* mycore_malloc (standart malloc), mycore_realloc (standart realloc),        *)
+(* mycore_free (standart free).                                               *)
+(*                                                                            *)
+(* You are free to change them on without fear that something will happen     *)
+(* You can call free for str_raw.data, or change str_raw.length = 0           *)
+(******************************************************************************)
+
+(**
+ * Clean mycore_string_raw_t object. In reality, data length set to 0
+ *
+ * @param[in] pmycore_string_raw_t
+ *)
+procedure mycore_string_raw_clean (str_raw : pmycore_string_raw_t); cdecl;
+  external MyHTMLLib;
+
+(**
+ * Full clean mycore_string_raw_t object.
+ * Equivalently: memset(str_raw, 0, sizeof(mycore_string_raw_t))
+ *
+ * @param[in] pmycore_string_raw_t
+ *)
+procedure mycore_string_raw_clean_all (str_raw : pmycore_string_raw_t); cdecl;
+  external MyHTMLLib;
+
+(**
+ * Free resources for mycore_string_raw_t object
+ *
+ * @param[in] pmycore_string_raw_t
+ * @param[in] call free function for current object or not
+ *
+ * @return NULL if destroy_obj set true, otherwise a current mycore_string_raw_t
+ * object
+ *)
+function mycore_string_raw_destroy (str_raw : pmycore_string_raw_t;
+  destroy_obj : Boolean) : pmycore_string_raw_t; cdecl; external MyHTMLLib;
+
+(******************************************************************************)
+(*                                                                            *)
+(* MyHTML_INCOMING                                                            *)
+(*                                                                            *)
+(******************************************************************************)
+
+(**
+ * Get Incoming Buffer by position
+ *
+ * @param[in] current pmycore_incoming_buffer_t
+ * @param[in] begin position
+ *
+ * @return mycore_incoming_buffer_t if successful, otherwise a NULL value
+ *)
+function mycore_incoming_buffer_find_by_position (inc_buf :
+  pmycore_incoming_buffer_t; start : QWord) : pmycore_incoming_buffer_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * Get data of Incoming Buffer
+ *
+ * @param[in] pmycore_incoming_buffer_t
+ *
+ * @return const char* if successful, otherwise a NULL value
+ *)
+function mycore_incoming_buffer_data (inc_buf : pmycore_incoming_buffer_t) :
+  PChar; cdecl; external MyHTMLLib;
+
+(**
+ * Get data length of Incoming Buffer
+ *
+ * @param[in] pmycore_incoming_buffer_t
+ *
+ * @return size_t
+ *)
+function mycore_incoming_buffer_length (inc_buf : pmycore_incoming_buffer_t) :
+  QWord; cdecl; external MyHTMLLib;
+
+(**
+ * Get data size of Incoming Buffer
+ *
+ * @param[in] pmycore_incoming_buffer_t
+ *
+ * @return size_t
+ *)
+function mycore_incoming_buffer_size (inc_buf : pmycore_incoming_buffer_t) :
+  QWord; cdecl; external MyHTMLLib;
+
+(**
+ * Get data offset of Incoming Buffer. Global position of begin Incoming Buffer.
+ * See description for MyHTML_INCOMING title
+ *
+ * @param[in] pmycore_incoming_buffer_t
+ *
+ * @return size_t
+ *)
+function mycore_incoming_buffer_offset (inc_buf : pmycore_incoming_buffer_t) :
+  QWord; cdecl; external MyHTMLLib;
+
+(**
+ * Get Relative Position for Incoming Buffer.
+ * Incoming Buffer should be prepared by mycore_incoming_buffer_find_by_position
+ *
+ * @param[in] pmycore_incoming_buffer_t
+ * @param[in] global begin
+ *
+ * @return size_t
+ *)
+function mycore_incoming_buffer_relative_begin (inc_buf :
+  pmycore_incoming_buffer_t; start : QWord) : QWord; cdecl; external MyHTMLLib;
+
+(**
+ * This function returns number of available data by Incoming Buffer
+ * Incoming buffer may be incomplete. See mycore_incoming_buffer_next
+ *
+ * @param[in] pmycore_incoming_buffer_t
+ * @param[in] global begin
+ *
+ * @return size_t
+ *)
+function mycore_incoming_buffer_available_length (inc_buf :
+  pmycore_incoming_buffer_t; relative_begin : QWord; length : QWord) : QWord;
+  cdecl; external MyHTMLLib;
+
+(**
+ * Get next buffer
+ *
+ * @param[in] pmycore_incoming_buffer_t
+ *
+ * @return pmycore_incoming_buffer_t
+ *)
+function mycore_incoming_buffer_next (inc_buf : pmycore_incoming_buffer_t) :
+  pmycore_incoming_buffer_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get prev buffer
+ *
+ * @param[in] pmycore_incoming_buffer_t
+ *
+ * @return pmycore_incoming_buffer_t
+ *)
+function mycore_incoming_buffer_prev (inc_buf : pmycore_incoming_buffer_t) :
+  pmycore_incoming_buffer_t; cdecl; external MyHTMLLib;
+
+
+
+
 
 
 implementation
