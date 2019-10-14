@@ -5018,10 +5018,265 @@ function mycore_incoming_buffer_next (inc_buf : pmycore_incoming_buffer_t) :
 function mycore_incoming_buffer_prev (inc_buf : pmycore_incoming_buffer_t) :
   pmycore_incoming_buffer_t; cdecl; external MyHTMLLib;
 
+(******************************************************************************)
+(*                                                                            *)
+(* MyHTML_NAMESPACE                                                           *)
+(*                                                                            *)
+(******************************************************************************)
 
+(**
+ * Get namespace text by namespace type (id)
+ *
+ * @param[in] myhtml_namespace_t
+ * @param[out] optional, length of returned text
+ *
+ * @return text if successful, otherwise a NULL value
+ *)
+function myhtml_namespace_name_by_id (ns : myhtml_namespace_t; length :
+  PQWord) : PChar; cdecl; external MyHTMLLib;
 
+(**
+ * Get namespace type (id) by namespace text
+ *
+ * @param[in] const char*, namespace text
+ * @param[in] size of namespace text
+ * @param[out] detected namespace type (id)
+ *
+ * @return true if detect, otherwise false
+ *)
+function myhtml_namespace_id_by_name (const name : PChar; length : QWord; ns :
+  pmyhtml_namespace_t) : Boolean; cdecl; external MyHTMLLib;
 
+(******************************************************************************)
+(*                                                                            *)
+(* MyHTML_CALLBACK                                                            *)
+(*                                                                            *)
+(******************************************************************************)
 
+(**
+ * Get current callback for tokens before processing
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return myhtml_callback_token_f
+ *)
+function myhtml_callback_before_token_done (tree : pmyhtml_tree_t) :
+  myhtml_callback_token_f; cdecl; external MyHTMLLib;
+
+(**
+ * Get current callback for tokens after processing
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return myhtml_callback_token_f
+ *)
+function myhtml_callback_after_token_done (tree : pmyhtml_tree_t) :
+  myhtml_callback_token_f; cdecl; external MyHTMLLib;
+
+(**
+ * Set callback for tokens before processing
+ *
+ * Warning!
+ * If you using thread mode parsing then this callback calls from thread (not
+ * Main thread)
+ * If you build MyHTML without thread or using MyHTML_OPTIONS_PARSE_MODE_SINGLE
+ * for create myhtml_t object then this callback calls from Main thread
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] myhtml_callback_token_f callback function
+ *)
+procedure myhtml_callback_before_token_done_set (tree : pmyhtml_tree_t; func :
+  myhtml_callback_token_f; ctx : Pointer); cdecl; external MyHTMLLib;
+
+(**
+ * Set callback for tokens after processing
+ *
+ * Warning!
+ * If you using thread mode parsing then this callback calls from thread (not
+ * Main thread)
+ * If you build MyHTML without thread or using MyHTML_OPTIONS_PARSE_MODE_SINGLE
+ * for create myhtml_t object then this callback calls from Main thread
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] myhtml_callback_token_f callback function
+ *)
+procedure myhtml_callback_after_token_done_set (tree : pmyhtml_tree_t; func :
+  myhtml_callback_token_f; ctx : Pointer); cdecl; external MyHTMLLib;
+
+(**
+ * Get current callback for tree node after inserted
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return myhtml_callback_tree_node_f
+ *)
+function myhtml_callback_tree_node_insert (tree : pmyhtml_tree_t) :
+  myhtml_callback_tree_node_t; cdecl; external MyHTMLLib;
+
+(**
+ * Get current callback for tree node after removed
+ *
+ * @param[in] pmyhtml_tree_t
+ *
+ * @return myhtml_callback_tree_node_f
+ *)
+function myhtml_callback_tree_node_remove (tree : pmyhtml_tree_t) :
+  myhtml_callback_tree_node_t; cdecl; external MyHTMLLib;
+
+(**
+ * Set callback for tree node after inserted
+ *
+ * Warning!
+ * If you using thread mode parsing then this callback calls from thread (not
+ * Main thread)
+ * If you build MyHTML without thread or using MyHTML_OPTIONS_PARSE_MODE_SINGLE
+ * for create myhtml_t object then this callback calls from Main thread
+ *
+ * Warning!!!
+ * If you well access to attributes or text for node and you using thread mode
+ * then you need wait for token processing done.
+ * See myhtml_token_node_wait_for_done
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] myhtml_callback_tree_node_f callback function
+ *)
+procedure myhtml_callback_tree_node_insert_set (tree : pmyhtml_tree_t; func :
+  myhtml_callback_tree_node_f; ctx : Pointer); cdecl; external MyHTMLLib;
+
+(**
+ * Set callback for tree node after removed
+ *
+ * Warning!
+ * If you using thread mode parsing then this callback calls from thread (not
+ * Main thread)
+ * If you build MyHTML without thread or using MyHTML_OPTIONS_PARSE_MODE_SINGLE
+ * for create myhtml_t object then this callback calls from Main thread
+ *
+ * Warning!!!
+ * If you well access to attributes or text for node and you using thread mode
+ * then you need wait for token processing done.
+ * See myhtml_token_node_wait_for_done
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] myhtml_callback_tree_node_f callback function
+ *)
+procedure myhtml_callback_tree_node_remove_set (tree : pmyhtml_tree_t; func :
+  myhtml_callback_tree_node_f; ctx : Pointer); cdecl; external MyHTMLLib;
+
+(******************************************************************************)
+(*                                                                            *)
+(* MyHTML_UTILS                                                               *)
+(*                                                                            *)
+(******************************************************************************)
+
+(**
+ * Compare two strings ignoring case
+ *
+ * @param[in] pmyhtml_collection_t
+ * @param[in] count of add nodes
+ *
+ * @return 0 if match, otherwise index of break position
+ *)
+function mycore_strcasecmp (const str1 : PChar; const str2 : PChar) : QWord;
+  cdecl; external MyHTMLLib;
+
+(**
+ * Compare two strings ignoring case
+ *
+ * @param[in] pmyhtml_collection_t
+ * @param[in] count of add nodes
+ *
+ * @return 0 if match, otherwise index of break position
+ *)
+function mycore_strncasecmp (const str1 : PChar; const str2 : PChar; size :
+  QWord) : QWord; cdecl; external MyHTMLLib;
+
+(******************************************************************************)
+(*                                                                            *)
+(* MyHTML_SERIALIZATION                                                       *)
+(*                                                                            *)
+(******************************************************************************)
+
+(**
+ * Tree fragment serialization
+ * The same as myhtml_serialization_tree_buffer function
+ *)
+function myhtml_serialization (scope_node : pmyhtml_tree_node_t; str :
+  pmycore_string_raw_t) : mystatus_t; cdecl; external MyHTMLLib;
+
+(**
+ * Only one tree node serialization
+ * The same as myhtml_serialization_node_buffer function
+ *)
+function myhtml_serialization_node (node : pmyhtml_tree_node_t; str :
+  pmycore_string_raw_t) : mystatus_t; cdecl; external MyHTMLLib;
+
+(**
+ * Serialize tree to an output string
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] scope node
+ * @param[in] pmycore_string_raw_t
+ *
+ * @return true if successful, otherwise false
+ *)
+function myhtml_serialization_tree_buffer (scope_node : pmyhtml_tree_node_t;
+  str : pmycore_string_raw_t) : mystatus_t; cdecl; external MyHTMLLib;
+
+(**
+ * Serialize node to an output string
+ *
+ * @param[in] pmyhtml_tree_t
+ * @param[in] node
+ * @param[in] pmycore_string_raw_t
+ *
+ * @return true if successful, otherwise false
+ *)
+function myhtml_serialization_node_buffer (node : pmyhtml_tree_node_t; str :
+  pmycore_string_raw_t) : mystatus_t; cdecl; external MyHTMLLib;
+
+(**
+ * The serialize function for an entire tree
+ *
+ * @param[in] tree        the tree to be serialized
+ * @param[in] scope_node  the scope_node
+ * @param[in] callback    function that will be called for all strings that have
+ *                        to be printed
+ * @param[in] ptr         user-supplied pointer
+ *
+ * @return true if successful, otherwise false
+ *)
+function myhtml_serialization_tree_callback (scope_node : pmyhtml_tree_node_t;
+  callback : mycore_callback_serialize_f; ptr : Pointer) : mystatus_t; cdecl;
+  external MyHTMLLib;
+
+(**
+ * The serialize function for a single node
+ *
+ * @param[in] tree        the tree to be serialized
+ * @param[in] node        the node that is going to be serialized
+ * @param[in] callback    function that will be called for all strings that have
+ *                        to be printed
+ * @param[in] ptr         user-supplied pointer
+ *
+ * @return true if successful, otherwise false
+ *)
+function myhtml_serialization_node_callback (node : pmyhtml_tree_node_t;
+  callback : mycore_callback_serialize_f; ptr : Pointer) : mystatus_t; cdecl;
+  external MyHTMLLib;
+
+(******************************************************************************)
+(*                                                                            *)
+(* MyHTML_VERSION                                                             *)
+(*                                                                            *)
+(******************************************************************************)
+
+(**
+ * Get current version
+ *
+ * @return myhtml_version_t
+ *)
+function myhtml_version : myhtml_version_t; cdecl; external MyHTMLLib;
 
 implementation
 
