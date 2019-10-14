@@ -47,34 +47,12 @@ uses
 type
   PPChar = ^PChar;
 
-(*mycore/myosi.h***************************************************************)
-
-type
   pmystatus_t = ^mystatus_t;
   mystatus_t = type Cardinal;
 
   pmythread_id_t = ^mythread_id_t;
   mythread_id_t = type QWord;
 
-(*mycore/utils.h***************************************************************)
-
-function mycore_power (t : QWord; k : QWord) : QWord; cdecl; external MyHTMLLib;
-function mycore_strncasecmp (const str1 : PChar; const str2 : PChar; size :
-  QWord) : QWord; cdecl; external MyHTMLLib;
-function mycore_strcasecmp (const str1 : PChar; const str2 : PChar) : QWord;
-  cdecl; external MyHTMLLib;
-function mycore_strncmp (const str1 : PChar; const str2 : PChar; size :
-  QWord) : QWord; cdecl; external MyHTMLLib;
-function mycore_strcmp (const str1 : PChar; const str2 : PChar) : QWord; cdecl;
-  external MyHTMLLib;
-function mycore_strcmp_ws (const str1 : PChar; const str2 : PChar) : QWord;
-  cdecl; external MyHTMLLib;
-function mycore_ustrcasecmp_without_checks_by_secondary (const ustr1 : PByte;
-  const ustr2 : PByte) : Boolean; cdecl; external MyHTMLLib;
-
-(*mycore/utils/mcobject.h******************************************************)
-
-type
   pmcobject_chunk_t = ^mcobject_chunk_t;
   mcobject_chunk_t = record
     start : PByte;
@@ -96,22 +74,6 @@ type
     chunk_size : QWord;
   end;
 
-function mcobject_create : pmcobject_t; cdecl; external MyHTMLLib;
-function mcobject_init (mcobject : pmcobject_t; chunk_size : QWord;
-  struct_size : QWord ) : mystatus_t; cdecl; external MyHTMLLib;
-procedure mcobject_clean (mcobject : pmcobject_t); cdecl; external MyHTMLLib;
-function mcobject_destroy (mcobject : pmcobject_t; destroy_self : Boolean) :
-  pmcobject_t; cdecl; external MyHTMLLib;
-procedure mcobject_chunk_malloc (mcobject : pmcobject_t; status : pmystatus_t);
-  cdecl; external MyHTMLLib;
-function mcobject_malloc (mcobject : pmcobject_t; status : pmystatus_t) :
-  Pointer; cdecl; external MyHTMLLib;
-function mcobject_free (mcobject : pmcobject_t; entry : Pointer) : mystatus_t;
-  cdecl; external MyHTMLLib;
-
-(*mycore/utils/avl_tree.h******************************************************)
-
-type
   ppmycore_utils_avl_tree_node_t = ^pmycore_utils_avl_tree_node_t;
   pmycore_utils_avl_tree_node_t = ^mycore_utils_avl_tree_node_t;
   mycore_utils_avl_tree_node_t = record
@@ -133,34 +95,6 @@ type
   mycore_utils_avl_tree_node_callback_f = procedure (avl_tree_node :
     pmycore_utils_avl_tree_node_t; ctx : Pointer) of object;
 
-function mycore_utils_avl_tree_create : pmycore_utils_avl_tree_t; cdecl;
-  external MyHTMLLib;
-function mycore_utils_avl_tree_init (avl_tree : pmycore_utils_avl_tree_t)
-  : mystatus_t; cdecl; external MyHTMLLib;
-procedure mycore_utils_avl_tree_clean (avl_tree : pmycore_utils_avl_tree_t);
-  cdecl; external MyHTMLLib;
-function mycore_utils_avl_tree_destroy (avl_tree : pmycore_utils_avl_tree_t;
-  self_destroy : Boolean) : pmycore_utils_avl_tree_t; cdecl; external MyHTMLLib;
-function mycore_utils_avl_tree_node_create_root (avl_tree :
-  pmycore_utils_avl_tree_t; node_type : QWord; value : Pointer)
-  : pmycore_utils_avl_tree_node_t; cdecl; external MyHTMLLib;
-procedure mycore_utils_avl_tree_add (avl_tree : pmycore_utils_avl_tree_t;
-  root : ppmycore_utils_avl_tree_node_t; node_type : QWord; value : Pointer);
-  cdecl; external MyHTMLLib;
-function mycore_utils_avl_tree_delete (avl_tree : pmycore_utils_avl_tree_t;
-  root : ppmycore_utils_avl_tree_node_t; node_type : QWord) : Pointer; cdecl;
-  external MyHTMLLib;
-function mycore_utils_avl_tree_search_by_type (avl_tree :
-  pmycore_utils_avl_tree_t; node : pmycore_utils_avl_tree_node_t; node_type :
-  QWord) : pmycore_utils_avl_tree_node_t; cdecl; external MyHTMLLib;
-procedure mycore_utils_avl_tree_list_all_nodes (avl_tree :
-  pmycore_utils_avl_tree_t; root : pmycore_utils_avl_tree_node_t; callback :
-  mycore_utils_avl_tree_node_callback_f; ctx : Pointer); cdecl;
-  external MyHTMLLib;
-
-(*mycore/utils/mcsimple.h******************************************************)
-
-type
   pmcsimple_t = ^mcsimple_t;
   mcsimple_t = record
     struct_size : QWord;
@@ -172,22 +106,6 @@ type
     list_length : QWord;
   end;
 
-function mcsimple_create : pmcsimple_t; cdecl; external MyHTMLLib;
-procedure mcsimple_init (mcsimple : pmcsimple_t; pos_size : QWord;
-  list_size : QWord; struct_size : QWord); cdecl; external MyHTMLLib;
-procedure mcsimple_clean (mcsimple : pmcsimple_t); cdecl; external MyHTMLLib;
-function mcsimple_destroy (mcsimple : pmcsimple_t; destroy_self : Boolean)
-  : pmcsimple_t; cdecl; external MyHTMLLib;
-function mcsimple_init_list_entries (mcsimple : pmcsimple_t; pos : QWord)
-  : PByte; cdecl; external MyHTMLLib;
-function mcsimple_malloc (mcsimple : pmcsimple_t) : Pointer; cdecl;
-  external MyHTMLLib;
-function mcsimple_get_by_absolute_position (mcsimple : pmcsimple_t;
-  pos : QWord) : Pointer; cdecl; external MyHTMLLib;
-
-(*mycore/utils/mcsync.h********************************************************)
-
-type
   pmcsync_status_t = ^mcsync_status_t;
   mcsync_status_t = (
     MCSYNC_STATUS_OK                                                    = $0000,
@@ -201,43 +119,6 @@ type
     mutex : Pointer;
   end;
 
-function mcsync_create : pmcsync_t; cdecl; external MyHTMLLib;
-function mcsync_init (mcsync : pmcsync_t) : mcsync_status_t; cdecl;
-  external MyHTMLLib;
-procedure mcsync_clean (mcsync : pmcsync_t); cdecl; external MyHTMLLib;
-function mcsync_destroy (mcsync : pmcsync_t; destroy_self : Integer)
-  : pmcsync_t; cdecl; external MyHTMLLib;
-function mcsync_lock (mcsync : pmcsync_t) : mcsync_status_t; cdecl;
-  external MyHTMLLib;
-function mcsync_unlock (mcsync : pmcsync_t) : mcsync_status_t; cdecl;
-  external MyHTMLLib;
-
-{$IFNDEF MyCORE_BUILD_WITHOUT_THREADS}
-function mcsync_spin_lock (spinlock : Pointer) : mcsync_status_t; cdecl;
-  external MyHTMLLib;
-function mcsync_spin_unlock (spinlock : Pointer) : mcsync_status_t; cdecl;
-  external MyHTMLLib;
-function mcsync_mutex_lock (mutex : Pointer) : mcsync_status_t; cdecl;
-  external MyHTMLLib;
-function mcsync_mutex_try_lock (mutex : Pointer) : mcsync_status_t; cdecl;
-  external MyHTMLLib;
-function mcsync_mutex_unlock (mutex : Pointer) : mcsync_status_t; cdecl;
-  external MyHTMLLib;
-function mcsync_spin_create : Pointer; cdecl; external MyHTMLLib;
-function mcsync_spin_init (spiclock : Pointer) : mcsync_status_t; cdecl;
-  external MyHTMLLib;
-procedure mcsync_spin_clear (spinlock : Pointer); cdecl; external MyHTMLLib;
-procedure mcsync_spin_destroy (spinlock : Pointer); cdecl; external MyHTMLLib;
-function mcsync_mutex_create : Pointer; cdecl; external MyHTMLLib;
-function mcsync_mutex_init (mutex : Pointer) : mcsync_status_t; cdecl;
-  external MyHTMLLib;
-procedure mcsync_mutex_clear (mutex : Pointer); cdecl; external MyHTMLLib;
-procedure mcsync_mutex_destroy (mutex : Pointer); cdecl; external MyHTMLLib;
-{$ENDIF}{MyCORE_BUILD_WITHOUT_THREADS}
-
-(*mycore/utils/mcobject_async.h************************************************)
-
-type
   pmcobject_async_status_t = ^mcobject_async_status_t;
   mcobject_async_status_t = (
     MCOBJECT_ASYNC_STATUS_OK                                            = 0,
@@ -293,37 +174,6 @@ type
     nodes_cache_size : QWord;
   end;
 
-function mcobject_async_create : pmcobject_async_t; cdecl; external MyHTMLLib;
-function mcobject_async_init (mcobj_async : pmcobject_async_t; chunk_len :
-  QWord; obj_size_by_one_chunk : QWord; struct_size : QWord) :
-  pmcobject_async_status_t; cdecl; external MyHTMLLib;
-procedure mcobject_async_clean (mcobj_async : pmcobject_async_t); cdecl;
-  external MyHTMLLib;
-function mcobject_async_destroy (mcobj_async : pmcobject_async_t; destroy_self :
-  Integer) : pmcobject_async_t; cdecl; external MyHTMLLib;
-function mcobject_async_node_add (mcobj_async : pmcobject_async_t; status :
-  pmcobject_async_status_t) : QWord; cdecl; external MyHTMLLib;
-procedure mcobject_async_node_clean (mcobj_async : pmcobject_async_t; node_idx :
-  QWord); cdecl; external MyHTMLLib;
-procedure mcobject_async_node_all_clean (mcobj_async : pmcobject_async_t);
-  cdecl; external MyHTMLLib;
-procedure mcobject_async_node_delete (mcobj_async : pmcobject_async_t;
-  node_idx : QWord); cdecl; external MyHTMLLib;
-function mcobject_async_malloc (mcobj_async : pmcobject_async_t; node_idx :
-  QWord; status : pmcobject_async_status_t) : Pointer; cdecl;
-  external MyHTMLLib;
-function mcobject_async_free (mcobj_async : pmcobject_async_t; entry : Pointer)
-  : mcobject_async_status_t; cdecl; external MyHTMLLib;
-function mcobject_async_chunk_malloc (mcobj_async : pmcobject_async_t; length :
-  QWord; status : pmcobject_async_status_t) : pmcobject_async_chunk_t; cdecl;
-  external MyHTMLLib;
-function mcobject_async_chunk_malloc_without_lock (mcobj_async :
-  pmcobject_async_t; length : QWord; status : pmcobject_async_status_t) :
-  pmcobject_async_chunk_t; cdecl; external MyHTMLLib;
-
-(*mycore/utils/mchar_async.h***************************************************)
-
-type
   pmchar_async_cache_node_t = ^mchar_async_cache_node_t;
   mchar_async_cache_node_t = record
     value : Pointer;
@@ -386,51 +236,6 @@ type
     mcsync : pmcsync_t;
   end;
 
-function mchar_async_create : pmchar_async_t; cdecl; external MyHTMLLib;
-function mchar_async_init (mchar_async : pmchar_async_t; chunk_len : QWord;
-  char_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
-function mchar_async_clean (mchar_async : pmchar_async_t) : mystatus_t; cdecl;
-  external MyHTMLLib;
-function mchar_async_destroy (mchar_async : pmchar_async_t; destroy_self :
-  Integer) : pmchar_async_t; cdecl; external MyHTMLLib;
-function mchar_async_malloc (mchar_async : pmchar_async_t; node_idx : QWord;
-  size : QWord) : PChar; cdecl; external MyHTMLLib;
-function mchar_async_realloc (mchar_async : pmchar_async_t; node_idx : QWord;
-  data : PChar; data_len : QWord; new_size : QWord) : PChar; cdecl;
-  external MyHTMLLib;
-procedure mchar_async_free (mchar_async : pmchar_async_t; node_idx : QWord;
-  entry : PChar); cdecl; external MyHTMLLib;
-function mchar_async_node_add (mchar_async : pmchar_async_t; status :
-  pmystatus_t) : QWord; cdecl; external MyHTMLLib;
-procedure mchar_async_node_clean (mchar_async : pmchar_async_t; node_idx :
-  QWord); cdecl; external MyHTMLLib;
-procedure mchar_async_node_delete (mchar_async : pmchar_async_t; node_idx :
-  QWord); cdecl; external MyHTMLLib;
-function mchar_async_chunk_malloc (mchar_async : pmchar_async_t; node :
-  pmchar_async_node_t; length : QWord) : pmchar_async_chunk_t; cdecl;
-  external MyHTMLLib;
-function mchar_async_crop_first_chars (mchar_async : pmchar_async_t; node_idx :
-  QWord; data : PChar; crop_len : QWord) : PChar; cdecl; external MyHTMLLib;
-function mchar_async_crop_first_chars_without_cache (data : PChar; crop_len :
-  QWord) : PChar; cdecl; external MyHTMLLib;
-function mchar_async_get_size_by_data (const data : PChar) : QWord; cdecl;
-  external MyHTMLLib;
-
-// cache
-function mchar_async_cache_init (cache : pmchar_async_cache_t) : mystatus_t;
-  cdecl; external MyHTMLLib;
-function mchar_async_cache_destroy (cache : pmchar_async_cache_t; self_destroy :
-  Boolean) : pmchar_async_cache_t; cdecl; external MyHTMLLib;
-procedure mchar_async_cache_clean (cache : pmchar_async_cache_t); cdecl;
-  external MyHTMLLib;
-procedure mchar_async_cache_add (cache : pmchar_async_cache_t; value : Pointer;
-  size : QWord); cdecl; external MyHTMLLib;
-function mchar_async_cache_delete (cache : pmchar_async_cache_t; size : QWord) :
-  QWord; cdecl; external MyHTMLLib;
-
-(*mycore/utils/mhash.h*********************************************************)
-
-type
   ppmycore_utils_mhash_entry_t = ^pmycore_utils_mhash_entry_t;
   pmycore_utils_mhash_entry_t = ^mycore_utils_mhash_entry_t;
   mycore_utils_mhash_entry_t = record
@@ -454,78 +259,32 @@ type
     table_max_depth : QWord;
   end;
 
-function mycore_utils_mhash_create : pmycore_utils_mhash_t; cdecl;
-  external MyHTMLLib;
-function mycore_utils_mhash_init (mhash : pmycore_utils_mhash_t; table_size :
-  QWord; depth : QWord) : mystatus_t; cdecl; external MyHTMLLib;
-procedure mycore_utils_mhash_clean (mhash : pmycore_utils_mhash_t); cdecl;
-  external MyHTMLLib;
-function mycore_utils_mhash_destroy (mhash : pmycore_utils_mhash_t;
-  self_destroy : Boolean) : pmycore_utils_mhash_t; cdecl; external MyHTMLLib;
-function mycore_utils_mhash_create_entry (mhash : pmycore_utils_mhash_t;
-  const key : PChar; key_size : QWord; value : Pointer) :
-  pmycore_utils_mhash_entry_t; cdecl; external MyHTMLLib;
-function mycore_utils_mhash_add (mhash : pmycore_utils_mhash_t; const key :
-  PChar; key_size : QWord; value : Pointer) : pmycore_utils_mhash_entry_t;
-  cdecl; external MyHTMLLib;
-function mycore_utils_mhash_search (mhash : pmycore_utils_mhash_t; const key :
-  PChar; key_size : QWord; value : Pointer) : pmycore_utils_mhash_entry_t;
-  cdecl; external MyHTMLLib;
-function mycore_utils_mhash_add_with_choice (mhash : pmycore_utils_mhash_t;
-  const key : PChar; key_size : QWord) : pmycore_utils_mhash_entry_t; cdecl;
-  external MyHTMLLib;
-function mycore_utils_mhash_entry_by_id (mhash : pmycore_utils_mhash_t; id :
-  QWord) : pmycore_utils_mhash_entry_t; cdecl; external MyHTMLLib;
-function mycore_utils_mhash_get_table_size (mhash : pmycore_utils_mhash_t) :
-  QWord; cdecl; external MyHTMLLib;
-function mycore_utils_mhash_rebuld (mhash : pmycore_utils_mhash_t) :
-  ppmycore_utils_mhash_entry_t; cdecl; external MyHTMLLib;
-
-(*mycore/utils/mctree.h********************************************************)
-
- type
-   pmctree_index_t = ^mctree_index_t;
+  pmctree_index_t = ^mctree_index_t;
    mctree_index_t = type QWord;
 
-   pmctree_node_t = ^mctree_node_t;
-   mctree_node_t = record
-     str : PChar;
-     str_size : QWord;
-     value : Pointer;
+  pmctree_node_t = ^mctree_node_t;
+  mctree_node_t = record
+    str : PChar;
+    str_size : QWord;
+    value : Pointer;
 
-     child_count : QWord;
-     prev : mctree_index_t;
-     next : mctree_index_t;
-     child : mctree_index_t;
-   end;
+    child_count : QWord;
+    prev : mctree_index_t;
+    next : mctree_index_t;
+    child : mctree_index_t;
+  end;
 
-   pmctree_t = ^mctree_t;
-   mctree_t = record
-     nodes : pmctree_node_t;
-     nodes_length : QWord;
-     nodes_size : QWord;
-     start_size : QWord;
-   end;
+  pmctree_t = ^mctree_t;
+  mctree_t = record
+    nodes : pmctree_node_t;
+    nodes_length : QWord;
+    nodes_size : QWord;
+    start_size : QWord;
+  end;
 
-   mctree_before_insert_f = procedure (const key : PChar; key_size : QWord;
-     value : Pointer) of object;
+  mctree_before_insert_f = procedure (const key : PChar; key_size : QWord;
+    value : Pointer) of object;
 
-function mctree_create (start_size : QWord) : pmctree_t; cdecl;
-  external MyHTMLLib;
-procedure mctree_clean (mctree : pmctree_t); cdecl; external MyHTMLLib;
-function mctree_destroy (mctree : pmctree_t) : pmctree_t; cdecl;
-  external MyHTMLLib;
-function mctree_insert (mctree : pmctree_t; const key : PChar; key_size : QWord;
-  value : Pointer; b_insert : mctree_before_insert_f) : mctree_index_t; cdecl;
-  external MyHTMLLib;
-function mctree_search (mctree : pmctree_t; const key : PChar; key_size : QWord)
-  : mctree_index_t; cdecl; external MyHTMLLib;
-function mctree_search_lowercase (mctree : pmctree_t; const key : PChar;
-  key_size : QWord) : mctree_index_t; cdecl; external MyHTMLLib;
-
-(*mycore/incoming.h************************************************************)
-
-type
   ppmycore_incoming_buffer_t = ^pmycore_incoming_buffer_t;
   pmycore_incoming_buffer_t = ^mycore_incoming_buffer_t;
   mycore_incoming_buffer_t = record
@@ -538,44 +297,6 @@ type
     next : pmycore_incoming_buffer_t;
   end;
 
-function mycore_incoming_buffer_add (current : pmycore_incoming_buffer_t;
-  mcobject : pmcobject_t; const html : PChar; html_size : QWord) :
-  pmycore_incoming_buffer_t; cdecl external MyHTMLLib;
-procedure mycore_incoming_buffer_clean (current : pmycore_incoming_buffer_t);
-  cdecl; external MyHTMLLib;
-function mycore_incoming_buffer_split (current : pmycore_incoming_buffer_t;
-  mcobject : pmcobject_t; global_pos : QWord) : pmycore_incoming_buffer_t;
-  cdecl; external MyHTMLLib;
-function mycore_incoming_buffer_find_by_position (inc_buf :
-  pmycore_incoming_buffer_t; start : QWord) : pmycore_incoming_buffer_t; cdecl;
-  external MyHTMLLib;
-function mycore_incoming_buffer_data (inc_buf : pmycore_incoming_buffer_t) :
-  PChar; cdecl; external MyHTMLLib;
-function mycore_incoming_buffer_length (inc_buf : pmycore_incoming_buffer_t) :
-  QWord; cdecl; external MyHTMLLib;
-function mycore_incoming_buffer_size (inc_buf : pmycore_incoming_buffer_t) :
-  QWord; cdecl; external MyHTMLLib;
-function mycore_incoming_buffer_offset (inc_buf : pmycore_incoming_buffer_t) :
-  QWord; cdecl; external MyHTMLLib;
-function mycore_incoming_buffer_relative_begin (inc_buf :
-  pmycore_incoming_buffer_t; start : QWord) : QWord; cdecl; external MyHTMLLib;
-function mycore_incoming_buffer_available_length (inc_buf :
-  pmycore_incoming_buffer_t;  relative_begin : QWord; length : QWord) : QWord;
-  cdecl; external MyHTMLLib;
-function mycore_incoming_buffer_next (inc_buf : pmycore_incoming_buffer_t) :
-  pmycore_incoming_buffer_t; cdecl; external MyHTMLLib;
-function mycore_incoming_buffer_prev (inc_buf : pmycore_incoming_buffer_t) :
-  pmycore_incoming_buffer_t; cdecl; external MyHTMLLib;
-function mycore_incoming_buffer_convert_one_escape_to_code_point (inc_buf :
-  ppmycore_incoming_buffer_t; relative_pos : PQword) : QWord; cdecl;
-  external MyHTMLLib;
-function mycore_incoming_buffer_escaped_case_cmp (inc_buf :
-  ppmycore_incoming_buffer_t; const to_ : PChar; to_size : QWord; relative_pos :
-  PQWord) : QWord; cdecl; external MyHTMLLib;
-
-(*mycore/mystring.h************************************************************)
-
-type
   pmycore_string_t = ^mycore_string_t;
   mycore_string_t = record
     data : PChar;
@@ -595,66 +316,6 @@ type
 
   mycore_string_index_t = type QWord;
 
-function mycore_string_init (mchar : pmchar_async_t; node_idx : QWord; str :
-  pmycore_string_t; size : QWord) : PChar; cdecl; external MyHTMLLib;
-function mycore_string_realloc (str : pmycore_string_t; new_size : QWord) :
-  PChar; cdecl; external MyHTMLLib;
-procedure mycore_string_clean (str : pmycore_string_t); cdecl;
-  external MyHTMLLib;
-procedure mycore_string_clean_all (str : pmycore_string_t); cdecl;
-  external MyHTMLLib;
-function mycore_string_destroy (str : pmycore_string_t; destroy_obj : Boolean) :
-  pmycore_string_raw_t; cdecl; external MyHTMLLib;
-
-(* basic api *)
-function mycore_string_data_alloc (mchar : pmchar_async_t; node_id : QWord;
-  size : QWord) : PChar; cdecl; external MyHTMLLib;
-function mycore_string_data_realloc (mchar : pmchar_async_t; node_id : QWord;
-  data : PChar; len_to_copy : QWord; size : QWord) : PChar; cdecl;
-  external MyHTMLLib;
-procedure mycore_string_data_free (mchar : pmchar_async_t; node_id : QWord;
-  data : PChar); cdecl; external MyHTMLLib;
-function mycore_string_data (str : pmycore_string_t) : PChar; cdecl;
-  external MyHTMLLib;
-function mycore_string_length (str : pmycore_string_t) : QWord; cdecl;
-  external MyHTMLLib;
-function mycore_string_size (str : pmycore_string_t) : QWord; cdecl;
-  external MyHTMLLib;
-function mycore_string_data_set (str : pmycore_string_t; data : PChar) : PChar;
-  cdecl; external MyHTMLLib;
-function mycore_string_size_set ( str : pmycore_string_t; size : QWord) : QWord;
-  cdecl; external MyHTMLLib;
-function mycore_string_length_set (str : pmycore_string_t; length : QWord) :
-  QWord; cdecl; external MyHTMLLib;
-
-(* append *)
-procedure mycore_string_append (str : pmycore_string_t; const data : PChar;
-  length : QWord); cdecl; external MyHTMLLib;
-procedure mycore_string_append_one (str : pmycore_string_t; const data : Char);
-  cdecl; external MyHTMLLib;
-procedure mycore_string_append_lowercase (str : pmycore_string_t; const data :
-  PChar; length : QWord); cdecl; external MyHTMLLib;
-procedure mycore_string_append_with_replacement_null_characters (str :
-  pmycore_string_t; const buff : PChar; length : QWord); cdecl;
-  external MyHTMLLib;
-function mycore_string_raw_set_replacement_character (target : pmycore_string_t;
-  position : QWord) : QWord; cdecl; external MyHTMLLib;
-
-(* other functions *)
-procedure mycore_string_copy (dest : pmycore_string_t; target :
-  pmycore_string_t); cdecl; external MyHTMLLib;
-function mycore_string_raw_copy (str1 : PChar; str2 : PChar; size : QWord) :
-  QWord; cdecl; external MyHTMLLib;
-procedure mycore_string_stay_only_whitespace (target : pmycore_string_t); cdecl;
-  external MyHTMLLib;
-function mycore_string_crop_whitespace_from_begin (target : pmycore_string_t) :
-  QWord; cdecl; external MyHTMLLib;
-function mycore_string_whitespace_from_begin (target : pmycore_string_t) :
-  QWord; cdecl; external MyHTMLLib;
-
-(*mycore/mythread.h************************************************************)
-
-type
 {$IFDEF MyCORE_BUILD_WITHOUT_THREADS}
   pmythread_t = ^mythread_t;
   mythread_t = record
@@ -726,98 +387,6 @@ type
     opt : mythread_thread_opt_t;
   end;
 
-function mythread_create : pmythread_t; cdecl; external MyHTMLLib;
-function mythread_init (mythread : pmythread_t; thread_type : mythread_type_t;
-  threads_count : QWord; id_increase : QWord) : mystatus_t; cdecl;
-  external MyHTMLLib;
-procedure mythread_clean (mythread : pmythread_t); cdecl; external MyHTMLLib;
-function mythread_destroy (mythread : pmythread_t; before_join :
-  mythread_callback_before_entry_join_f; ctx : Pointer; self_destroy : Boolean)
-  : pmythread_t; cdecl; external MyHTMLLib;
-function mythread_increase_id_by_entry_id (mythread : pmythread_t; thread_id :
-  mythread_id_t) : mythread_id_t; cdecl; external MyHTMLLib;
-
-(* set for all threads *)
-function mythread_join (mythread : pmythread_t; before_join :
-  mythread_callback_before_entry_join_f; ctx : Pointer) : mystatus_t; cdecl;
-  external MyHTMLLib;
-function mythread_quit (mythread : pmythread_t; before_join :
-  mythread_callback_before_entry_join_f; ctx : Pointer) : mystatus_t; cdecl;
-  external MyHTMLLib;
-function mythread_stop (mythread : pmythread_t) : mystatus_t; cdecl;
-  external MyHTMLLib;
-function mythread_resume (mythread : pmythread_t; send_opt :
-  mythread_thread_opt_t) : mystatus_t; cdecl; external MyHTMLLib;
-function mythread_suspend (mythread : pmythread_t) : mystatus_t; cdecl;
-  external MyHTMLLib;
-function mythread_check_status (mythread : pmythread_t) : mystatus_t; cdecl;
-  external MyHTMLLib;
-function mythread_option (mythread : pmythread_t) : mythread_thread_opt_t;
-  cdecl; external MyHTMLLib;
-procedure mythread_option_set (mythread : pmythread_t; opt :
-  mythread_thread_opt_t); cdecl; external MyHTMLLib;
-
-(* Entries *)
-function mythread_entry_create (mythread : pmythread_t; process_func :
-  mythread_process_f; func : mythread_work_f; opt : mythread_thread_opt_t) :
-  mystatus_t; cdecl; external MyHTMLLib;
-function mythread_entry_join (entry : pmythread_entry_t; before_join :
-  mythread_callback_before_entry_join_f; ctx : Pointer) : mystatus_t; cdecl;
-  external MyHTMLLib;
-function mythread_entry_quit (entry : pmythread_entry_t; before_join :
-  mythread_callback_before_entry_join_f; ctx : Pointer) : mystatus_t; cdecl;
-  external MyHTMLLib;
-function mythread_entry_stop (entry : pmythread_entry_t) : mystatus_t; cdecl;
-  external MyHTMLLib;
-function mythread_entry_resume (entry : pmythread_entry_t; send_opt :
-  mythread_thread_opt_t) : mystatus_t; cdecl; external MyHTMLLib;
-function mythread_entry_suspend (entry : pmythread_entry_t) : mystatus_t; cdecl;
-  external MyHTMLLib;
-function mythread_entry_status (entry : pmythread_entry_t) : mystatus_t; cdecl;
-  external MyHTMLLib;
-function mythread_entry_mythread (entry : pmythread_entry_t) : pmythread_t;
-  cdecl; external MyHTMLLib;
-
-(* API for ports *)
-function mythread_thread_create (mythread : pmythread_t; process_func :
-  mythread_process_f; ctx : Pointer) : Pointer; cdecl; external MyHTMLLib;
-function mythread_thread_join (mythread : pmythread_t; thread : Pointer) :
-  mystatus_t; cdecl; external MyHTMLLib;
-function mythread_thread_cancel (mythread : pmythread_t; thread : Pointer) :
-  mystatus_t; cdecl; external MyHTMLLib;
-function mythread_thread_destroy (mythread : pmythread_t; thread : Pointer) :
-  mystatus_t; cdecl; external MyHTMLLib;
-function mythread_thread_attr_init (mythread : pmythread_t) : Pointer; cdecl;
-  external MyHTMLLib;
-procedure mythread_thread_attr_clean (mythread : pmythread_t; attr : Pointer);
-  cdecl; external MyHTMLLib;
-procedure mythread_thread_attr_destroy (mythread : pmythread_t; attr : Pointer);
-  cdecl; external MyHTMLLib;
-function mythread_mutex_create (mythread : pmythread_t) : Pointer; cdecl;
-  external MyHTMLLib;
-function mythread_mutex_post (mythread : pmythread_t; mutex : Pointer) :
-  mystatus_t; cdecl; external MyHTMLLib;
-function mythread_mutex_wait (mythread : pmythread_t; mutex : Pointer) :
-  mystatus_t; cdecl; external MyHTMLLib;
-procedure mythread_mutex_close (mythread : pmythread_t; mutex : Pointer); cdecl;
-  external MyHTMLLib;
-function mythread_nanosleep_create (mythread : pmythread_t) : Pointer; cdecl;
-  external MyHTMLLib;
-procedure mythread_nanosleep_clean (timespec : Pointer); cdecl;
-  external MyHTMLLib;
-procedure mythread_nanosleep_destroy (timespec : Pointer); cdecl;
-  external MyHTMLLib;
-function mythread_nanosleep_sleep (timespec : Pointer) : mystatus_t; cdecl;
-  external MyHTMLLib;
-
-(* callback *)
-procedure mythread_callback_quit (mythread : pmythread_t; entry :
-  pmythread_entry_t; ctx : Pointer); cdecl; external MyHTMLLib;
-{$ENDIF}{MyCORE_BUILD_WITHOUT_THREADS}
-
-(*mycore/thread_queue.h********************************************************)
-
-type
   (* queue *)
   ppmythread_queue_node_t = ^pmythread_queue_node_t;
   pmythread_queue_node_t = ^mythread_queue_node_t;
@@ -864,67 +433,6 @@ type
     count : QWord;
   end;
 
-function mythread_queue_create : pmythread_queue_t; cdecl; external MyHTMLLib;
-function mythread_queue_init (queue : pmythread_queue_t; size : QWord) :
-  mystatus_t; cdecl; external MyHTMLLib;
-procedure mythread_queue_clean (queue : pmythread_queue_t); cdecl;
-  external MyHTMLLib;
-function mythread_queue_destroy (token : pmythread_queue_t) : pmythread_queue_t;
-  cdecl; external MyHTMLLib;
-procedure mythread_queue_node_clean (qnode : pmythread_queue_node_t); cdecl;
-  external MyHTMLLib;
-function mythread_queue_count_used_node (queue : pmythread_queue_t) : QWord;
-  cdecl; external MyHTMLLib;
-function mythread_queue_get_first_node (queue : pmythread_queue_t) :
-  pmythread_queue_node_t; cdecl; external MyHTMLLib;
-function mythread_queue_get_prev_node (qnode : pmythread_queue_node_t) :
-  pmythread_queue_node_t; cdecl; external MyHTMLLib;
-function mythread_queue_get_current_node (queue : pmythread_queue_t) :
-  pmythread_queue_node_t; cdecl; external MyHTMLLib;
-function mythread_queue_node_malloc (mythread : pmythread_t; queue :
-  pmythread_queue_t; status : pmystatus_t) : pmythread_queue_node_t; cdecl;
-  external MyHTMLLib;
-function mythread_queue_node_malloc_limit (mythread : pmythread_t; queue :
-  pmythread_queue_t; limit : QWord; status : pmystatus_t) :
-  pmythread_queue_node_t; cdecl; external MyHTMLLib;
-{$IFNDEF MyCORE_BUILD_WITHOUT_THREADS}
-function mythread_queue_node_malloc_round (mythread : pmythread_t; entry :
-  pmythread_queue_list_entry_t) : pmythread_queue_node_t; cdecl;
-  external MyHTMLLib;
-function mythread_queue_list_create (status : pmystatus_t) :
-  pmythread_queue_list_t; cdecl; external MyHTMLLib;
-procedure mythread_queue_list_destroy (queue_list : pmythread_queue_list_t);
-  cdecl; external MyHTMLLib;
-function mythread_queue_list_get_count (queue_list : pmythread_queue_list_t) :
-  QWord; cdecl; external MyHTMLLib;
-procedure mythread_queue_list_wait_for_done (mythread : pmythread_t;
-  queue_list : pmythread_queue_list_t); cdecl; external MyHTMLLib;
-function mythread_queue_list_see_for_done (mythread : pmythread_t;
-  queue_list : pmythread_queue_list_t) : Boolean; cdecl; external MyHTMLLib;
-function mythread_queue_list_see_for_done_by_thread (mythread : pmythread_t;
-  queue_list : pmythread_queue_list_t; thread_id : mythread_id_t) : Boolean;
-  cdecl; external MyHTMLLib;
-function mythread_queue_list_entry_push (mythread_list : ppmythread_t;
-  list_size : QWord; queue_list : pmythread_queue_list_t; queue :
-  pmythread_queue_t; thread_param_size : QWord; status : pmystatus_t) :
-  pmythread_queue_list_t; cdecl; external MyHTMLLib;
-function mythread_queue_list_entry_delete (mythread_list : ppmythread_t;
-  list_size : QWord; queue_list : pmythread_queue_list_t; entry :
-  pmythread_queue_list_entry_t; destroy_queue : Boolean) :
-  pmythread_queue_list_entry_t; cdecl; external MyHTMLLib;
-procedure mythread_queue_list_entry_clean (entry :
-  pmythread_queue_list_entry_t); cdecl; external MyHTMLLib;
-procedure mythread_queue_list_entry_wait_for_done (mythread : pmythread_t;
-  entry : pmythread_queue_list_entry_t); cdecl; external MyHTMLLib;
-procedure mythread_queue_list_entry_make_batch (mythread : pmythread_t;
-  entry : pmythread_queue_list_entry_t); cdecl; external MyHTMLLib;
-procedure mythread_queue_list_entry_make_stream (mythread : pmythread_t;
-  entry : pmythread_queue_list_entry_t); cdecl; external MyHTMLLib;
-{$ENDIF}{MyCORE_BUILD_WITHOUT_THREADS}
-
-(*mycore/myosi.h***************************************************************)
-
-type
   mycore_status_t = (
     MyCORE_STATUS_OK                                                    = $0000,
     MyCORE_STATUS_ERROR                                                 = $0001,
@@ -964,48 +472,7 @@ type
   mycore_callback_serialize_f = function (const buffer : PChar; size : QWord;
     ctx : Pointer) : mystatus_t of object;
 
-function mycore_malloc (size : QWord) : Pointer; cdecl; external MyHTMLLib;
-function mycore_realloc (dst : Pointer; size : QWord) : Pointer; cdecl;
-  external MyHTMLLib;
-function mycore_calloc (num : QWord; size : QWord) : Pointer; cdecl;
-  external MyHTMLLib;
-function mycore_free (dst : Pointer) : Pointer; cdecl; external MyHTMLLib;
 
-(* io *)
-function mycore_fopen (const filename : PChar; const mode : PChar) : Pointer;
-  cdecl; external MyHTMLLib;
-function mycore_fclose (stream : Pointer) : Integer; cdecl; external MyHTMLLib;
-function mycore_fread (buffer : Pointer; size : QWord; count : QWord; stream :
-  Pointer) : QWord; cdecl; external MyHTMLLib;
-function mycore_fwrite (const buffer : Pointer; size : QWord; count : QWord;
-  stream : Pointer) : QWord; cdecl; external MyHTMLLib;
-function mycore_fflush (stream : Pointer) : Integer; cdecl; external MyHTMLLib;
-function mycore_fseek (stream : Pointer; offset : Longint; origin : Integer) :
-  Integer; cdecl; external MyHTMLLib;
-function mycore_ftell (stream : Pointer) : Longint; cdecl; external MyHTMLLib;
-function mycore_ferror (stream : Pointer) : Integer; cdecl; external MyHTMLLib;
-procedure mycore_setbuf (stream : Pointer; buffer : PChar); cdecl;
-  external MyHTMLLib;
-
-(*mycore/perf.h****************************************************************)
-
-{$IFDEF MyHTML_WITH_PERF}
-function mycore_perf_create : Pointer; cdecl; external MyHTMLLib;
-procedure mycore_perf_clean (perf : Pointer); cdecl; external MyHTMLLib;
-procedure mycore_perf_destroy (perf : Pointer); cdecl; external MyHTMLLib;
-function mycore_perf_begin (perf : Pointer) : mycore_status_t; cdecl;
-  external MyHTMLLib;
-function mycore_perf_end (perf : Pointer) : mycore_status_t; cdecl;
-  external MyHTMLLib;
-function mycore_pref_in_sec (perf : Pointer) : Double; cdecl;
-  external MyHTMLLib;
-function mycore_perf_clock : QWord; cdecl; external MyHTMLLib;
-function mycore_perf_frequency : QWord; cdecl; external MyHTMLLib;
-{$ENDIF}{MyHTML_WITH_PERF}
-
-(*myencoding/myosi.h***********************************************************)
-
-type
   (* encoding *)
   pmyencoding_t = ^myencoding_t;
   myencoding_t = (
@@ -1062,9 +529,6 @@ type
     MyENCODING_STATUS_DONE                                              = $0004
   );
 
-(*myencoding/encoding.h********************************************************)
-
-type
   pmyencoding_result_t = ^myencoding_result_t;
   myencoding_result_t = record
     first : Cardinal;
@@ -1126,165 +590,11 @@ type
   myencoding_custom_f = function (const data : Byte; res : pmyencoding_result_t)
     : myencoding_status_t of object;
 
-function myencoding_get_function_by_id (idx : myencoding_t) :
-  myencoding_custom_f; cdecl; external MyHTMLLib;
-function myencoding_decode_utf_8 (const data : Byte; res : pmyencoding_result_t)
-  : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_ibm866 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_iso_8859_2 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_iso_8859_3 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_iso_8859_4 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_iso_8859_5 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_iso_8859_6 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_iso_8859_7 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_iso_8859_8 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_iso_8859_8_i (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_iso_8859_10 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_iso_8859_13 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_iso_8859_14 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_iso_8859_15 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_iso_8859_16 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_koi8_r (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_koi8_u (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_macintosh (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_windows_874 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_windows_1250 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_windows_1251 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_windows_1252 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_windows_1253 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_windows_1254 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_windows_1255 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_windows_1256 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_windows_1257 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_windows_1258 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_x_mac_cyrillic (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_gbk (const data : Byte; res : pmyencoding_result_t)
-  : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_gb18030 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_big5 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_euc_jp (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_iso_2022_jp (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_shift_jis (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_euc_kr (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_shared_utf_16 (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_utf_16be (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_utf_16le (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_decode_x_user_defined (const data : Byte; res :
-  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_codepoint_ascii_length (codepoint : QWord) :  QWord; cdecl;
-  external MyHTMLLib;
-function myencoding_ascii_utf_8_length (const data : Byte) : QWord; cdecl;
-  external MyHTMLLib;
-function myencoding_codepoint_to_ascii_utf_8 (codepoint : QWord; data : PChar) :
-  QWord; cdecl; external MyHTMLLib;
-function myencoding_codepoint_to_lowercase_ascii_utf_8 (codepoint : QWord;
-  data : PChar) : QWord; cdecl; external MyHTMLLib;
-function myencoding_codepoint_to_ascii_utf_16 (codepoint : QWord; data : PChar)
-  : QWord; cdecl; external MyHTMLLib;
-function myencoding_ascii_utf_8_to_codepoint (const data : PByte; codepoint :
-  PQWord) : QWord; cdecl; external MyHTMLLib;
-procedure myencoding_result_clean (res : pmyencoding_result_t); cdecl;
-  external MyHTMLLib;
-function myencoding_detect (const text : PChar; length : QWord; encoding :
-  pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
-function myencoding_detect_russian (const text : PChar; length : QWord;
-  encoding : pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
-function myencoding_detect_unicode (const text : PChar; length : QWord;
-  encoding : pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
-function myencoding_detect_bom (const text : PChar; length : QWord;
-  encoding : pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
-function myencoding_detect_and_cut_bom (const text : PChar; length : PChar;
-  encoding : pmyencoding_t; const new_text : PPChar; new_size : QWord) :
-  Boolean; cdecl; external MyHTMLLib;
-function myencoding_convert_to_ascii_utf_8 (raw_str : pmycore_string_raw_t;
-  const buff : PChar; length : QWord; encoding : myencoding_t) : QWord; cdecl;
-  external MyHTMLLib;
-function myencoding_name_entry_by_name (const name : PChar; length : QWord) :
-  pmyencoding_detect_name_entry_t; cdecl; external MyHTMLLib;
-function myencoding_by_name (const name : PChar; length : QWord; encoding :
-  pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
-function myencoding_name_by_id (encoding : myencoding_t; length : PQWord) :
-  PChar; cdecl; external MyHTMLLib;
-function myencoding_extracting_character_encoding_from_charset (const data :
-  PChar; data_size : QWord; encoding : pmyencoding_t) : Boolean; cdecl;
-  external MyHTMLLib;
-function myencoding_prescan_stream_to_determine_encoding (const data : PChar;
-  data_size : QWord) : myencoding_t; cdecl; external MyHTMLLib;
-function myencoding_extracting_character_encoding_from_charset_with_found (
-  const data : PChar; data_size : QWord; encoding : pmyencoding_t; const found :
-  PPChar; found_length : PQWord) : Boolean; cdecl; external MyHTMLLib;
-function myencoding_prescan_stream_to_determine_encoding_with_found (
-  const data : PChar; data_size : QWord; const found : PPChar; found_length :
-  PQWord) : myencoding_t; cdecl; external MyHTMLLib;
-
-(*myencoding/mystring.h********************************************************)
-
-procedure myencoding_string_append (str : pmycore_string_t; const buff :
-  PChar; length : QWord; encoding : myencoding_t); cdecl; external MyHTMLLib;
-
-(* append with convert encoding *)
-procedure myencoding_string_append_chunk (str : pmycore_string_t; res :
-  pmyencoding_result_t; const buff : PChar; length : QWord; encoding :
-  myencoding_t); cdecl; external MyHTMLLib;
-procedure myencoding_string_append_one (str : pmycore_string_t; res :
-  pmyencoding_result_t; const data : Char; encoding : myencoding_t); cdecl;
-  external MyHTMLLib;
-
-(* append with convert encoding lowercase *)
-procedure myencoding_string_append_lowercase_ascii (str : pmycore_string_t;
-  const buff : PChar; length : QWord; encoding : myencoding_t); cdecl;
-  external MyHTMLLib;
-procedure myencoding_string_append_chunk_lowercase_ascii (str :
-  pmycore_string_t; res : pmyencoding_result_t; const buff : PChar; length :
-  QWord; encoding : myencoding_t); cdecl; external MyHTMLLib;
-
-(*myhtml/tree.h****************************************************************)
-
-type
   pmyhtml_tree_t = ^myhtml_tree_t;
   pmyhtml_tree_node_t = ^myhtml_tree_node_t;
+  ppmyhtml_token_node_t = ^pmyhtml_token_node_t;
   pmyhtml_token_node_t = ^myhtml_token_node_t;
 
-(*myhtml/api.h*****************************************************************)
-
-type
   pmyhtml_t = ^myhtml_t;
   pmyhtml_token_t = ^myhtml_token_t;
   pmyhtml_tag_t = ^myhtml_tag_t;
@@ -1556,9 +866,6 @@ type
   myhtml_callback_tree_node_f = procedure (tree : pmyhtml_tree_t; node :
     pmyhtml_tree_node_t; ctx : Pointer) of object;
 
-(*myhtml/myosi.h***************************************************************)
-
-type
   (* tree *)
   myhtml_tree_flags = (
     MyHTML_TREE_FLAGS_CLEAN                                             = $0000,
@@ -1622,108 +929,108 @@ type
   (* parse *)
   pmyhtml_tokenizer_state_t = ^myhtml_tokenizer_state_t;
   myhtml_tokenizer_state_t = (
-    MyHTML_TOKENIZER_STATE_DATA                                         = $0000,
-    MyHTML_TOKENIZER_STATE_CHARACTER_REFERENCE_IN_DATA                  = $0001,
-    MyHTML_TOKENIZER_STATE_RCDATA                                       = $0002,
-    MyHTML_TOKENIZER_STATE_CHARACTER_REFERENCE_IN_RCDATA                = $0003,
-    MyHTML_TOKENIZER_STATE_RAWTEXT                                      = $0004,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA                                  = $0005,
-    MyHTML_TOKENIZER_STATE_PLAINTEXT                                    = $0006,
-    MyHTML_TOKENIZER_STATE_TAG_OPEN                                     = $0007,
-    MyHTML_TOKENIZER_STATE_END_TAG_OPEN                                 = $0008,
-    MyHTML_TOKENIZER_STATE_TAG_NAME                                     = $0009,
-    MyHTML_TOKENIZER_STATE_RCDATA_LESS_THAN_SIGN                        = $000a,
-    MyHTML_TOKENIZER_STATE_RCDATA_END_TAG_OPEN                          = $000b,
-    MyHTML_TOKENIZER_STATE_RCDATA_END_TAG_NAME                          = $000c,
-    MyHTML_TOKENIZER_STATE_RAWTEXT_LESS_THAN_SIGN                       = $000d,
-    MyHTML_TOKENIZER_STATE_RAWTEXT_END_TAG_OPEN                         = $000e,
-    MyHTML_TOKENIZER_STATE_RAWTEXT_END_TAG_NAME                         = $000f,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_LESS_THAN_SIGN                   = $0010,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_END_TAG_OPEN                     = $0011,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_END_TAG_NAME                     = $0012,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPE_START                     = $0013,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPE_START_DASH                = $0014,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED                          = $0015,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_DASH                     = $0016,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_DASH_DASH                = $0017,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN           = $0018,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_END_TAG_OPEN             = $0019,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_END_TAG_NAME             = $001a,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPE_START              = $001b,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPED                   = $001c,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPED_DASH              = $001d,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH         = $001e,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN    = $001f,
-    MyHTML_TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPE_END                = $0020,
-    MyHTML_TOKENIZER_STATE_BEFORE_ATTRIBUTE_NAME                        = $0021,
-    MyHTML_TOKENIZER_STATE_ATTRIBUTE_NAME                               = $0022,
-    MyHTML_TOKENIZER_STATE_AFTER_ATTRIBUTE_NAME                         = $0023,
-    MyHTML_TOKENIZER_STATE_BEFORE_ATTRIBUTE_VALUE                       = $0024,
-    MyHTML_TOKENIZER_STATE_ATTRIBUTE_VALUE_DOUBLE_QUOTED                = $0025,
-    MyHTML_TOKENIZER_STATE_ATTRIBUTE_VALUE_SINGLE_QUOTED                = $0026,
-    MyHTML_TOKENIZER_STATE_ATTRIBUTE_VALUE_UNQUOTED                     = $0027,
-    MyHTML_TOKENIZER_STATE_CHARACTER_REFERENCE_IN_ATTRIBUTE_VALUE       = $0028,
-    MyHTML_TOKENIZER_STATE_AFTER_ATTRIBUTE_VALUE_QUOTED                 = $0029,
-    MyHTML_TOKENIZER_STATE_SELF_CLOSING_START_TAG                       = $002a,
-    MyHTML_TOKENIZER_STATE_BOGUS_COMMENT                                = $002b,
-    MyHTML_TOKENIZER_STATE_MARKUP_DECLARATION_OPEN                      = $002c,
-    MyHTML_TOKENIZER_STATE_COMMENT_START                                = $002d,
-    MyHTML_TOKENIZER_STATE_COMMENT_START_DASH                           = $002e,
-    MyHTML_TOKENIZER_STATE_COMMENT                                      = $002f,
-    MyHTML_TOKENIZER_STATE_COMMENT_END_DASH                             = $0030,
-    MyHTML_TOKENIZER_STATE_COMMENT_END                                  = $0031,
-    MyHTML_TOKENIZER_STATE_COMMENT_END_BANG                             = $0032,
-    MyHTML_TOKENIZER_STATE_DOCTYPE                                      = $0033,
-    MyHTML_TOKENIZER_STATE_BEFORE_DOCTYPE_NAME                          = $0034,
-    MyHTML_TOKENIZER_STATE_DOCTYPE_NAME                                 = $0035,
-    MyHTML_TOKENIZER_STATE_AFTER_DOCTYPE_NAME                           = $0036,
-    MyHTML_TOKENIZER_STATE_AFTER_DOCTYPE_PUBLIC_KEYWORD                 = $0037,
-    MyHTML_TOKENIZER_STATE_BEFORE_DOCTYPE_PUBLIC_IDENTIFIER             = $0038,
-    MyHTML_TOKENIZER_STATE_DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED      = $0039,
-    MyHTML_TOKENIZER_STATE_DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED      = $003a,
-    MyHTML_TOKENIZER_STATE_AFTER_DOCTYPE_PUBLIC_IDENTIFIER              = $003b,
-    MyHTML_TOKENIZER_STATE_BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS= $003c,
-    MyHTML_TOKENIZER_STATE_AFTER_DOCTYPE_SYSTEM_KEYWORD                 = $003d,
-    MyHTML_TOKENIZER_STATE_BEFORE_DOCTYPE_SYSTEM_IDENTIFIER             = $003e,
-    MyHTML_TOKENIZER_STATE_DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED      = $003f,
-    MyHTML_TOKENIZER_STATE_DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED      = $0040,
-    MyHTML_TOKENIZER_STATE_AFTER_DOCTYPE_SYSTEM_IDENTIFIER              = $0041,
-    MyHTML_TOKENIZER_STATE_BOGUS_DOCTYPE                                = $0042,
-    MyHTML_TOKENIZER_STATE_CDATA_SECTION                                = $0043,
-    MyHTML_TOKENIZER_STATE_CUSTOM_AFTER_DOCTYPE_NAME_A_Z                = $0044,
-    MyHTML_TOKENIZER_STATE_PARSE_ERROR_STOP                             = $0045,
+    TOKENIZER_STATE_DATA                                                = $0000,
+    TOKENIZER_STATE_CHARACTER_REFERENCE_IN_DATA                         = $0001,
+    TOKENIZER_STATE_RCDATA                                              = $0002,
+    TOKENIZER_STATE_CHARACTER_REFERENCE_IN_RCDATA                       = $0003,
+    TOKENIZER_STATE_RAWTEXT                                             = $0004,
+    TOKENIZER_STATE_SCRIPT_DATA                                         = $0005,
+    TOKENIZER_STATE_PLAINTEXT                                           = $0006,
+    TOKENIZER_STATE_TAG_OPEN                                            = $0007,
+    TOKENIZER_STATE_END_TAG_OPEN                                        = $0008,
+    TOKENIZER_STATE_TAG_NAME                                            = $0009,
+    TOKENIZER_STATE_RCDATA_LESS_THAN_SIGN                               = $000a,
+    TOKENIZER_STATE_RCDATA_END_TAG_OPEN                                 = $000b,
+    TOKENIZER_STATE_RCDATA_END_TAG_NAME                                 = $000c,
+    TOKENIZER_STATE_RAWTEXT_LESS_THAN_SIGN                              = $000d,
+    TOKENIZER_STATE_RAWTEXT_END_TAG_OPEN                                = $000e,
+    TOKENIZER_STATE_RAWTEXT_END_TAG_NAME                                = $000f,
+    TOKENIZER_STATE_SCRIPT_DATA_LESS_THAN_SIGN                          = $0010,
+    TOKENIZER_STATE_SCRIPT_DATA_END_TAG_OPEN                            = $0011,
+    TOKENIZER_STATE_SCRIPT_DATA_END_TAG_NAME                            = $0012,
+    TOKENIZER_STATE_SCRIPT_DATA_ESCAPE_START                            = $0013,
+    TOKENIZER_STATE_SCRIPT_DATA_ESCAPE_START_DASH                       = $0014,
+    TOKENIZER_STATE_SCRIPT_DATA_ESCAPED                                 = $0015,
+    TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_DASH                            = $0016,
+    TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_DASH_DASH                       = $0017,
+    TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN                  = $0018,
+    TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_END_TAG_OPEN                    = $0019,
+    TOKENIZER_STATE_SCRIPT_DATA_ESCAPED_END_TAG_NAME                    = $001a,
+    TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPE_START                     = $001b,
+    TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPED                          = $001c,
+    TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPED_DASH                     = $001d,
+    TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH                = $001e,
+    TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN           = $001f,
+    TOKENIZER_STATE_SCRIPT_DATA_DOUBLE_ESCAPE_END                       = $0020,
+    TOKENIZER_STATE_BEFORE_ATTRIBUTE_NAME                               = $0021,
+    TOKENIZER_STATE_ATTRIBUTE_NAME                                      = $0022,
+    TOKENIZER_STATE_AFTER_ATTRIBUTE_NAME                                = $0023,
+    TOKENIZER_STATE_BEFORE_ATTRIBUTE_VALUE                              = $0024,
+    TOKENIZER_STATE_ATTRIBUTE_VALUE_DOUBLE_QUOTED                       = $0025,
+    TOKENIZER_STATE_ATTRIBUTE_VALUE_SINGLE_QUOTED                       = $0026,
+    TOKENIZER_STATE_ATTRIBUTE_VALUE_UNQUOTED                            = $0027,
+    TOKENIZER_STATE_CHARACTER_REFERENCE_IN_ATTRIBUTE_VALUE              = $0028,
+    TOKENIZER_STATE_AFTER_ATTRIBUTE_VALUE_QUOTED                        = $0029,
+    TOKENIZER_STATE_SELF_CLOSING_START_TAG                              = $002a,
+    TOKENIZER_STATE_BOGUS_COMMENT                                       = $002b,
+    TOKENIZER_STATE_MARKUP_DECLARATION_OPEN                             = $002c,
+    TOKENIZER_STATE_COMMENT_START                                       = $002d,
+    TOKENIZER_STATE_COMMENT_START_DASH                                  = $002e,
+    TOKENIZER_STATE_COMMENT                                             = $002f,
+    TOKENIZER_STATE_COMMENT_END_DASH                                    = $0030,
+    TOKENIZER_STATE_COMMENT_END                                         = $0031,
+    TOKENIZER_STATE_COMMENT_END_BANG                                    = $0032,
+    TOKENIZER_STATE_DOCTYPE                                             = $0033,
+    TOKENIZER_STATE_BEFORE_DOCTYPE_NAME                                 = $0034,
+    TOKENIZER_STATE_DOCTYPE_NAME                                        = $0035,
+    TOKENIZER_STATE_AFTER_DOCTYPE_NAME                                  = $0036,
+    TOKENIZER_STATE_AFTER_DOCTYPE_PUBLIC_KEYWORD                        = $0037,
+    TOKENIZER_STATE_BEFORE_DOCTYPE_PUBLIC_IDENTIFIER                    = $0038,
+    TOKENIZER_STATE_DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED             = $0039,
+    TOKENIZER_STATE_DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED             = $003a,
+    TOKENIZER_STATE_AFTER_DOCTYPE_PUBLIC_IDENTIFIER                     = $003b,
+    TOKENIZER_STATE_BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS       = $003c,
+    TOKENIZER_STATE_AFTER_DOCTYPE_SYSTEM_KEYWORD                        = $003d,
+    TOKENIZER_STATE_BEFORE_DOCTYPE_SYSTEM_IDENTIFIER                    = $003e,
+    TOKENIZER_STATE_DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED             = $003f,
+    TOKENIZER_STATE_DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED             = $0040,
+    TOKENIZER_STATE_AFTER_DOCTYPE_SYSTEM_IDENTIFIER                     = $0041,
+    TOKENIZER_STATE_BOGUS_DOCTYPE                                       = $0042,
+    TOKENIZER_STATE_CDATA_SECTION                                       = $0043,
+    TOKENIZER_STATE_CUSTOM_AFTER_DOCTYPE_NAME_A_Z                       = $0044,
+    TOKENIZER_STATE_PARSE_ERROR_STOP                                    = $0045,
 
-    MyHTML_TOKENIZER_STATE_FIRST_ENTRY = Longint(MyHTML_TOKENIZER_STATE_DATA){%H-},
-    MyHTML_TOKENIZER_STATE_LAST_ENTRY                                   = $0046
+    TOKENIZER_STATE_FIRST_ENTRY            = Longint(TOKENIZER_STATE_DATA){%H-},
+    TOKENIZER_STATE_LAST_ENTRY                                          = $0046
   );
 
   pmyhtml_insertion_mode_t = ^myhtml_insertion_mode_t;
   myhtml_insertion_mode_t = (
-    MyHTML_INSERTION_MODE_INITIAL                                       = $0000,
-    MyHTML_INSERTION_MODE_BEFORE_HTML                                   = $0001,
-    MyHTML_INSERTION_MODE_BEFORE_HEAD                                   = $0002,
-    MyHTML_INSERTION_MODE_IN_HEAD                                       = $0003,
-    MyHTML_INSERTION_MODE_IN_HEAD_NOSCRIPT                              = $0004,
-    MyHTML_INSERTION_MODE_AFTER_HEAD                                    = $0005,
-    MyHTML_INSERTION_MODE_IN_BODY                                       = $0006,
-    MyHTML_INSERTION_MODE_TEXT                                          = $0007,
-    MyHTML_INSERTION_MODE_IN_TABLE                                      = $0008,
-    MyHTML_INSERTION_MODE_IN_TABLE_TEXT                                 = $0009,
-    MyHTML_INSERTION_MODE_IN_CAPTION                                    = $000a,
-    MyHTML_INSERTION_MODE_IN_COLUMN_GROUP                               = $000b,
-    MyHTML_INSERTION_MODE_IN_TABLE_BODY                                 = $000c,
-    MyHTML_INSERTION_MODE_IN_ROW                                        = $000d,
-    MyHTML_INSERTION_MODE_IN_CELL                                       = $000e,
-    MyHTML_INSERTION_MODE_IN_SELECT                                     = $000f,
-    MyHTML_INSERTION_MODE_IN_SELECT_IN_TABLE                            = $0010,
-    MyHTML_INSERTION_MODE_IN_TEMPLATE                                   = $0011,
-    MyHTML_INSERTION_MODE_AFTER_BODY                                    = $0012,
-    MyHTML_INSERTION_MODE_IN_FRAMESET                                   = $0013,
-    MyHTML_INSERTION_MODE_AFTER_FRAMESET                                = $0014,
-    MyHTML_INSERTION_MODE_AFTER_AFTER_BODY                              = $0015,
-    MyHTML_INSERTION_MODE_AFTER_AFTER_FRAMESET                          = $0016,
+    INSERTION_MODE_INITIAL                                              = $0000,
+    INSERTION_MODE_BEFORE_HTML                                          = $0001,
+    INSERTION_MODE_BEFORE_HEAD                                          = $0002,
+    INSERTION_MODE_IN_HEAD                                              = $0003,
+    INSERTION_MODE_IN_HEAD_NOSCRIPT                                     = $0004,
+    INSERTION_MODE_AFTER_HEAD                                           = $0005,
+    INSERTION_MODE_IN_BODY                                              = $0006,
+    INSERTION_MODE_TEXT                                                 = $0007,
+    INSERTION_MODE_IN_TABLE                                             = $0008,
+    INSERTION_MODE_IN_TABLE_TEXT                                        = $0009,
+    INSERTION_MODE_IN_CAPTION                                           = $000a,
+    INSERTION_MODE_IN_COLUMN_GROUP                                      = $000b,
+    INSERTION_MODE_IN_TABLE_BODY                                        = $000c,
+    INSERTION_MODE_IN_ROW                                               = $000d,
+    INSERTION_MODE_IN_CELL                                              = $000e,
+    INSERTION_MODE_IN_SELECT                                            = $000f,
+    INSERTION_MODE_IN_SELECT_IN_TABLE                                   = $0010,
+    INSERTION_MODE_IN_TEMPLATE                                          = $0011,
+    INSERTION_MODE_AFTER_BODY                                           = $0012,
+    INSERTION_MODE_IN_FRAMESET                                          = $0013,
+    INSERTION_MODE_AFTER_FRAMESET                                       = $0014,
+    INSERTION_MODE_AFTER_AFTER_BODY                                     = $0015,
+    INSERTION_MODE_AFTER_AFTER_FRAMESET                                 = $0016,
 
-    MyHTML_INSERTION_MODE_LAST_ENTRY                                    = $0017
+    INSERTION_MODE_LAST_ENTRY                                           = $0017
   );
 
   (* base *)
@@ -1790,9 +1097,6 @@ type
     patch : Integer;
   end;
 
-(*myhtml/token.h***************************************************************)
-
-type
   pmyhtml_token_replacement_entry_t = ^myhtml_token_replacement_entry_t;
   myhtml_token_replacement_entry_t = record
     from : PChar;
@@ -1846,17 +1150,11 @@ type
     token_type : pmyhtml_token_type_t;
   end;
 
-(*myhtml/api.h*****************************************************************)
-
-type
   pmyhtml_tree_attr_t = ^myhtml_tree_attr_t;
   myhtml_tree_attr_t = type myhtml_token_attr_t;
 
-(*myhtml/stream.h**************************************************************)
-
-type
   pmyhtml_stream_buffer_entry_t = ^myhtml_stream_buffer_entry_t;
-  myhtml_stream_buffer_t = record
+  myhtml_stream_buffer_entry_t = record
     data : PChar;
     length : QWord;
     size : QWord;
@@ -1871,32 +1169,6 @@ type
     res : myencoding_result_t;
   end;
 
-function myhtml_stream_buffer_create : pmyhtml_stream_buffer_t; cdecl;
-  external MyHTMLLib;
-function myhtml_stream_buffer_init (stream_buffer : pmyhtml_stream_buffer_t;
-  entries_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
-procedure myhtml_stream_buffer_clean (stream_buffer : pmyhtml_stream_buffer_t);
-  cdecl; external MyHTMLLib;
-function myhtml_stream_buffer_destroy (stream_buffer : pmyhtml_stream_buffer_t;
-  self_destroy : Boolean) : pmyhtml_stream_buffer_t; cdecl; external MyHTMLLib;
-function myhtml_stream_buffer_add_entry (stream_buffer :
-  pmyhtml_stream_buffer_t; entry_data_size : QWord) :
-  pmyhtml_stream_buffer_entry_t; cdecl; external MyHTMLLib;
-function myhtml_stream_buffer_current_entry (stream_buffer :
-  pmyhtml_stream_buffer_t) : pmyhtml_stream_buffer_entry_t; cdecl;
-  external MyHTMLLib;
-function myhtml_stream_buffer_entry_init (stream_buffer_entry :
-  pmyhtml_stream_buffer_entry_t; size : QWord) : mystatus_t; cdecl;
-  external MyHTMLLib;
-procedure myhtml_stream_buffer_entry_clean (stream_buffer_entry :
-  pmyhtml_stream_buffer_entry_t); cdecl; external MyHTMLLib;
-function myhtml_stream_buffer_entry_destroy (stream_buffer_entry :
-  pmyhtml_stream_buffer_entry_t; self_destroy : Boolean) :
-  pmyhtml_stream_buffer_entry_t; cdecl; external MyHTMLLib;
-
-(*myhtml/tree.h****************************************************************)
-
-type
   pmyhtml_tree_node_type = ^myhtml_tree_node_type;
   myhtml_tree_node_type = (
     MyHTML_TYPE_NONE                                                    = 0,
@@ -1999,7 +1271,7 @@ type
 
   ppmyhtml_tree_temp_tag_name_t = ^pmyhtml_tree_temp_tag_name_t;
   pmyhtml_tree_temp_tag_name_t = ^myhtml_tree_temp_tag_name_t;
-  myhtml_tree_tag_name = record
+  myhtml_tree_temp_tag_name_t = record
     data : PChar;
     length : QWord;
     size : QWord;
@@ -2111,39 +1383,764 @@ type
     callback_tree_node_remove_ctx : Pointer;
   end;
 
-(* base *)
-function myhtml_tree_create : pmyhtml_tree_t; cdecl; external MyHTMLLib;
-function myhtml_tree_init (tree : pmyhtml_tree_t; myhtml : pmyhtml_t) :
-  mystatus_t; cdecl; external MyHTMLLib;
-procedure myhtml_tree_clean (tree : pmyhtml_tree_t); cdecl; external MyHTMLLib;
-procedure myhtml_tree_clean_all (tree : pmyhtml_tree_t); cdecl;
-  external MyHTMLLib;
-function myhtml_tree_destroy (tree : myhtml_tree_t) : pmyhtml_tree_t; cdecl;
-  external MyHTMLLib;
+  myhtml_token_t = record
+    tree : pmyhtml_tree_t; { ref }
 
-(* parse flags *)
-function myhtml_tree_parse_flags (tree : pmyhtml_tree_t) :
-  myhtml_tree_parse_flags_t; cdecl; external MyHTMLLib;
-procedure myhtml_tree_parse_flags_set (tree : pmyhtml_tree_t; flags :
-  myhtml_tree_parse_flags_t); cdecl; external MyHTMLLib;
+    nodes_obj : pmcobject_async_t; { myhtml_token_node_t }
+    attr_obj : pmcobject_async_t; { myhtml_token_attr_t }
 
-function myhtml_tree_get_html (tree : pmyhtml_tree_t) : pmyhtml_t; cdecl;
+    (* def thread node_id *)
+    mcasync_token_id : QWord;
+    mcasync_attr_id : QWord;
+
+    is_new_tmp : Boolean;
+  end;
+
+  pcharef_entry_t = ^charef_entry_t;
+  charef_entry_t = record
+    ch : Byte;
+    next : QWord;
+    cur_pos : QWord;
+    codepoints : array [0 .. 1] of QWord;
+    codepoints_len : QWord;
+  end;
+
+  pcharef_entry_result_t = ^charef_entry_result_t;
+  charef_entry_result_t = record
+    curr_entry : pcharef_entry_t;
+    last_entry : pcharef_entry_t;
+    last_offset : QWord;
+    is_done : Integer;
+  end;
+
+  pmyhtml_data_process_entry_t = ^myhtml_data_process_entry_t;
+
+  (* parser state function *)
+  myhtml_tokenizer_state_f = function (tree : pmyhtml_tree_t; token_node :
+    pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
+    QWord) : QWord of object;
+
+  (* parser insertion mode function *)
+  myhtml_insertion_f = function (tree : pmyhtml_tree_t; token :
+    pmyhtml_token_node_t) : Boolean of object;
+
+  (* char references state *)
+  myhtml_data_process_state_f = function (chref : pmyhtml_data_process_entry_t;
+    str : pmycore_string_t; const data : PChar; offset : QWord; size : QWord) :
+    QWord of object;
+
+  (* find attribute value functions *)
+  myhtml_attribute_value_find_f = function (str_key : pmycore_string_t;
+    const value : PChar; value_len : QWord) : Boolean of object;
+
+  myhtml_data_process_entry_t = record
+    (* current state for process data *)
+    state : myhtml_data_process_state_f;
+
+    (* for encoding *)
+    encoding : myencoding_t;
+    res : myencoding_result_t;
+
+    (* temp *)
+    tmp_str_pos_proc : QWord;
+    tmp_str_pos : QWord;
+    tmp_num : QWord;
+
+    (* current result *)
+    charef_res : charef_entry_result_t;
+
+    (* settings *)
+    is_attributes : Boolean;
+    emit_null_char : Boolean;
+  end;
+
+  pmyhtml_namespace_detect_name_entry_t = ^myhtml_namespace_detect_name_entry_t;
+  myhtml_namespace_detect_name_entry_t = record
+    name : PChar;
+    name_length : QWord;
+
+    ns : myhtml_namespace_t;
+
+    next : QWord;
+    curr : QWord;
+  end;
+
+  pmyhtml_namespace_detect_url_entry_t = ^myhtml_namespace_detect_url_entry_t;
+  myhtml_namespace_detect_url_entry_t = record
+    url : PChar;
+    url_length : QWord;
+
+    ns : myhtml_namespace_t;
+  end;
+
+  pmyhtml_tag_context_t = ^myhtml_tag_context_t;
+  myhtml_tag_context_t = record
+    id : myhtml_tag_id_t;
+
+    name : PChar;
+    name_length : QWord;
+
+    data_parser : myhtml_tokenizer_state_t;
+    cats : array [0 .. Longint(MyHTML_NAMESPACE_LAST_ENTRY)]
+      of myhtml_tag_categories_t;
+  end;
+
+  pmyhtml_tag_static_list_t = ^myhtml_tag_static_list_t;
+  myhtml_tag_static_list_t = record
+    ctx : pmyhtml_tag_context_t;
+    next : QWord;
+    cur : QWord;
+  end;
+
+  myhtml_tag_t = record
+    tree : pmctree_t;
+    mcsimple_context : pmcsimple_t;
+
+    tags_count : QWord;
+    mchar_node : QWord;
+
+    mchar : pmchar_async_t;
+  end;
+
+  pmyhtml_collection_t = ^myhtml_collection_t;
+  myhtml_collection_t = record
+    list : ppmyhtml_tree_node_t;
+    size : QWord;
+    length : QWord;
+  end;
+
+  myhtml_t = record
+    thread_stream : pmythread_t;
+    thread_batch : pmythread_t;
+    thread_list : array [0 .. 2] of pmythread_t;
+    thread_total : QWord;
+
+    parse_state_func : myhtml_tokenizer_state_f;
+    insertion_func : myhtml_insertion_f;
+
+    opt : myhtml_options_t;
+    marker : pmyhtml_tree_node_t;
+  end;
+
+(*mycore/utils.h***************************************************************)
+
+function mycore_power (t : QWord; k : QWord) : QWord; cdecl; external MyHTMLLib;
+function mycore_strncmp (const str1 : PChar; const str2 : PChar; size :
+  QWord) : QWord; cdecl; external MyHTMLLib;
+function mycore_strcmp (const str1 : PChar; const str2 : PChar) : QWord; cdecl;
   external MyHTMLLib;
-function myhtml_tree_get_tag (tree : pmyhtml_tree_t) : pmyhtml_tag_t; cdecl;
-  external MyHTMLLib;
-function myhtml_tree_get_document (tree : pmyhtml_tree_t) : pmyhtml_tree_node_t;
+function mycore_strcmp_ws (const str1 : PChar; const str2 : PChar) : QWord;
   cdecl; external MyHTMLLib;
-function myhtml_tree_get_node_html (tree : pmyhtml_tree_t) :
-  pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
-function myhtml_tree_get_node_head (tree : pmyhtml_tree_t) :
-  pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
-function myhtml_tree_get_node_body (tree : pmyhtml_tree_t) :
-  pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+function mycore_ustrcasecmp_without_checks_by_secondary (const ustr1 : PByte;
+  const ustr2 : PByte) : Boolean; cdecl; external MyHTMLLib;
 
-function myhtml_tree_get_mchar (tree : pmyhtml_tree_t) : pmchar_async_t; cdecl;
+(*mycore/utils/mcobject.h******************************************************)
+
+function mcobject_create : pmcobject_t; cdecl; external MyHTMLLib;
+function mcobject_init (mcobject : pmcobject_t; chunk_size : QWord;
+  struct_size : QWord ) : mystatus_t; cdecl; external MyHTMLLib;
+procedure mcobject_clean (mcobject : pmcobject_t); cdecl; external MyHTMLLib;
+function mcobject_destroy (mcobject : pmcobject_t; destroy_self : Boolean) :
+  pmcobject_t; cdecl; external MyHTMLLib;
+procedure mcobject_chunk_malloc (mcobject : pmcobject_t; status : pmystatus_t);
+  cdecl; external MyHTMLLib;
+function mcobject_malloc (mcobject : pmcobject_t; status : pmystatus_t) :
+  Pointer; cdecl; external MyHTMLLib;
+function mcobject_free (mcobject : pmcobject_t; entry : Pointer) : mystatus_t;
+  cdecl; external MyHTMLLib;
+
+(*mycore/utils/avl_tree.h******************************************************)
+
+function mycore_utils_avl_tree_create : pmycore_utils_avl_tree_t; cdecl;
   external MyHTMLLib;
-function myhtml_tree_get_mchar_node_id (tree : pmyhtml_tree_t) : QWord; cdecl;
+function mycore_utils_avl_tree_init (avl_tree : pmycore_utils_avl_tree_t)
+  : mystatus_t; cdecl; external MyHTMLLib;
+procedure mycore_utils_avl_tree_clean (avl_tree : pmycore_utils_avl_tree_t);
+  cdecl; external MyHTMLLib;
+function mycore_utils_avl_tree_destroy (avl_tree : pmycore_utils_avl_tree_t;
+  self_destroy : Boolean) : pmycore_utils_avl_tree_t; cdecl; external MyHTMLLib;
+function mycore_utils_avl_tree_node_create_root (avl_tree :
+  pmycore_utils_avl_tree_t; node_type : QWord; value : Pointer)
+  : pmycore_utils_avl_tree_node_t; cdecl; external MyHTMLLib;
+procedure mycore_utils_avl_tree_add (avl_tree : pmycore_utils_avl_tree_t;
+  root : ppmycore_utils_avl_tree_node_t; node_type : QWord; value : Pointer);
+  cdecl; external MyHTMLLib;
+function mycore_utils_avl_tree_delete (avl_tree : pmycore_utils_avl_tree_t;
+  root : ppmycore_utils_avl_tree_node_t; node_type : QWord) : Pointer; cdecl;
   external MyHTMLLib;
+function mycore_utils_avl_tree_search_by_type (avl_tree :
+  pmycore_utils_avl_tree_t; node : pmycore_utils_avl_tree_node_t; node_type :
+  QWord) : pmycore_utils_avl_tree_node_t; cdecl; external MyHTMLLib;
+procedure mycore_utils_avl_tree_list_all_nodes (avl_tree :
+  pmycore_utils_avl_tree_t; root : pmycore_utils_avl_tree_node_t; callback :
+  mycore_utils_avl_tree_node_callback_f; ctx : Pointer); cdecl;
+  external MyHTMLLib;
+
+(*mycore/utils/mcsimple.h******************************************************)
+
+function mcsimple_create : pmcsimple_t; cdecl; external MyHTMLLib;
+procedure mcsimple_init (mcsimple : pmcsimple_t; pos_size : QWord;
+  list_size : QWord; struct_size : QWord); cdecl; external MyHTMLLib;
+procedure mcsimple_clean (mcsimple : pmcsimple_t); cdecl; external MyHTMLLib;
+function mcsimple_destroy (mcsimple : pmcsimple_t; destroy_self : Boolean)
+  : pmcsimple_t; cdecl; external MyHTMLLib;
+function mcsimple_init_list_entries (mcsimple : pmcsimple_t; pos : QWord)
+  : PByte; cdecl; external MyHTMLLib;
+function mcsimple_malloc (mcsimple : pmcsimple_t) : Pointer; cdecl;
+  external MyHTMLLib;
+function mcsimple_get_by_absolute_position (mcsimple : pmcsimple_t;
+  pos : QWord) : Pointer; cdecl; external MyHTMLLib;
+
+(*mycore/utils/mcsync.h********************************************************)
+
+function mcsync_create : pmcsync_t; cdecl; external MyHTMLLib;
+function mcsync_init (mcsync : pmcsync_t) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+procedure mcsync_clean (mcsync : pmcsync_t); cdecl; external MyHTMLLib;
+function mcsync_destroy (mcsync : pmcsync_t; destroy_self : Integer)
+  : pmcsync_t; cdecl; external MyHTMLLib;
+function mcsync_lock (mcsync : pmcsync_t) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+function mcsync_unlock (mcsync : pmcsync_t) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+
+{$IFNDEF MyCORE_BUILD_WITHOUT_THREADS}
+function mcsync_spin_lock (spinlock : Pointer) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+function mcsync_spin_unlock (spinlock : Pointer) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+function mcsync_mutex_lock (mutex : Pointer) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+function mcsync_mutex_try_lock (mutex : Pointer) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+function mcsync_mutex_unlock (mutex : Pointer) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+function mcsync_spin_create : Pointer; cdecl; external MyHTMLLib;
+function mcsync_spin_init (spiclock : Pointer) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+procedure mcsync_spin_clear (spinlock : Pointer); cdecl; external MyHTMLLib;
+procedure mcsync_spin_destroy (spinlock : Pointer); cdecl; external MyHTMLLib;
+function mcsync_mutex_create : Pointer; cdecl; external MyHTMLLib;
+function mcsync_mutex_init (mutex : Pointer) : mcsync_status_t; cdecl;
+  external MyHTMLLib;
+procedure mcsync_mutex_clear (mutex : Pointer); cdecl; external MyHTMLLib;
+procedure mcsync_mutex_destroy (mutex : Pointer); cdecl; external MyHTMLLib;
+{$ENDIF}{MyCORE_BUILD_WITHOUT_THREADS}
+
+(*mycore/utils/mcobject_async.h************************************************)
+
+function mcobject_async_create : pmcobject_async_t; cdecl; external MyHTMLLib;
+function mcobject_async_init (mcobj_async : pmcobject_async_t; chunk_len :
+  QWord; obj_size_by_one_chunk : QWord; struct_size : QWord) :
+  pmcobject_async_status_t; cdecl; external MyHTMLLib;
+procedure mcobject_async_clean (mcobj_async : pmcobject_async_t); cdecl;
+  external MyHTMLLib;
+function mcobject_async_destroy (mcobj_async : pmcobject_async_t; destroy_self :
+  Integer) : pmcobject_async_t; cdecl; external MyHTMLLib;
+function mcobject_async_node_add (mcobj_async : pmcobject_async_t; status :
+  pmcobject_async_status_t) : QWord; cdecl; external MyHTMLLib;
+procedure mcobject_async_node_clean (mcobj_async : pmcobject_async_t; node_idx :
+  QWord); cdecl; external MyHTMLLib;
+procedure mcobject_async_node_all_clean (mcobj_async : pmcobject_async_t);
+  cdecl; external MyHTMLLib;
+procedure mcobject_async_node_delete (mcobj_async : pmcobject_async_t;
+  node_idx : QWord); cdecl; external MyHTMLLib;
+function mcobject_async_malloc (mcobj_async : pmcobject_async_t; node_idx :
+  QWord; status : pmcobject_async_status_t) : Pointer; cdecl;
+  external MyHTMLLib;
+function mcobject_async_free (mcobj_async : pmcobject_async_t; entry : Pointer)
+  : mcobject_async_status_t; cdecl; external MyHTMLLib;
+function mcobject_async_chunk_malloc (mcobj_async : pmcobject_async_t; length :
+  QWord; status : pmcobject_async_status_t) : pmcobject_async_chunk_t; cdecl;
+  external MyHTMLLib;
+function mcobject_async_chunk_malloc_without_lock (mcobj_async :
+  pmcobject_async_t; length : QWord; status : pmcobject_async_status_t) :
+  pmcobject_async_chunk_t; cdecl; external MyHTMLLib;
+
+(*mycore/utils/mchar_async.h***************************************************)
+
+function mchar_async_create : pmchar_async_t; cdecl; external MyHTMLLib;
+function mchar_async_init (mchar_async : pmchar_async_t; chunk_len : QWord;
+  char_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+function mchar_async_clean (mchar_async : pmchar_async_t) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mchar_async_destroy (mchar_async : pmchar_async_t; destroy_self :
+  Integer) : pmchar_async_t; cdecl; external MyHTMLLib;
+function mchar_async_malloc (mchar_async : pmchar_async_t; node_idx : QWord;
+  size : QWord) : PChar; cdecl; external MyHTMLLib;
+function mchar_async_realloc (mchar_async : pmchar_async_t; node_idx : QWord;
+  data : PChar; data_len : QWord; new_size : QWord) : PChar; cdecl;
+  external MyHTMLLib;
+procedure mchar_async_free (mchar_async : pmchar_async_t; node_idx : QWord;
+  entry : PChar); cdecl; external MyHTMLLib;
+function mchar_async_node_add (mchar_async : pmchar_async_t; status :
+  pmystatus_t) : QWord; cdecl; external MyHTMLLib;
+procedure mchar_async_node_clean (mchar_async : pmchar_async_t; node_idx :
+  QWord); cdecl; external MyHTMLLib;
+procedure mchar_async_node_delete (mchar_async : pmchar_async_t; node_idx :
+  QWord); cdecl; external MyHTMLLib;
+function mchar_async_chunk_malloc (mchar_async : pmchar_async_t; node :
+  pmchar_async_node_t; length : QWord) : pmchar_async_chunk_t; cdecl;
+  external MyHTMLLib;
+function mchar_async_crop_first_chars (mchar_async : pmchar_async_t; node_idx :
+  QWord; data : PChar; crop_len : QWord) : PChar; cdecl; external MyHTMLLib;
+function mchar_async_crop_first_chars_without_cache (data : PChar; crop_len :
+  QWord) : PChar; cdecl; external MyHTMLLib;
+function mchar_async_get_size_by_data (const data : PChar) : QWord; cdecl;
+  external MyHTMLLib;
+
+// cache
+function mchar_async_cache_init (cache : pmchar_async_cache_t) : mystatus_t;
+  cdecl; external MyHTMLLib;
+function mchar_async_cache_destroy (cache : pmchar_async_cache_t; self_destroy :
+  Boolean) : pmchar_async_cache_t; cdecl; external MyHTMLLib;
+procedure mchar_async_cache_clean (cache : pmchar_async_cache_t); cdecl;
+  external MyHTMLLib;
+procedure mchar_async_cache_add (cache : pmchar_async_cache_t; value : Pointer;
+  size : QWord); cdecl; external MyHTMLLib;
+function mchar_async_cache_delete (cache : pmchar_async_cache_t; size : QWord) :
+  QWord; cdecl; external MyHTMLLib;
+
+(*mycore/utils/mhash.h*********************************************************)
+
+function mycore_utils_mhash_create : pmycore_utils_mhash_t; cdecl;
+  external MyHTMLLib;
+function mycore_utils_mhash_init (mhash : pmycore_utils_mhash_t; table_size :
+  QWord; depth : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+procedure mycore_utils_mhash_clean (mhash : pmycore_utils_mhash_t); cdecl;
+  external MyHTMLLib;
+function mycore_utils_mhash_destroy (mhash : pmycore_utils_mhash_t;
+  self_destroy : Boolean) : pmycore_utils_mhash_t; cdecl; external MyHTMLLib;
+function mycore_utils_mhash_create_entry (mhash : pmycore_utils_mhash_t;
+  const key : PChar; key_size : QWord; value : Pointer) :
+  pmycore_utils_mhash_entry_t; cdecl; external MyHTMLLib;
+function mycore_utils_mhash_add (mhash : pmycore_utils_mhash_t; const key :
+  PChar; key_size : QWord; value : Pointer) : pmycore_utils_mhash_entry_t;
+  cdecl; external MyHTMLLib;
+function mycore_utils_mhash_search (mhash : pmycore_utils_mhash_t; const key :
+  PChar; key_size : QWord; value : Pointer) : pmycore_utils_mhash_entry_t;
+  cdecl; external MyHTMLLib;
+function mycore_utils_mhash_add_with_choice (mhash : pmycore_utils_mhash_t;
+  const key : PChar; key_size : QWord) : pmycore_utils_mhash_entry_t; cdecl;
+  external MyHTMLLib;
+function mycore_utils_mhash_entry_by_id (mhash : pmycore_utils_mhash_t; id :
+  QWord) : pmycore_utils_mhash_entry_t; cdecl; external MyHTMLLib;
+function mycore_utils_mhash_get_table_size (mhash : pmycore_utils_mhash_t) :
+  QWord; cdecl; external MyHTMLLib;
+function mycore_utils_mhash_rebuld (mhash : pmycore_utils_mhash_t) :
+  ppmycore_utils_mhash_entry_t; cdecl; external MyHTMLLib;
+
+(*mycore/utils/mctree.h********************************************************)
+
+function mctree_create (start_size : QWord) : pmctree_t; cdecl;
+  external MyHTMLLib;
+procedure mctree_clean (mctree : pmctree_t); cdecl; external MyHTMLLib;
+function mctree_destroy (mctree : pmctree_t) : pmctree_t; cdecl;
+  external MyHTMLLib;
+function mctree_insert (mctree : pmctree_t; const key : PChar; key_size : QWord;
+  value : Pointer; b_insert : mctree_before_insert_f) : mctree_index_t; cdecl;
+  external MyHTMLLib;
+function mctree_search (mctree : pmctree_t; const key : PChar; key_size : QWord)
+  : mctree_index_t; cdecl; external MyHTMLLib;
+function mctree_search_lowercase (mctree : pmctree_t; const key : PChar;
+  key_size : QWord) : mctree_index_t; cdecl; external MyHTMLLib;
+
+(*mycore/incoming.h************************************************************)
+
+function mycore_incoming_buffer_add (current : pmycore_incoming_buffer_t;
+  mcobject : pmcobject_t; const html : PChar; html_size : QWord) :
+  pmycore_incoming_buffer_t; cdecl external MyHTMLLib;
+procedure mycore_incoming_buffer_clean (current : pmycore_incoming_buffer_t);
+  cdecl; external MyHTMLLib;
+function mycore_incoming_buffer_split (current : pmycore_incoming_buffer_t;
+  mcobject : pmcobject_t; global_pos : QWord) : pmycore_incoming_buffer_t;
+  cdecl; external MyHTMLLib;
+function mycore_incoming_buffer_convert_one_escape_to_code_point (inc_buf :
+  ppmycore_incoming_buffer_t; relative_pos : PQword) : QWord; cdecl;
+  external MyHTMLLib;
+function mycore_incoming_buffer_escaped_case_cmp (inc_buf :
+  ppmycore_incoming_buffer_t; const to_ : PChar; to_size : QWord; relative_pos :
+  PQWord) : QWord; cdecl; external MyHTMLLib;
+
+(*mycore/mystring.h************************************************************)
+
+function mycore_string_destroy (str : pmycore_string_t; destroy_obj : Boolean) :
+  pmycore_string_raw_t; cdecl; external MyHTMLLib;
+
+(* append *)
+procedure mycore_string_append (str : pmycore_string_t; const data : PChar;
+  length : QWord); cdecl; external MyHTMLLib;
+procedure mycore_string_append_one (str : pmycore_string_t; const data : Char);
+  cdecl; external MyHTMLLib;
+procedure mycore_string_append_lowercase (str : pmycore_string_t; const data :
+  PChar; length : QWord); cdecl; external MyHTMLLib;
+procedure mycore_string_append_with_replacement_null_characters (str :
+  pmycore_string_t; const buff : PChar; length : QWord); cdecl;
+  external MyHTMLLib;
+function mycore_string_raw_set_replacement_character (target : pmycore_string_t;
+  position : QWord) : QWord; cdecl; external MyHTMLLib;
+
+(* other functions *)
+procedure mycore_string_copy (dest : pmycore_string_t; target :
+  pmycore_string_t); cdecl; external MyHTMLLib;
+function mycore_string_raw_copy (str1 : PChar; str2 : PChar; size : QWord) :
+  QWord; cdecl; external MyHTMLLib;
+procedure mycore_string_stay_only_whitespace (target : pmycore_string_t); cdecl;
+  external MyHTMLLib;
+function mycore_string_crop_whitespace_from_begin (target : pmycore_string_t) :
+  QWord; cdecl; external MyHTMLLib;
+function mycore_string_whitespace_from_begin (target : pmycore_string_t) :
+  QWord; cdecl; external MyHTMLLib;
+
+(*mycore/mythread.h************************************************************)
+
+function mythread_create : pmythread_t; cdecl; external MyHTMLLib;
+function mythread_init (mythread : pmythread_t; thread_type : mythread_type_t;
+  threads_count : QWord; id_increase : QWord) : mystatus_t; cdecl;
+  external MyHTMLLib;
+procedure mythread_clean (mythread : pmythread_t); cdecl; external MyHTMLLib;
+function mythread_destroy (mythread : pmythread_t; before_join :
+  mythread_callback_before_entry_join_f; ctx : Pointer; self_destroy : Boolean)
+  : pmythread_t; cdecl; external MyHTMLLib;
+function mythread_increase_id_by_entry_id (mythread : pmythread_t; thread_id :
+  mythread_id_t) : mythread_id_t; cdecl; external MyHTMLLib;
+
+(* set for all threads *)
+function mythread_join (mythread : pmythread_t; before_join :
+  mythread_callback_before_entry_join_f; ctx : Pointer) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_quit (mythread : pmythread_t; before_join :
+  mythread_callback_before_entry_join_f; ctx : Pointer) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_stop (mythread : pmythread_t) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_resume (mythread : pmythread_t; send_opt :
+  mythread_thread_opt_t) : mystatus_t; cdecl; external MyHTMLLib;
+function mythread_suspend (mythread : pmythread_t) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_check_status (mythread : pmythread_t) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_option (mythread : pmythread_t) : mythread_thread_opt_t;
+  cdecl; external MyHTMLLib;
+procedure mythread_option_set (mythread : pmythread_t; opt :
+  mythread_thread_opt_t); cdecl; external MyHTMLLib;
+
+(* Entries *)
+function mythread_entry_create (mythread : pmythread_t; process_func :
+  mythread_process_f; func : mythread_work_f; opt : mythread_thread_opt_t) :
+  mystatus_t; cdecl; external MyHTMLLib;
+function mythread_entry_join (entry : pmythread_entry_t; before_join :
+  mythread_callback_before_entry_join_f; ctx : Pointer) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_entry_quit (entry : pmythread_entry_t; before_join :
+  mythread_callback_before_entry_join_f; ctx : Pointer) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_entry_stop (entry : pmythread_entry_t) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_entry_resume (entry : pmythread_entry_t; send_opt :
+  mythread_thread_opt_t) : mystatus_t; cdecl; external MyHTMLLib;
+function mythread_entry_suspend (entry : pmythread_entry_t) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_entry_status (entry : pmythread_entry_t) : mystatus_t; cdecl;
+  external MyHTMLLib;
+function mythread_entry_mythread (entry : pmythread_entry_t) : pmythread_t;
+  cdecl; external MyHTMLLib;
+
+(* API for ports *)
+function mythread_thread_create (mythread : pmythread_t; process_func :
+  mythread_process_f; ctx : Pointer) : Pointer; cdecl; external MyHTMLLib;
+function mythread_thread_join (mythread : pmythread_t; thread : Pointer) :
+  mystatus_t; cdecl; external MyHTMLLib;
+function mythread_thread_cancel (mythread : pmythread_t; thread : Pointer) :
+  mystatus_t; cdecl; external MyHTMLLib;
+function mythread_thread_destroy (mythread : pmythread_t; thread : Pointer) :
+  mystatus_t; cdecl; external MyHTMLLib;
+function mythread_thread_attr_init (mythread : pmythread_t) : Pointer; cdecl;
+  external MyHTMLLib;
+procedure mythread_thread_attr_clean (mythread : pmythread_t; attr : Pointer);
+  cdecl; external MyHTMLLib;
+procedure mythread_thread_attr_destroy (mythread : pmythread_t; attr : Pointer);
+  cdecl; external MyHTMLLib;
+function mythread_mutex_create (mythread : pmythread_t) : Pointer; cdecl;
+  external MyHTMLLib;
+function mythread_mutex_post (mythread : pmythread_t; mutex : Pointer) :
+  mystatus_t; cdecl; external MyHTMLLib;
+function mythread_mutex_wait (mythread : pmythread_t; mutex : Pointer) :
+  mystatus_t; cdecl; external MyHTMLLib;
+procedure mythread_mutex_close (mythread : pmythread_t; mutex : Pointer); cdecl;
+  external MyHTMLLib;
+function mythread_nanosleep_create (mythread : pmythread_t) : Pointer; cdecl;
+  external MyHTMLLib;
+procedure mythread_nanosleep_clean (timespec : Pointer); cdecl;
+  external MyHTMLLib;
+procedure mythread_nanosleep_destroy (timespec : Pointer); cdecl;
+  external MyHTMLLib;
+function mythread_nanosleep_sleep (timespec : Pointer) : mystatus_t; cdecl;
+  external MyHTMLLib;
+
+(* callback *)
+procedure mythread_callback_quit (mythread : pmythread_t; entry :
+  pmythread_entry_t; ctx : Pointer); cdecl; external MyHTMLLib;
+{$ENDIF}{MyCORE_BUILD_WITHOUT_THREADS}
+
+(*mycore/thread_queue.h********************************************************)
+
+function mythread_queue_create : pmythread_queue_t; cdecl; external MyHTMLLib;
+function mythread_queue_init (queue : pmythread_queue_t; size : QWord) :
+  mystatus_t; cdecl; external MyHTMLLib;
+procedure mythread_queue_clean (queue : pmythread_queue_t); cdecl;
+  external MyHTMLLib;
+function mythread_queue_destroy (token : pmythread_queue_t) : pmythread_queue_t;
+  cdecl; external MyHTMLLib;
+procedure mythread_queue_node_clean (qnode : pmythread_queue_node_t); cdecl;
+  external MyHTMLLib;
+function mythread_queue_count_used_node (queue : pmythread_queue_t) : QWord;
+  cdecl; external MyHTMLLib;
+function mythread_queue_get_first_node (queue : pmythread_queue_t) :
+  pmythread_queue_node_t; cdecl; external MyHTMLLib;
+function mythread_queue_get_prev_node (qnode : pmythread_queue_node_t) :
+  pmythread_queue_node_t; cdecl; external MyHTMLLib;
+function mythread_queue_get_current_node (queue : pmythread_queue_t) :
+  pmythread_queue_node_t; cdecl; external MyHTMLLib;
+function mythread_queue_node_malloc (mythread : pmythread_t; queue :
+  pmythread_queue_t; status : pmystatus_t) : pmythread_queue_node_t; cdecl;
+  external MyHTMLLib;
+function mythread_queue_node_malloc_limit (mythread : pmythread_t; queue :
+  pmythread_queue_t; limit : QWord; status : pmystatus_t) :
+  pmythread_queue_node_t; cdecl; external MyHTMLLib;
+{$IFNDEF MyCORE_BUILD_WITHOUT_THREADS}
+function mythread_queue_node_malloc_round (mythread : pmythread_t; entry :
+  pmythread_queue_list_entry_t) : pmythread_queue_node_t; cdecl;
+  external MyHTMLLib;
+function mythread_queue_list_create (status : pmystatus_t) :
+  pmythread_queue_list_t; cdecl; external MyHTMLLib;
+procedure mythread_queue_list_destroy (queue_list : pmythread_queue_list_t);
+  cdecl; external MyHTMLLib;
+function mythread_queue_list_get_count (queue_list : pmythread_queue_list_t) :
+  QWord; cdecl; external MyHTMLLib;
+procedure mythread_queue_list_wait_for_done (mythread : pmythread_t;
+  queue_list : pmythread_queue_list_t); cdecl; external MyHTMLLib;
+function mythread_queue_list_see_for_done (mythread : pmythread_t;
+  queue_list : pmythread_queue_list_t) : Boolean; cdecl; external MyHTMLLib;
+function mythread_queue_list_see_for_done_by_thread (mythread : pmythread_t;
+  queue_list : pmythread_queue_list_t; thread_id : mythread_id_t) : Boolean;
+  cdecl; external MyHTMLLib;
+function mythread_queue_list_entry_push (mythread_list : ppmythread_t;
+  list_size : QWord; queue_list : pmythread_queue_list_t; queue :
+  pmythread_queue_t; thread_param_size : QWord; status : pmystatus_t) :
+  pmythread_queue_list_t; cdecl; external MyHTMLLib;
+function mythread_queue_list_entry_delete (mythread_list : ppmythread_t;
+  list_size : QWord; queue_list : pmythread_queue_list_t; entry :
+  pmythread_queue_list_entry_t; destroy_queue : Boolean) :
+  pmythread_queue_list_entry_t; cdecl; external MyHTMLLib;
+procedure mythread_queue_list_entry_clean (entry :
+  pmythread_queue_list_entry_t); cdecl; external MyHTMLLib;
+procedure mythread_queue_list_entry_wait_for_done (mythread : pmythread_t;
+  entry : pmythread_queue_list_entry_t); cdecl; external MyHTMLLib;
+procedure mythread_queue_list_entry_make_batch (mythread : pmythread_t;
+  entry : pmythread_queue_list_entry_t); cdecl; external MyHTMLLib;
+procedure mythread_queue_list_entry_make_stream (mythread : pmythread_t;
+  entry : pmythread_queue_list_entry_t); cdecl; external MyHTMLLib;
+{$ENDIF}{MyCORE_BUILD_WITHOUT_THREADS}
+
+(*mycore/myosi.h***************************************************************)
+
+function mycore_malloc (size : QWord) : Pointer; cdecl; external MyHTMLLib;
+function mycore_realloc (dst : Pointer; size : QWord) : Pointer; cdecl;
+  external MyHTMLLib;
+function mycore_calloc (num : QWord; size : QWord) : Pointer; cdecl;
+  external MyHTMLLib;
+function mycore_free (dst : Pointer) : Pointer; cdecl; external MyHTMLLib;
+
+(* io *)
+function mycore_fopen (const filename : PChar; const mode : PChar) : Pointer;
+  cdecl; external MyHTMLLib;
+function mycore_fclose (stream : Pointer) : Integer; cdecl; external MyHTMLLib;
+function mycore_fread (buffer : Pointer; size : QWord; count : QWord; stream :
+  Pointer) : QWord; cdecl; external MyHTMLLib;
+function mycore_fwrite (const buffer : Pointer; size : QWord; count : QWord;
+  stream : Pointer) : QWord; cdecl; external MyHTMLLib;
+function mycore_fflush (stream : Pointer) : Integer; cdecl; external MyHTMLLib;
+function mycore_fseek (stream : Pointer; offset : Longint; origin : Integer) :
+  Integer; cdecl; external MyHTMLLib;
+function mycore_ftell (stream : Pointer) : Longint; cdecl; external MyHTMLLib;
+function mycore_ferror (stream : Pointer) : Integer; cdecl; external MyHTMLLib;
+procedure mycore_setbuf (stream : Pointer; buffer : PChar); cdecl;
+  external MyHTMLLib;
+
+(*mycore/perf.h****************************************************************)
+
+{$IFDEF MyHTML_WITH_PERF}
+function mycore_perf_create : Pointer; cdecl; external MyHTMLLib;
+procedure mycore_perf_clean (perf : Pointer); cdecl; external MyHTMLLib;
+procedure mycore_perf_destroy (perf : Pointer); cdecl; external MyHTMLLib;
+function mycore_perf_begin (perf : Pointer) : mycore_status_t; cdecl;
+  external MyHTMLLib;
+function mycore_perf_end (perf : Pointer) : mycore_status_t; cdecl;
+  external MyHTMLLib;
+function mycore_pref_in_sec (perf : Pointer) : Double; cdecl;
+  external MyHTMLLib;
+function mycore_perf_clock : QWord; cdecl; external MyHTMLLib;
+function mycore_perf_frequency : QWord; cdecl; external MyHTMLLib;
+{$ENDIF}{MyHTML_WITH_PERF}
+
+(*myencoding/encoding.h********************************************************)
+
+function myencoding_get_function_by_id (idx : myencoding_t) :
+  myencoding_custom_f; cdecl; external MyHTMLLib;
+function myencoding_decode_utf_8 (const data : Byte; res : pmyencoding_result_t)
+  : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_ibm866 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_2 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_3 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_4 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_5 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_6 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_7 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_8 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_8_i (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_10 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_13 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_14 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_15 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_8859_16 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_koi8_r (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_koi8_u (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_macintosh (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_874 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1250 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1251 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1252 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1253 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1254 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1255 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1256 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1257 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_windows_1258 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_x_mac_cyrillic (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_gbk (const data : Byte; res : pmyencoding_result_t)
+  : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_gb18030 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_big5 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_euc_jp (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_iso_2022_jp (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_shift_jis (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_euc_kr (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_shared_utf_16 (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_utf_16be (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_utf_16le (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_decode_x_user_defined (const data : Byte; res :
+  pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
+function myencoding_codepoint_ascii_length (codepoint : QWord) :  QWord; cdecl;
+  external MyHTMLLib;
+function myencoding_ascii_utf_8_length (const data : Byte) : QWord; cdecl;
+  external MyHTMLLib;
+function myencoding_codepoint_to_ascii_utf_8 (codepoint : QWord; data : PChar) :
+  QWord; cdecl; external MyHTMLLib;
+function myencoding_codepoint_to_lowercase_ascii_utf_8 (codepoint : QWord;
+  data : PChar) : QWord; cdecl; external MyHTMLLib;
+function myencoding_codepoint_to_ascii_utf_16 (codepoint : QWord; data : PChar)
+  : QWord; cdecl; external MyHTMLLib;
+function myencoding_ascii_utf_8_to_codepoint (const data : PByte; codepoint :
+  PQWord) : QWord; cdecl; external MyHTMLLib;
+procedure myencoding_result_clean (res : pmyencoding_result_t); cdecl;
+  external MyHTMLLib;
+function myencoding_detect_and_cut_bom (const text : PChar; length : PChar;
+  encoding : pmyencoding_t; const new_text : PPChar; new_size : QWord) :
+  Boolean; cdecl; external MyHTMLLib;
+function myencoding_convert_to_ascii_utf_8 (raw_str : pmycore_string_raw_t;
+  const buff : PChar; length : QWord; encoding : myencoding_t) : QWord; cdecl;
+  external MyHTMLLib;
+function myencoding_name_entry_by_name (const name : PChar; length : QWord) :
+  pmyencoding_detect_name_entry_t; cdecl; external MyHTMLLib;
+function myencoding_extracting_character_encoding_from_charset_with_found (
+  const data : PChar; data_size : QWord; encoding : pmyencoding_t; const found :
+  PPChar; found_length : PQWord) : Boolean; cdecl; external MyHTMLLib;
+
+(*myencoding/mystring.h********************************************************)
+
+procedure myencoding_string_append (str : pmycore_string_t; const buff :
+  PChar; length : QWord; encoding : myencoding_t); cdecl; external MyHTMLLib;
+
+(* append with convert encoding *)
+procedure myencoding_string_append_chunk (str : pmycore_string_t; res :
+  pmyencoding_result_t; const buff : PChar; length : QWord; encoding :
+  myencoding_t); cdecl; external MyHTMLLib;
+procedure myencoding_string_append_one (str : pmycore_string_t; res :
+  pmyencoding_result_t; const data : Char; encoding : myencoding_t); cdecl;
+  external MyHTMLLib;
+
+(* append with convert encoding lowercase *)
+procedure myencoding_string_append_lowercase_ascii (str : pmycore_string_t;
+  const buff : PChar; length : QWord; encoding : myencoding_t); cdecl;
+  external MyHTMLLib;
+procedure myencoding_string_append_chunk_lowercase_ascii (str :
+  pmycore_string_t; res : pmyencoding_result_t; const buff : PChar; length :
+  QWord; encoding : myencoding_t); cdecl; external MyHTMLLib;
+
+(*myhtml/stream.h**************************************************************)
+
+function myhtml_stream_buffer_create : pmyhtml_stream_buffer_t; cdecl;
+  external MyHTMLLib;
+function myhtml_stream_buffer_init (stream_buffer : pmyhtml_stream_buffer_t;
+  entries_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+procedure myhtml_stream_buffer_clean (stream_buffer : pmyhtml_stream_buffer_t);
+  cdecl; external MyHTMLLib;
+function myhtml_stream_buffer_destroy (stream_buffer : pmyhtml_stream_buffer_t;
+  self_destroy : Boolean) : pmyhtml_stream_buffer_t; cdecl; external MyHTMLLib;
+function myhtml_stream_buffer_add_entry (stream_buffer :
+  pmyhtml_stream_buffer_t; entry_data_size : QWord) :
+  pmyhtml_stream_buffer_entry_t; cdecl; external MyHTMLLib;
+function myhtml_stream_buffer_current_entry (stream_buffer :
+  pmyhtml_stream_buffer_t) : pmyhtml_stream_buffer_entry_t; cdecl;
+  external MyHTMLLib;
+function myhtml_stream_buffer_entry_init (stream_buffer_entry :
+  pmyhtml_stream_buffer_entry_t; size : QWord) : mystatus_t; cdecl;
+  external MyHTMLLib;
+procedure myhtml_stream_buffer_entry_clean (stream_buffer_entry :
+  pmyhtml_stream_buffer_entry_t); cdecl; external MyHTMLLib;
+function myhtml_stream_buffer_entry_destroy (stream_buffer_entry :
+  pmyhtml_stream_buffer_entry_t; self_destroy : Boolean) :
+  pmyhtml_stream_buffer_entry_t; cdecl; external MyHTMLLib;
+
+(*myhtml/tree.h****************************************************************)
 
 (* list *)
 function myhtml_tree_list_init : pmyhtml_tree_list_t; cdecl; external MyHTMLLib;
@@ -2295,12 +2292,6 @@ procedure myhtml_tree_node_free (node : pmyhtml_tree_node_t); cdecl;
   external MyHTMLLib;
 function myhtml_tree_node_clone (node : pmyhtml_tree_node_t) :
   pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
-procedure myhtml_tree_node_add_child (root : pmyhtml_tree_node_t; node :
-  pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
-procedure myhtml_tree_node_insert_before (root : pmyhtml_tree_node_t; node :
-  pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
-procedure myhtml_tree_node_insert_after (root : pmyhtml_tree_node_t; node :
-  pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
 procedure myhtml_tree_node_insert_by_mode (adjusted_location :
   pmyhtml_tree_node_t; node : pmyhtml_tree_node_t; mode :
   myhtml_tree_insertion_mode_t); cdecl; external MyHTMLLib;
@@ -2382,53 +2373,10 @@ function myhtml_tree_special_list_pop (special :
   pmyhtml_tree_special_token_list_t) : QWord; cdecl; external MyHTMLLib;
 
 (* incoming buffer *)
-function myhtml_tree_incoming_buffer_first (tree : pmyhtml_tree_t) :
-  pmycore_incoming_buffer_t; cdecl; external MyHTMLLib;
 function myhtml_tree_incoming_buffer_make_data (tree : pmyhtml_tree_t;
   start : QWord; length : QWord) : PChar; cdecl; external MyHTMLLib;
 
-(*myhtml/myosi.h***************************************************************)
-
-type
-  (* parser state function *)
-  myhtml_tokenizer_state_f = function (tree : pmyhtml_tree_t; token_node :
-    pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
-    QWord) : QWord of object;
-
-  (* parser insertion mode function *)
-  myhtml_insertion_f = function (tree : pmyhtml_tree_t; token :
-    pmyhtml_token_node_t) : Boolean of object;
-
-  (* char references state *)
-  myhtml_data_process_state_f = function (chref : pmyhtml_data_process_entry_t;
-    str : pmycore_string_t; const data : PChar; offset : QWord; size : QWord) :
-    QWord of object;
-
-  (* callback function *)
-  myhtml_callback_token_f = function (tree : pmyhtml_tree_t; token :
-    pmyhtml_token_node_t; ctx : Pointer) : Pointer of object;
-  myhtml_callback_tree_node_f = procedure (tree : pmyhtml_tree_t; node :
-    pmyhtml_tree_node_t; ctx : Pointer) of object;
-
-  (* find attribute value functions *)
-  myhtml_attribute_value_find_f = function (str_key : pmycore_string_t;
-    const value : PChar; value_len : QWord) : Boolean of object;
-
 (*myhtml/token.h***************************************************************)
-
-type
-  myhtml_token_t = record
-    tree : pmyhtml_tree_t; { ref }
-
-    nodes_obj : pmcobject_async_t; { myhtml_token_node_t }
-    attr_obj : pmcobject_async_t; { myhtml_token_attr_t }
-
-    (* def thread node_id *)
-    mcasync_token_id : QWord;
-    mcasync_attr_id : QWord;
-
-    is_new_tmp : Boolean;
-  end;
 
 function myhtml_token_create (tree : pmyhtml_tree_t; size : QWord) :
   pmyhtml_token_t; cdecl; external MyHTMLLib;
@@ -2438,24 +2386,6 @@ procedure myhtml_token_clean_all (token : pmyhtml_token_t); cdecl;
   external MyHTMLLib;
 function myhtml_token_destroy (token : pmyhtml_token_t) : pmyhtml_token_t;
   cdecl; external MyHTMLLib;
-function myhtml_token_node_tag_id (token_node : pmyhtml_token_node_t) :
-  myhtml_tag_id_t; cdecl; external MyHTMLLib;
-function myhtml_token_node_raw_position (token_node : pmyhtml_token_node_t) :
-  myhtml_position_t; cdecl; external MyHTMLLib;
-function myhtml_token_node_element_position (token_node : pmyhtml_token_node_t)
-  : myhtml_position_t; cdecl; external MyHTMLLib;
-function myhtml_token_node_attribute_first (token_node : pmyhtml_token_node_t) :
-  pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
-function myhtml_token_node_attribute_last (token_node : pmyhtml_token_node_t) :
-  pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
-function myhtml_token_node_text (token_node : pmyhtml_token_node_t; length :
-  PQWord) : PChar; cdecl; external MyHTMLLib;
-function myhtml_token_node_string (token_node : pmyhtml_token_node_t) :
-  pmycore_string_t; cdecl; external MyHTMLLib;
-function myhtml_token_node_is_close (token_node : pmyhtml_token_node_t) :
-  Boolean; cdecl; external MyHTMLLib;
-function myhtml_token_node_is_close_self (token_node : pmyhtml_token_node_t) :
-  Boolean; cdecl; external MyHTMLLib;
 function myhtml_token_node_create (token : pmyhtml_token_t; async_node_id :
   QWord) : pmyhtml_token_node_t; cdecl; external MyHTMLLib;
 procedure myhtml_token_node_clean (node : pmyhtml_token_node_t); cdecl;
@@ -2472,8 +2402,6 @@ function myhtml_token_attr_remove_by_name (node : pmyhtml_token_node_t;
 procedure myhtml_token_attr_delete_all (token : pmyhtml_token_t; node :
   pmyhtml_token_node_t); cdecl; external MyHTMLLib;
 procedure myhtml_token_delete (token : pmyhtml_token_t; node :
-  pmyhtml_token_node_t); cdecl; external MyHTMLLib;
-procedure myhtml_token_node_wait_for_done (token : pmyhtml_token_t; node :
   pmyhtml_token_node_t); cdecl; external MyHTMLLib;
 procedure myhtml_token_set_done (node : pmyhtml_token_node_t); cdecl;
   external MyHTMLLib;
@@ -2527,24 +2455,6 @@ procedure myhtml_token_set_replacement_character_for_null_token (tree :
 
 (*myhtml/charef.h**************************************************************)
 
-type
-  pcharef_entry_t = ^charef_entry_t;
-  charef_entry_t = record
-    ch : Byte;
-    next : QWord;
-    cur_pos : QWord;
-    codepoints : array [0 .. 1] of QWord;
-    codepoints_len : QWord;
-  end;
-
-  pcharef_entry_result_t = ^charef_entry_result_t;
-  charef_entry_result_t = record
-    curr_entry : pcharef_entry_t;
-    last_entry : pcharef_entry_t;
-    last_offset : QWord;
-    is_done : Integer;
-  end;
-
 function myhtml_charef_find (const start : PChar; offset : PQWord; size :
   QWord; data_size : PQWord) : pcharef_entry_t; cdecl; external MyHTMLLib;
 function myhtml_charef_find_by_pos (pos : QWord; const start : PChar; offset :
@@ -2554,29 +2464,6 @@ function myhtml_charef_get_first_position (const start : Char) :
   pcharef_entry_t; cdecl; external MyHTMLLib;
 
 (*myhtml/data_process.h********************************************************)
-
-type
-  pmyhtml_data_process_entry_t = ^myhtml_data_process_entry_t;
-  myhtml_data_process_entry_t = record
-    (* current state for process data *)
-    state : myhtml_data_process_state_f;
-
-    (* for encoding *)
-    encoding : myencoding_t;
-    res : myencoding_result_t;
-
-    (* temp *)
-    tmp_str_pos_proc : QWord;
-    tmp_str_pos : QWord;
-    tmp_num : QWord;
-
-    (* current result *)
-    charef_res : charef_entry_result_t;
-
-    (* settings *)
-    is_attributes : Boolean;
-    emit_null_char : Boolean;
-  end;
 
 procedure myhtml_data_process_entry_clean (proc_entry :
   pmyhtml_data_process_entry_t); cdecl; external MyHTMLLib;
@@ -2609,30 +2496,6 @@ procedure myhtml_data_process_state_end (proc_entry :
 
 (*myhtml/mynamespace.h*********************************************************)
 
-type
-  pmyhtml_namespace_detect_name_entry_t = ^myhtml_namespace_detect_name_entry_t;
-  myhtml_namespace_detect_name_entry_t = record
-    name : PChar;
-    name_length : QWord;
-
-    ns : myhtml_namespace_t;
-
-    next : QWord;
-    curr : QWord;
-  end;
-
-  pmyhtml_namespace_detect_url_entry_t = ^myhtml_namespace_detect_url_entry_t;
-  myhtml_namespace_detect_url_entry_t = record
-    url : PChar;
-    url_length : QWord;
-
-    ns : myhtml_namespace_t;
-  end;
-
-function myhtml_namespace_name_by_id (ns : myhtml_namespace_t; length : PQWord)
-  : PChar; cdecl; external MyHTMLLib;
-function myhtml_namespace_id_by_name (const name : PChar; length : QWord; ns :
-  pmyhtml_namespace_t) : Boolean; cdecl; external MyHTMLLib;
 function myhtml_namespace_url_by_id (ns : myhtml_namespace_t; length : PQWord) :
   PChar; cdecl; external MyHTMLLib;
 function myhtml_namespace_id_by_url (const url : PChar; length : QWord) :
@@ -2657,7 +2520,7 @@ function myhtml_string_append_lowercase_with_convert_encoding_with_preprocessing
   myencoding_t; emit_null_chars : Boolean) : QWord; cdecl; external MyHTMLLib;
 function myhtml_string_append_lowercase_chunk_with_convert_encoding_with_preprocessing
   (str : pmycore_string_t; res : pmyencoding_result_t; const buff : PChar;
-  length : QWord; encoding : myencoding; emit_null_chars : Boolean) :QWord;
+  length : QWord; encoding : myencoding_t; emit_null_chars : Boolean) :QWord;
   cdecl; external MyHTMLLib;
 
 (* append with preprocessing *)
@@ -2704,99 +2567,7 @@ function myhtml_insertion_mode_in_body (tree : pmyhtml_tree_t; token :
 function myhtml_insertion_mode_in_template (tree : pmyhtml_tree_t; token :
   pmyhtml_token_node_t) : Boolean; cdecl; external MyHTMLLib;
 
-(*myhtml/serialization.h*******************************************************)
-
-(* the serialization functions *)
-function myhtml_serialization_tree_buffer (scope_node : pmyhtml_tree_node_t;
-  str : pmycore_string_raw_t) : mystatus_t; cdecl; external MyHTMLLib;
-function myhtml_serialization_node_buffer (node : pmyhtml_tree_node_t; str :
-  pmycore_string_raw_t) : mystatus_t; cdecl; external MyHTMLLib;
-function myhtml_serialization_tree_callback (scope_node : pmyhtml_tree_node_t;
-  callback : mycore_callback_serialize_f; ptr : Pointer) : mystatus_t; cdecl;
-  external MyHTMLLib;
-function myhtml_serialization_node_callback (node : pmyhtml_tree_node_t;
-  callback : mycore_callback_serialize_f; ptr : Pointer) : mystatus_t; cdecl;
-  external MyHTMLLib;
-
-(* in versuon 1.0.3 this is in public api. *)
-(* Need to set deprecated? *)
-function myhtml_serialization (scope_node : pmyhtml_tree_node_t; str :
-  pmycore_string_raw_t) : mystatus_t; cdecl; external MyHTMLLib;
-function myhtml_serialization_node (node : pmyhtml_tree_node_t; str :
-  pmycore_string_raw_t) : mystatus_t; cdecl; external MyHTMLLib;
-
-(*myhtml/stream.h**************************************************************)
-
-type
-  pmyhtml_stream_buffer_entry_t = ^myhtml_stream_buffer_entry_t;
-  myhtml_stream_buffer_entry_t = record
-    data : PChar;
-    length : QWord;
-    size : QWord;
-  end;
-
-  pmyhtml_stream_buffer_t = ^myhtml_stream_buffer_t;
-  myhtml_stream_buffer_t = record
-    entries : pmyhtml_stream_buffer_entry_t;
-    length : QWord;
-    size : QWord;
-
-    res : myencoding_result_t;
-  end;
-
-function myhtml_stream_buffer_create : pmyhtml_stream_buffer_t; cdecl;
-  external MyHTMLLib;
-function myhtml_stream_buffer_init (stream_buffer : pmyhtml_stream_buffer_t;
-  entries_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
-procedure myhtml_stream_buffer_clean (stream_buffer : pmyhtml_stream_buffer_t);
-  cdecl; external MyHTMLLib;
-function myhtml_stream_buffer_destroy (stream_buffer : pmyhtml_stream_buffer_t;
-  self_destroy : Boolean) : pmyhtml_stream_buffer_t; cdecl; external MyHTMLLib;
-function myhtml_stream_buffer_add_entry (stream_buffer :
-  pmyhtml_stream_buffer_t; entry_data_size : QWord) :
-  pmyhtml_stream_buffer_entry_t; cdecl; external MyHTMLLib;
-function myhtml_stream_buffer_current_entry (stream_buffer :
-  pmyhtml_stream_buffer_t) : pmyhtml_stream_buffer_entry_t; cdecl;
-  external MyHTMLLib;
-function myhtml_stream_buffer_entry_init (stream_buffer_entry :
-  pmyhtml_stream_buffer_entry_t; size : QWord) : mystatus_t; cdecl;
-  external MyHTMLLib;
-procedure myhtml_stream_buffer_entry_clean (stream_buffer_entry :
-  pmyhtml_stream_buffer_entry_t); cdecl; external MyHTMLLib;
-function myhtml_stream_buffer_entry_destroy (stream_buffer_entry :
-  pmyhtml_stream_buffer_entry_t; self_destroy : Boolean) :
-  pmyhtml_stream_buffer_entry_t; cdecl; external MyHTMLLib;
-
 (*myhtml/tag.h*****************************************************************)
-
-type
-  pmyhtml_tag_context_t = ^myhtml_tag_context_t;
-  myhtml_tag_context_t = record
-    id : myhtml_tag_id_t;
-
-    name : PChar;
-    name_length : QWord;
-
-    data_parser : myhtml_tokenizer_state_t;
-    cats : array [0 .. MyHTML_NAMESPACE_LAST_ENTRY] of myhtml_tag_categories_t;
-  end;
-
-  pmyhtml_tag_static_list_t = ^myhtml_tag_static_list_t;
-  myhtml_tag_static_list_t = record
-    ctx : pmyhtml_tag_context_t;
-    next : QWord;
-    cur : QWord;
-  end;
-
-  myhtml_tag_t = record
-    tree : pmctree_t;
-    mcsimple_context : pmcsimple_t;
-
-    tags_count : QWord;
-    mchar_node : QWord;
-
-    mchar : pmchar_async_t;
-  end;
 
 function myhtml_tag_create : pmyhtml_tag_t; cdecl; external MyHTMLLib;
 function myhtml_tag_init (tree : pmyhtml_tree_t; tags : pmyhtml_tag_t) :
@@ -3065,7 +2836,7 @@ function myhtml_tokenizer_end_state_script_data_escaped_less_than_sign (tree :
   pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
   html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_escaped_end_tag_open (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node; const html : PChar;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
   html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_escaped_end_tag_name (tree :
   pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
@@ -3150,14 +2921,6 @@ function myhtml_tokenizer_state_script_data_double_escape_end (tree :
   html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
 
 (*myhtml/api.h*****************************************************************)
-
-type
-  pmyhtml_collection_t = ^myhtml_collection_t;
-  myhtml_collection_t = record
-    list : ppmyhtml_tree_node_t;
-    size : QWord;
-    length : QWord;
-  end;
 
 (******************************************************************************)
 (*                                                                            *)
@@ -4603,7 +4366,7 @@ function myencoding_detect_and_cut_bom (const text : PChar; length : QWord;
  * @return true if encoding found, otherwise false
  *)
 function myencoding_by_name (const name : PChar; length : QWord; encoding :
-  pmyencoding_t) : Boolean;
+  pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
 
 (**
  * Get Encoding name by myencoding_t (by id)
@@ -5111,7 +4874,7 @@ procedure myhtml_callback_after_token_done_set (tree : pmyhtml_tree_t; func :
  * @return myhtml_callback_tree_node_f
  *)
 function myhtml_callback_tree_node_insert (tree : pmyhtml_tree_t) :
-  myhtml_callback_tree_node_t; cdecl; external MyHTMLLib;
+  myhtml_callback_tree_node_f; cdecl; external MyHTMLLib;
 
 (**
  * Get current callback for tree node after removed
@@ -5121,7 +4884,7 @@ function myhtml_callback_tree_node_insert (tree : pmyhtml_tree_t) :
  * @return myhtml_callback_tree_node_f
  *)
 function myhtml_callback_tree_node_remove (tree : pmyhtml_tree_t) :
-  myhtml_callback_tree_node_t; cdecl; external MyHTMLLib;
+  myhtml_callback_tree_node_f; cdecl; external MyHTMLLib;
 
 (**
  * Set callback for tree node after inserted
@@ -5190,6 +4953,12 @@ function mycore_strcasecmp (const str1 : PChar; const str2 : PChar) : QWord;
  *)
 function mycore_strncasecmp (const str1 : PChar; const str2 : PChar; size :
   QWord) : QWord; cdecl; external MyHTMLLib;
+
+function myhtml_is_html_node (node : pmyhtml_tree_node_t; tag_id :
+  myhtml_tag_id_t) : Boolean; cdecl; external MyHTMLLib;
+
+function myhtml_queue_add (tree : pmyhtml_tree_t; start : QWord; token :
+  pmyhtml_token_node_t) : mystatus_t; cdecl; external MyHTMLLib;
 
 (******************************************************************************)
 (*                                                                            *)
