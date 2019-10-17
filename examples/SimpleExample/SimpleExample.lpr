@@ -6,7 +6,7 @@ uses
   {$IFDEF UNIX}{$IFDEF UseCThreads}
   cthreads,
   {$ENDIF}{$ENDIF}
-  Classes, SysUtils, CustApp, libpasmyhtml
+  Classes, SysUtils, CustApp, libpasmyhtml, pasmyhtml
   { you can add units after this };
 
 type
