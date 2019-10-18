@@ -1,4 +1,10 @@
-/examples/SimpleExample/SimpleExample
+
+#build file for tests
+/unit-tests/libpasmyhtml_testproject
+
+#unit-test
+/unit-tests/libpasmyhtml_testproject.fpcunit.ini
+/unit-tests/libpasmyhtml_testproject.ico
 
 # Delphi compiler-generated binaries (safe to delete)
 *.exe
