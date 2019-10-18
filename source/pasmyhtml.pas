@@ -9,7 +9,7 @@
 (******************************************************************************)
 (*                                                                            *)
 (* Module:          Unit 'pasmyhtml'                                          *)
-(* Functionality:   Provides  TMyHTML class                                   *)
+(* Functionality:   Provides  TMyHTMLParser class                             *)
 (*                                                                            *)
 (*                                                                            *)
 (*                                                                            *)
@@ -42,30 +42,6 @@ uses
 
 type
 
-  { TMyHTMLTreeChunk }
-
-  TMyHTMLTreeChunk = class
-  private
-    MyHTMLNode : pmyhtml_tree_node_t;
-    MyHTMLNextNode : pmyhtml_tree_node_t;
-  public
-    constructor Create (Node : pmyhtml_tree_node_t);
-    destructor Destroy; override;
-  end;
-
-  { TMyHTMLTagNode }
-
-  TMyHTMLTagNode = class
-  private
-    MyHTMLNode : pmyhtml_tree_node_t;
-    MyHTMLNextChildrenNode : pmyhtml_tree_node_t;
-  public
-    constructor Create (Node : pmyhtml_tree_node_t);
-    destructor Destroy; override;
-  end;
-
-  { TParser }
-
   { TMyHTMLParser }
 
   TMyHTMLParser = class
@@ -76,90 +52,111 @@ type
         DOCUMENT_HEAD,
         DOCUMENT_BODY
       );
+
+    { TTreeChunk }
+
+    TTreeChunk = class
+    private
+      FNode : pmyhtml_tree_node_t;
+      FNextNode : pmyhtml_tree_node_t;
+    public
+      constructor Create (ANode : pmyhtml_tree_node_t);
+      destructor Destroy; override;
+    end;
+
+    { TTagNode }
+
+    TTagNode = class
+    private
+      FNode : pmyhtml_tree_node_t;
+      FNextChildrenNode : pmyhtml_tree_node_t;
+    public
+      constructor Create (ANode : pmyhtml_tree_node_t);
+      destructor Destroy; override;
+    end;
+
   private
-    MyHTML : pmyhtml_t;
-    MyHTMLTree : pmyhtml_tree_t;
-    MyHTMLEncoding : myencoding_t;
-    MyHTMLError : mystatus_t;
+    FHTML : pmyhtml_t;
+    FTree : pmyhtml_tree_t;
+    FEncoding : myencoding_t;
+    FError : mystatus_t;
   public
-    constructor Create(ParserOptions: myhtml_options_t; Encoding: myencoding_t;
-      ThreadCount: QWord; QueueSize: QWord; Flags: myhtml_parse_flags_t);
+    constructor Create(AParserOptions: myhtml_options_t;
+      AEncoding: myencoding_t; AThreadCount: QWord; AQueueSize: QWord;
+      AFlags: myhtml_tree_parse_flags_t);
     destructor Destroy; override;
 
-    function Parse (buffer : string; ParseFrom : TDocumentParseFrom =
-      DOCUMENT_HTML) : TMyHTMLTreeChunk;
+    function Parse (AHTML : string; AParseFrom : TDocumentParseFrom =
+      DOCUMENT_HTML) : TTreeChunk;
   end;
 
 
 implementation
 
-{ TMyHTMLTagNode }
+{ TMyHTMLParser.TTreeChunk }
 
-constructor TMyHTMLTagNode.Create(Node: pmyhtml_tree_node_t);
+constructor TMyHTMLParser.TTreeChunk.Create(ANode: pmyhtml_tree_node_t);
 begin
-  MyHTMLNode := Node;
-  MyHTMLNextChildrenNode := nil;
+  FNode := ANode;
+  FNextNode := nil;
 end;
 
-destructor TMyHTMLTagNode.Destroy;
+destructor TMyHTMLParser.TTreeChunk.Destroy;
 begin
   inherited Destroy;
 end;
 
-{ TMyHTMLTreeChunk }
+{ TMyHTMLParser.TTagNode }
 
-constructor TMyHTMLTreeChunk.Create(Node: pmyhtml_tree_node_t);
+constructor TMyHTMLParser.TTagNode.Create(ANode: pmyhtml_tree_node_t);
 begin
-  MyHTMLNode := Node;
-  MyHTMLNextNode := nil;
+  FNode := ANode;
+  FNextChildrenNode := nil;
 end;
 
-destructor TMyHTMLTreeChunk.Destroy;
+destructor TMyHTMLParser.TTagNode.Destroy;
 begin
   inherited Destroy;
 end;
 
-{ TMyHTML }
+{ TMyHTMLParser }
 
-constructor TMyHTMLParser.Create(ParserOptions: myhtml_options_t;
-  Encoding: myencoding_t; ThreadCount: QWord; QueueSize: QWord;
-  Flags: myhtml_parse_flags_t);
+constructor TMyHTMLParser.Create(AParserOptions: myhtml_options_t;
+  AEncoding: myencoding_t; AThreadCount: QWord; AQueueSize: QWord;
+  AFlags: myhtml_tree_parse_flags_t);
 begin
-  MyHTML := myhtml_create;
-  myhtml_init(MyHTML, ParserOptions, ThreadCount, QueueSize);
-  MyHTMLTree := myhtml_tree_create;
-  myhtml_tree_init(MyHTMLTree, MyHTML);
-  myhtml_tree_parse_flags_set(MyHTMLTree, Flags);
-  MyHTMLEncoding := Encoding;
-  MyHTMLError := MyHTML_STATUS_OK;
+  FHTML := myhtml_create;
+  myhtml_init(FHTML, AParserOptions, AThreadCount, AQueueSize);
+  FTree := myhtml_tree_create;
+  myhtml_tree_init(FTree, FHTML);
+  myhtml_tree_parse_flags_set(FTree, AFlags);
+  FEncoding := AEncoding;
+  FError := Cardinal(MyHTML_STATUS_OK);
 end;
 
 destructor TMyHTMLParser.Destroy;
 begin
-  myhtml_tree_clean(MyHTMLTree);
-  myhtml_clean(MyHTML);
-  myhtml_tree_destroy(MyHTMLTree);
-  myhtml_destroy(MyHTML);
+  myhtml_tree_clean(FTree);
+  myhtml_clean(FHTML);
+  myhtml_tree_destroy(FTree);
+  myhtml_destroy(FHTML);
   inherited Destroy;
 end;
 
-function TMyHTMLParser.Parse(buffer: string; ParseFrom: TDocumentParseFrom
-  ): TMyHTMLTreeChunk;
+function TMyHTMLParser.Parse(AHTML: string; AParseFrom: TDocumentParseFrom
+  ): TTreeChunk;
 begin
-  MyHTMLError := myhtml_parse(MyHTMLTree, MyHTMLEncoding, PChar(buffer),
-    Length(buffer));
-  if MyHTMLError = MyHTML_STATUS_OK then
+  FError := myhtml_parse(FTree, FEncoding, PChar(AHTML),
+    Length(AHTML));
+  if FError = Cardinal(MyHTML_STATUS_OK) then
   begin
-    case ParseFrom of
+    case AParseFrom of
       DOCUMENT_HTML :
-          Result := TMyHTMLTreeChunk.Create
-            (myhtml_tree_get_node_html(MyHTMLTree));
+          Result := TTreeChunk.Create(myhtml_tree_get_node_html(FTree));
       DOCUMENT_HEAD :
-          Result := TMyHTMLTreeChunk.Create
-            (myhtml_tree_get_node_head(MyHTMLTree));
+          Result := TTreeChunk.Create(myhtml_tree_get_node_head(FTree));
       DOCUMENT_BODY :
-          Result := TMyHTMLTreeChunk.Create
-            (myhtml_tree_get_node_body(MyHTMLTree));
+          Result := TTreeChunk.Create(myhtml_tree_get_node_body(FTree));
     end;
   end;
 end;
