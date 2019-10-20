@@ -187,7 +187,7 @@ begin
     Result := myhtml_node_tag_id(FNode);
   end else
   begin
-     Result := MyHTML_TAG__UNDEF;
+     Result := myhtml_tag_id_t(MyHTML_TAG__UNDEF);
   end;
 end;
 
@@ -253,6 +253,9 @@ end;
 function TMyHTMLParser.Parse(AHTML: string; AParseFrom: TDocumentParseFrom
   ): TTreeChunk;
 begin
+  myhtml_tree_clean(FTree);
+  myhtml_clean(FHTML);
+
   FError := myhtml_parse(FTree, FEncoding, PChar(AHTML), Length(AHTML));
   if FError = Cardinal(MyHTML_STATUS_OK) then
   begin
@@ -269,128 +272,128 @@ end;
 
 function TMyHTMLParser.HasErrors: Boolean;
 begin
-  Result := (FError <> MyHTML_STATUS_OK);
+  Result := (FError <> mystatus_t(MyHTML_STATUS_OK));
 end;
 
 function TMyHTMLParser.Error: string;
 begin
   case FError of
-    MyHTML_STATUS_OK :
+    mystatus_t(MyHTML_STATUS_OK) :
     begin
       Result := '';
     end;
 
-    MyHTML_STATUS_ERROR :
+    mystatus_t(MyHTML_STATUS_ERROR) :
     begin
       Result := 'MyHTML_STATUS_ERROR';
     end;
 
-    MyHTML_STATUS_ERROR_MEMORY_ALLOCATION :
+    mystatus_t(MyHTML_STATUS_ERROR_MEMORY_ALLOCATION) :
     begin
       Result := 'MyHTML_STATUS_ERROR_MEMORY_ALLOCATION';
     end;
 
-    MyHTML_STATUS_RULES_ERROR_MEMORY_ALLOCATION :
+    mystatus_t(MyHTML_STATUS_RULES_ERROR_MEMORY_ALLOCATION) :
     begin
       Result := 'MyHTML_STATUS_RULES_ERROR_MEMORY_ALLOCATION';
     end;
 
-    MyHTML_STATUS_TOKENIZER_ERROR_MEMORY_ALLOCATION :
+    mystatus_t(MyHTML_STATUS_TOKENIZER_ERROR_MEMORY_ALLOCATION) :
     begin
       Result := 'MyHTML_STATUS_TOKENIZER_ERROR_MEMORY_ALLOCATION';
     end;
 
-    MyHTML_STATUS_TOKENIZER_ERROR_FRAGMENT_INIT :
+    mystatus_t(MyHTML_STATUS_TOKENIZER_ERROR_FRAGMENT_INIT) :
     begin
       Result := 'MyHTML_STATUS_TOKENIZER_ERROR_FRAGMENT_INIT';
     end;
 
-    MyHTML_STATUS_TAGS_ERROR_MEMORY_ALLOCATION :
+    mystatus_t(MyHTML_STATUS_TAGS_ERROR_MEMORY_ALLOCATION) :
     begin
       Result := 'MyHTML_STATUS_TAGS_ERROR_MEMORY_ALLOCATION';
     end;
 
-    MyHTML_STATUS_TAGS_ERROR_MCOBJECT_CREATE :
+    mystatus_t(MyHTML_STATUS_TAGS_ERROR_MCOBJECT_CREATE) :
     begin
       Result := 'MyHTML_STATUS_TAGS_ERROR_MCOBJECT_CREATE';
     end;
 
-    MyHTML_STATUS_TAGS_ERROR_MCOBJECT_MALLOC :
+    mystatus_t(MyHTML_STATUS_TAGS_ERROR_MCOBJECT_MALLOC) :
     begin
       Result := 'MyHTML_STATUS_TAGS_ERROR_MCOBJECT_MALLOC';
     end;
 
-    MyHTML_STATUS_TAGS_ERROR_MCOBJECT_CREATE_NODE :
+    mystatus_t(MyHTML_STATUS_TAGS_ERROR_MCOBJECT_CREATE_NODE) :
     begin
       Result := 'MyHTML_STATUS_TAGS_ERROR_MCOBJECT_CREATE_NODE';
     end;
 
-    MyHTML_STATUS_TAGS_ERROR_CACHE_MEMORY_ALLOCATION :
+    mystatus_t(MyHTML_STATUS_TAGS_ERROR_CACHE_MEMORY_ALLOCATION) :
     begin
       Result := 'MyHTML_STATUS_TAGS_ERROR_CACHE_MEMORY_ALLOCATION';
     end;
 
-    MyHTML_STATUS_TAGS_ERROR_INDEX_MEMORY_ALLOCATION :
+    mystatus_t(MyHTML_STATUS_TAGS_ERROR_INDEX_MEMORY_ALLOCATION) :
     begin
       Result := 'MyHTML_STATUS_TAGS_ERROR_INDEX_MEMORY_ALLOCATION';
     end;
 
-    MyHTML_STATUS_TREE_ERROR_MEMORY_ALLOCATION :
+    mystatus_t(MyHTML_STATUS_TREE_ERROR_MEMORY_ALLOCATION) :
     begin
       Result := 'MyHTML_STATUS_TREE_ERROR_MEMORY_ALLOCATION';
     end;
 
-    MyHTML_STATUS_TREE_ERROR_MCOBJECT_CREATE :
+    mystatus_t(MyHTML_STATUS_TREE_ERROR_MCOBJECT_CREATE) :
     begin
       Result := 'MyHTML_STATUS_TREE_ERROR_MCOBJECT_CREATE';
     end;
 
-    MyHTML_STATUS_TREE_ERROR_MCOBJECT_INIT :
+    mystatus_t(MyHTML_STATUS_TREE_ERROR_MCOBJECT_INIT) :
     begin
       Result := 'MyHTML_STATUS_TREE_ERROR_MCOBJECT_INIT';
     end;
 
-    MyHTML_STATUS_TREE_ERROR_MCOBJECT_CREATE_NODE :
+    mystatus_t(MyHTML_STATUS_TREE_ERROR_MCOBJECT_CREATE_NODE) :
     begin
       Result := 'MyHTML_STATUS_TREE_ERROR_MCOBJECT_CREATE_NODE';
     end;
 
-    MyHTML_STATUS_TREE_ERROR_INCOMING_BUFFER_CREATE :
+    mystatus_t(MyHTML_STATUS_TREE_ERROR_INCOMING_BUFFER_CREATE) :
     begin
       Result := 'MyHTML_STATUS_TREE_ERROR_INCOMING_BUFFER_CREATE';
     end;
 
-    MyHTML_STATUS_ATTR_ERROR_ALLOCATION :
+    mystatus_t(MyHTML_STATUS_ATTR_ERROR_ALLOCATION) :
     begin
       Result := 'MyHTML_STATUS_ATTR_ERROR_ALLOCATION';
     end;
 
-    MyHTML_STATUS_ATTR_ERROR_CREATE :
+    mystatus_t(MyHTML_STATUS_ATTR_ERROR_CREATE) :
     begin
       Result := 'MyHTML_STATUS_ATTR_ERROR_CREATE';
     end;
 
-    MyHTML_STATUS_STREAM_BUFFER_ERROR_CREATE :
+    mystatus_t(MyHTML_STATUS_STREAM_BUFFER_ERROR_CREATE) :
     begin
       Result := 'MyHTML_STATUS_STREAM_BUFFER_ERROR_CREATE';
     end;
 
-    MyHTML_STATUS_STREAM_BUFFER_ERROR_INIT :
+    mystatus_t(MyHTML_STATUS_STREAM_BUFFER_ERROR_INIT) :
     begin
       Result := 'MyHTML_STATUS_STREAM_BUFFER_ERROR_INIT';
     end;
 
-    MyHTML_STATUS_STREAM_BUFFER_ENTRY_ERROR_CREATE :
+    mystatus_t(MyHTML_STATUS_STREAM_BUFFER_ENTRY_ERROR_CREATE) :
     begin
       Result := 'MyHTML_STATUS_STREAM_BUFFER_ENTRY_ERROR_CREATE';
     end;
 
-    MyHTML_STATUS_STREAM_BUFFER_ENTRY_ERROR_INIT :
+    mystatus_t(MyHTML_STATUS_STREAM_BUFFER_ENTRY_ERROR_INIT) :
     begin
       Result := 'MyHTML_STATUS_STREAM_BUFFER_ENTRY_ERROR_INIT';
     end;
 
-    MyHTML_STATUS_STREAM_BUFFER_ERROR_ADD_ENTRY :
+    mystatus_t(MyHTML_STATUS_STREAM_BUFFER_ERROR_ADD_ENTRY) :
     begin
       Result := 'MyHTML_STATUS_STREAM_BUFFER_ERROR_ADD_ENTRY';
     end;

@@ -32,7 +32,7 @@
         <PackageName Value="FCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="4">
+    <Units Count="5">
       <Unit0>
         <Filename Value="libpasmyhtml_testproject.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -49,6 +49,10 @@
         <Filename Value="../source/pasmyhtml.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit3>
+      <Unit4>
+        <Filename Value="htmldocuments/myhtmlsimpleparse_document.inc"/>
+        <IsPartOfProject Value="True"/>
+      </Unit4>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -57,7 +61,7 @@
       <Filename Value="libpasmyhtml_testproject"/>
     </Target>
     <SearchPaths>
-      <IncludeFiles Value="$(ProjOutDir)"/>
+      <IncludeFiles Value="$(ProjOutDir);htmldocuments"/>
       <OtherUnitFiles Value="../source"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
