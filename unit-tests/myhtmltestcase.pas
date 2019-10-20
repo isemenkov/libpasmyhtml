@@ -30,14 +30,16 @@ type
     procedure TestDocumentParseTitle;
   end;
 
-  { TMyHTMLParserSimpleTestCase }
+  { TMyHTMLParserSimpleParseTestCase }
 
-  TMyHTMLParserSimpleTestCase = class(TTestCase)
+  TMyHTMLParserSimpleParseTestCase = class(TTestCase)
   private
     FParser : TMyHTMLParser;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
+
+    function TitleFilter (ANode : TMyHTMLParser.TTagNode) : Boolean;
   published
     procedure TestDocumentParse;
     procedure TestDocumentParseTitle;
@@ -49,29 +51,37 @@ implementation
 
 { TMyHTMLParserSimpleTestCase }
 
-procedure TMyHTMLParserSimpleTestCase.SetUp;
+procedure TMyHTMLParserSimpleParseTestCase.SetUp;
 begin
   FParser := TMyHTMLParser.Create(MyHTML_OPTIONS_PARSE_MODE_SEPARATELY,
     MyENCODING_UTF_8, 1, 4096, MyHTML_TREE_PARSE_FLAGS_CLEAN);
 end;
 
-procedure TMyHTMLParserSimpleTestCase.TearDown;
+procedure TMyHTMLParserSimpleParseTestCase.TearDown;
 begin
   FreeAndNil(FParser);
 end;
 
-procedure TMyHTMLParserSimpleTestCase.TestDocumentParse;
+function TMyHTMLParserSimpleParseTestCase.TitleFilter(
+  ANode: TMyHTMLParser.TTagNode): Boolean;
+begin
+  Result := (ANode.GetTag = myhtml_tag_id_t(MyHTML_TAG_TITLE));
+end;
+
+procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParse;
 begin
   FParser.Parse(SimpleParseDocument, DOCUMENT_HTML);
   AssertFalse('Test parse html document', FParser.HasErrors);
 end;
 
-procedure TMyHTMLParserSimpleTestCase.TestDocumentParseTitle;
+procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseTitle;
 var
   tree : TMyHTMLParser.TTreeChunk;
+  title : TMyHTMLParser.TTagNode;
 begin
-  tree := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD);
-
+  tree := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD).First.FirstChildren;
+  title := tree.First(@TitleFilter);
+  AssertTrue('Test document title', title.GetValue = 'Document Title');
 end;
 
 { TMyHTMLSimpleParseTestCase }
@@ -152,6 +162,6 @@ end;
 
 initialization
   RegisterTest(TMyHTMLSimpleParseTestCase);
-  RegisterTest(TMyHTMLParserSimpleTestCase);
+  RegisterTest(TMyHTMLParserSimpleParseTestCase);
 end.
 
