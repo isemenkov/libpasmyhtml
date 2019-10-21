@@ -90,6 +90,8 @@ type
       FNode : pmyhtml_tree_node_t;
       FNextChildrenNode : pmyhtml_tree_node_t;
       FChildrenFilter : TTagFilter;
+
+      function StringTokenize (AString : string) : TStringList;
     public
       constructor Create (ANode : pmyhtml_tree_node_t);
       destructor Destroy; override;
@@ -173,8 +175,9 @@ begin
   if IsOk then
   begin
     FNextNode := FNode;
-  end;
-  Result := TTagNode.Create(FNextNode);
+    Result := TTagNode.Create(FNextNode);
+  end else
+    Result := TTagNode.Create(nil);
 end;
 
 function TMyHTMLParser.TTreeChunk.First(AFilter: TTagFilter): TTagNode;
@@ -201,8 +204,9 @@ begin
   if IsOk then
   begin
     FNextNode := myhtml_node_child(FNode);
+    Result := TTreeChunk.Create(FNextNode);
   end;
-  Result := TTreeChunk.Create(FNextNode);
+    Result := TTreeChunk.Create(nil);
 end;
 
 function TMyHTMLParser.TTreeChunk.FirstChildren(AFilter: TTagFilter
@@ -230,11 +234,34 @@ begin
   if FNextNode <> nil then
   begin
     FNextNode := myhtml_node_next(FNextNode);
-  end;
-  Result := TTagNode.Create(FNextNode);
+    Result := TTagNode.Create(FNextNode);
+  end else
+    Result := TTagNode.Create(nil);
 end;
 
 { TMyHTMLParser.TTagNode }
+
+function TMyHTMLParser.TTagNode.StringTokenize(AString: string): TStringList;
+var
+  Index : SizeInt;
+begin
+  Result := TStringList.Create;
+  while AString <> '' do
+  begin
+    AString := TrimLeft(AString);
+    Index := Pos(AString, #10);
+
+    if Index <> 0 then
+    begin
+      Result.Add(Trim(Copy(AString, 0, Index)));
+      Delete(AString, 0, Index);
+    end else
+    begin
+      Result.Add(AString);
+      AString := '';
+    end;
+  end;
+end;
 
 constructor TMyHTMLParser.TTagNode.Create(ANode: pmyhtml_tree_node_t);
 begin
@@ -258,14 +285,23 @@ begin
   begin
     Result := myhtml_node_tag_id(FNode);
   end else
-  begin
-     Result := myhtml_tag_id_t(MyHTML_TAG__UNDEF);
-  end;
+    Result := myhtml_tag_id_t(MyHTML_TAG__UNDEF);
 end;
 
 function TMyHTMLParser.TTagNode.GetClass: TStringList;
+var
+  Attr : pmyhtml_tree_attr_t;
 begin
-
+  if IsOk then
+  begin
+    Attr := myhtml_attribute_by_key(FNode, PChar('class'), 5);
+    if Attr <> nil then
+    begin
+      Result := StringTokenize(myhtml_attribute_value(Attr, nil));
+    end else
+      Result := TStringList.Create;
+  end else
+    Result := TStringList.Create;
 end;
 
 function TMyHTMLParser.TTagNode.GetId: TStringList;
@@ -286,19 +322,28 @@ begin
     begin
       Value := myhtml_node_string(TextNode);
       Result := mycore_string_data(Value);
-    end;
+    end else
+      Result := '';
   end else
     Result := '';
 end;
 
 function TMyHTMLParser.TTagNode.GetParent: TTreeChunk;
 begin
-
+  if IsOk then
+  begin
+    Result := TTreeChunk.Create(myhtml_node_parent(FNode));
+  end else
+    Result := TTreeChunk.Create(nil);
 end;
 
 function TMyHTMLParser.TTagNode.HasChildren: Boolean;
 begin
-
+  if IsOk then
+  begin
+    Result := myhtml_node_child(FNode) <> nil;
+  end else
+    Result := False;
 end;
 
 function TMyHTMLParser.TTagNode.FirstChildren: TTreeChunk;
@@ -332,7 +377,7 @@ end;
 
 function TMyHTMLParser.TTagNode.NextChildren: TTreeChunk;
 begin
-  if FNextChildrenNode <> nil then
+  if IsOk and (FNextChildrenNode <> nil) then
   begin
     FNextChildrenNode := myhtml_node_next(FNextChildrenNode);
     Result := TTreeChunk.Create(FNextChildrenNode);
@@ -382,12 +427,13 @@ begin
       DOCUMENT_BODY :
         Result := TTreeChunk.Create(myhtml_tree_get_node_body(FTree));
     end;
-  end;
+  end else
+    Result := TTreeChunk.Create(nil);
 end;
 
 function TMyHTMLParser.HasErrors: Boolean;
 begin
-  Result := (FError <> MyHTML_STATUS_OK);
+  Result := FError <> MyHTML_STATUS_OK;
 end;
 
 function TMyHTMLParser.Error: string;
