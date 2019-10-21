@@ -76,11 +76,14 @@ end;
 
 procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseTitle;
 var
-  tree : TMyHTMLParser.TTreeChunk;
   title : TMyHTMLParser.TTagNode;
 begin
-  tree := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD).First.FirstChildren;
-  title := tree.First(@TitleFilter);
+  title := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+    .FirstChildren(@TitleFilter).First;
+
+  if not title.IsOk then
+    Fail('Empty document title node');
+
   AssertTrue('Test document title', title.GetValue = 'Document Title');
 end;
 

@@ -65,13 +65,19 @@ type
       FNode : pmyhtml_tree_node_t;
       FNextNode : pmyhtml_tree_node_t;
       FFilter : TTagFilter;
+      FChildrenFilter : TTagFilter;
     public
       constructor Create (ANode : pmyhtml_tree_node_t);
       destructor Destroy; override;
 
+      function IsOk : Boolean;
+
       (* Return first tree element node *)
       function First : TTagNode;
       function First (AFilter : TTagFilter) : TTagNode;
+
+      function FirstChildren : TTreeChunk;
+      function FirstChildren (AFilter : TTagFilter) : TTreeChunk;
 
       (* Return next tree element node *)
       function Next : TTagNode;
@@ -83,9 +89,12 @@ type
     private
       FNode : pmyhtml_tree_node_t;
       FNextChildrenNode : pmyhtml_tree_node_t;
+      FChildrenFilter : TTagFilter;
     public
       constructor Create (ANode : pmyhtml_tree_node_t);
       destructor Destroy; override;
+
+      function IsOk : Boolean;
 
       (* Return tag element id *)
       function GetTag : myhtml_tag_id_t;
@@ -107,6 +116,7 @@ type
 
       (* Return first tag element inner element *)
       function FirstChildren : TTreeChunk;
+      function FirstChildren (AFilter : TTagFilter) : TTreeChunk;
 
       (* Return next tag element inner element *)
       function NextChildren : TTreeChunk;
@@ -116,7 +126,7 @@ type
     FHTML : pmyhtml_t;
     FTree : pmyhtml_tree_t;
     FEncoding : myencoding_t;
-    FError : mystatus_t;
+    FError : myhtml_status_t;
   public
     constructor Create(
       AParserOptions: myhtml_options_t = MyHTML_OPTIONS_PARSE_MODE_SEPARATELY;
@@ -153,11 +163,16 @@ begin
   inherited Destroy;
 end;
 
+function TMyHTMLParser.TTreeChunk.IsOk: Boolean;
+begin
+  Result := FNode <> nil;
+end;
+
 function TMyHTMLParser.TTreeChunk.First: TTagNode;
 begin
-  if FNode <> nil then
+  if IsOk then
   begin
-    FNextNode := myhtml_node_next(FNode);
+    FNextNode := FNode;
   end;
   Result := TTagNode.Create(FNextNode);
 end;
@@ -166,16 +181,48 @@ function TMyHTMLParser.TTreeChunk.First(AFilter: TTagFilter): TTagNode;
 begin
   FFilter := AFilter;
 
-  if FNode <> nil then
+  if IsOk then
   begin
     FNextNode := FNode;
-    while not FFilter(TTagNode.Create(FNextNode)) do
+    if Assigned(FFilter) then
     begin
-      FNextNode := myhtml_node_next(FNextNode);
+      while not FFilter(TTagNode.Create(FNextNode)) do
+      begin
+        FNextNode := myhtml_node_next(FNextNode);
+      end;
     end;
     Result := TTagNode.Create(FNextNode);
   end else
     Result := TTagNode.Create(nil);
+end;
+
+function TMyHTMLParser.TTreeChunk.FirstChildren: TTreeChunk;
+begin
+  if IsOk then
+  begin
+    FNextNode := myhtml_node_child(FNode);
+  end;
+  Result := TTreeChunk.Create(FNextNode);
+end;
+
+function TMyHTMLParser.TTreeChunk.FirstChildren(AFilter: TTagFilter
+  ): TTreeChunk;
+begin
+  FFilter := AFilter;
+
+  if IsOk then
+  begin
+    FNextNode := myhtml_node_child(FNode);
+    if Assigned(FFilter) then
+    begin
+      while not FFilter(TTagNode.Create(FNextNode)) do
+      begin
+        FNextNode := myhtml_node_next(FNextNode);
+      end;
+    end;
+    Result := TTreeChunk.Create(FNextNode);
+  end else
+    Result := TTreeChunk.Create(nil);
 end;
 
 function TMyHTMLParser.TTreeChunk.Next: TTagNode;
@@ -200,9 +247,14 @@ begin
   inherited Destroy;
 end;
 
+function TMyHTMLParser.TTagNode.IsOk: Boolean;
+begin
+  Result := FNode <> nil;
+end;
+
 function TMyHTMLParser.TTagNode.GetTag: myhtml_tag_id_t;
 begin
-  if FNode <> nil then
+  if IsOk then
   begin
     Result := myhtml_node_tag_id(FNode);
   end else
@@ -226,13 +278,17 @@ var
   TextNode : pmyhtml_tree_node_t;
   Value : pmycore_string_t;
 begin
-  TextNode := myhtml_node_child(FNode);
-  if (TextNode <> nil)
-    and (myhtml_node_tag_id(TextNode) = myhtml_tag_id_t(MyHTML_TAG__TEXT)) then
+  if IsOk then
   begin
-    Value := myhtml_node_string(TextNode);
-    Result := mycore_string_data(Value);
-  end;
+    TextNode := myhtml_node_child(FNode);
+    if (TextNode <> nil) and (myhtml_node_tag_id(TextNode) =
+      myhtml_tag_id_t(MyHTML_TAG__TEXT)) then
+    begin
+      Value := myhtml_node_string(TextNode);
+      Result := mycore_string_data(Value);
+    end;
+  end else
+    Result := '';
 end;
 
 function TMyHTMLParser.TTagNode.GetParent: TTreeChunk;
@@ -247,7 +303,7 @@ end;
 
 function TMyHTMLParser.TTagNode.FirstChildren: TTreeChunk;
 begin
-  if FNode <> nil then
+  if IsOk then
   begin
     FNextChildrenNode := myhtml_node_child(FNode);
     Result := TTreeChunk.Create(FNextChildrenNode);
@@ -255,9 +311,33 @@ begin
     Result := TTreeChunk.Create(nil);
 end;
 
+function TMyHTMLParser.TTagNode.FirstChildren(AFilter: TTagFilter): TTreeChunk;
+begin
+  FChildrenFilter := AFilter;
+
+  if IsOk then
+  begin
+    FNextChildrenNode := myhtml_node_child(FNode);
+    if Assigned(FChildrenFilter) then
+    begin
+      while not FChildrenFilter(TTagNode.Create(FNextChildrenNode)) do
+      begin
+         FNextChildrenNode := myhtml_node_next(FNextChildrenNode);
+      end;
+    end;
+    Result := TTreeChunk.Create(FNextChildrenNode);
+  end else
+    Result := TTreeChunk.Create(nil);
+end;
+
 function TMyHTMLParser.TTagNode.NextChildren: TTreeChunk;
 begin
-
+  if FNextChildrenNode <> nil then
+  begin
+    FNextChildrenNode := myhtml_node_next(FNextChildrenNode);
+    Result := TTreeChunk.Create(FNextChildrenNode);
+  end else
+    Result := TTreeChunk.Create(nil);
 end;
 
 { TMyHTMLParser }
@@ -272,7 +352,7 @@ begin
   myhtml_tree_init(FTree, FHTML);
   myhtml_tree_parse_flags_set(FTree, AFlags);
   FEncoding := AEncoding;
-  FError := Cardinal(MyHTML_STATUS_OK);
+  FError := MyHTML_STATUS_OK;
 end;
 
 destructor TMyHTMLParser.Destroy;
@@ -290,8 +370,9 @@ begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
 
-  FError := myhtml_parse(FTree, FEncoding, PChar(AHTML), Length(AHTML));
-  if FError = Cardinal(MyHTML_STATUS_OK) then
+  FError := myhtml_status_t(myhtml_parse(FTree, FEncoding, PChar(AHTML),
+    Length(AHTML)));
+  if FError = MyHTML_STATUS_OK then
   begin
     case AParseFrom of
       DOCUMENT_HTML :
@@ -306,128 +387,128 @@ end;
 
 function TMyHTMLParser.HasErrors: Boolean;
 begin
-  Result := (FError <> mystatus_t(MyHTML_STATUS_OK));
+  Result := (FError <> MyHTML_STATUS_OK);
 end;
 
 function TMyHTMLParser.Error: string;
 begin
   case FError of
-    mystatus_t(MyHTML_STATUS_OK) :
+    MyHTML_STATUS_OK :
     begin
       Result := '';
     end;
 
-    mystatus_t(MyHTML_STATUS_ERROR) :
+    MyHTML_STATUS_ERROR :
     begin
       Result := 'MyHTML_STATUS_ERROR';
     end;
 
-    mystatus_t(MyHTML_STATUS_ERROR_MEMORY_ALLOCATION) :
+    MyHTML_STATUS_ERROR_MEMORY_ALLOCATION :
     begin
       Result := 'MyHTML_STATUS_ERROR_MEMORY_ALLOCATION';
     end;
 
-    mystatus_t(MyHTML_STATUS_RULES_ERROR_MEMORY_ALLOCATION) :
+    MyHTML_STATUS_RULES_ERROR_MEMORY_ALLOCATION :
     begin
       Result := 'MyHTML_STATUS_RULES_ERROR_MEMORY_ALLOCATION';
     end;
 
-    mystatus_t(MyHTML_STATUS_TOKENIZER_ERROR_MEMORY_ALLOCATION) :
+    MyHTML_STATUS_TOKENIZER_ERROR_MEMORY_ALLOCATION :
     begin
       Result := 'MyHTML_STATUS_TOKENIZER_ERROR_MEMORY_ALLOCATION';
     end;
 
-    mystatus_t(MyHTML_STATUS_TOKENIZER_ERROR_FRAGMENT_INIT) :
+    MyHTML_STATUS_TOKENIZER_ERROR_FRAGMENT_INIT :
     begin
       Result := 'MyHTML_STATUS_TOKENIZER_ERROR_FRAGMENT_INIT';
     end;
 
-    mystatus_t(MyHTML_STATUS_TAGS_ERROR_MEMORY_ALLOCATION) :
+    MyHTML_STATUS_TAGS_ERROR_MEMORY_ALLOCATION :
     begin
       Result := 'MyHTML_STATUS_TAGS_ERROR_MEMORY_ALLOCATION';
     end;
 
-    mystatus_t(MyHTML_STATUS_TAGS_ERROR_MCOBJECT_CREATE) :
+    MyHTML_STATUS_TAGS_ERROR_MCOBJECT_CREATE :
     begin
       Result := 'MyHTML_STATUS_TAGS_ERROR_MCOBJECT_CREATE';
     end;
 
-    mystatus_t(MyHTML_STATUS_TAGS_ERROR_MCOBJECT_MALLOC) :
+    MyHTML_STATUS_TAGS_ERROR_MCOBJECT_MALLOC :
     begin
       Result := 'MyHTML_STATUS_TAGS_ERROR_MCOBJECT_MALLOC';
     end;
 
-    mystatus_t(MyHTML_STATUS_TAGS_ERROR_MCOBJECT_CREATE_NODE) :
+    MyHTML_STATUS_TAGS_ERROR_MCOBJECT_CREATE_NODE :
     begin
       Result := 'MyHTML_STATUS_TAGS_ERROR_MCOBJECT_CREATE_NODE';
     end;
 
-    mystatus_t(MyHTML_STATUS_TAGS_ERROR_CACHE_MEMORY_ALLOCATION) :
+    MyHTML_STATUS_TAGS_ERROR_CACHE_MEMORY_ALLOCATION :
     begin
       Result := 'MyHTML_STATUS_TAGS_ERROR_CACHE_MEMORY_ALLOCATION';
     end;
 
-    mystatus_t(MyHTML_STATUS_TAGS_ERROR_INDEX_MEMORY_ALLOCATION) :
+    MyHTML_STATUS_TAGS_ERROR_INDEX_MEMORY_ALLOCATION :
     begin
       Result := 'MyHTML_STATUS_TAGS_ERROR_INDEX_MEMORY_ALLOCATION';
     end;
 
-    mystatus_t(MyHTML_STATUS_TREE_ERROR_MEMORY_ALLOCATION) :
+    MyHTML_STATUS_TREE_ERROR_MEMORY_ALLOCATION :
     begin
       Result := 'MyHTML_STATUS_TREE_ERROR_MEMORY_ALLOCATION';
     end;
 
-    mystatus_t(MyHTML_STATUS_TREE_ERROR_MCOBJECT_CREATE) :
+    MyHTML_STATUS_TREE_ERROR_MCOBJECT_CREATE :
     begin
       Result := 'MyHTML_STATUS_TREE_ERROR_MCOBJECT_CREATE';
     end;
 
-    mystatus_t(MyHTML_STATUS_TREE_ERROR_MCOBJECT_INIT) :
+    MyHTML_STATUS_TREE_ERROR_MCOBJECT_INIT :
     begin
       Result := 'MyHTML_STATUS_TREE_ERROR_MCOBJECT_INIT';
     end;
 
-    mystatus_t(MyHTML_STATUS_TREE_ERROR_MCOBJECT_CREATE_NODE) :
+    MyHTML_STATUS_TREE_ERROR_MCOBJECT_CREATE_NODE :
     begin
       Result := 'MyHTML_STATUS_TREE_ERROR_MCOBJECT_CREATE_NODE';
     end;
 
-    mystatus_t(MyHTML_STATUS_TREE_ERROR_INCOMING_BUFFER_CREATE) :
+    MyHTML_STATUS_TREE_ERROR_INCOMING_BUFFER_CREATE :
     begin
       Result := 'MyHTML_STATUS_TREE_ERROR_INCOMING_BUFFER_CREATE';
     end;
 
-    mystatus_t(MyHTML_STATUS_ATTR_ERROR_ALLOCATION) :
+    MyHTML_STATUS_ATTR_ERROR_ALLOCATION :
     begin
       Result := 'MyHTML_STATUS_ATTR_ERROR_ALLOCATION';
     end;
 
-    mystatus_t(MyHTML_STATUS_ATTR_ERROR_CREATE) :
+    MyHTML_STATUS_ATTR_ERROR_CREATE :
     begin
       Result := 'MyHTML_STATUS_ATTR_ERROR_CREATE';
     end;
 
-    mystatus_t(MyHTML_STATUS_STREAM_BUFFER_ERROR_CREATE) :
+    MyHTML_STATUS_STREAM_BUFFER_ERROR_CREATE :
     begin
       Result := 'MyHTML_STATUS_STREAM_BUFFER_ERROR_CREATE';
     end;
 
-    mystatus_t(MyHTML_STATUS_STREAM_BUFFER_ERROR_INIT) :
+    MyHTML_STATUS_STREAM_BUFFER_ERROR_INIT :
     begin
       Result := 'MyHTML_STATUS_STREAM_BUFFER_ERROR_INIT';
     end;
 
-    mystatus_t(MyHTML_STATUS_STREAM_BUFFER_ENTRY_ERROR_CREATE) :
+    MyHTML_STATUS_STREAM_BUFFER_ENTRY_ERROR_CREATE :
     begin
       Result := 'MyHTML_STATUS_STREAM_BUFFER_ENTRY_ERROR_CREATE';
     end;
 
-    mystatus_t(MyHTML_STATUS_STREAM_BUFFER_ENTRY_ERROR_INIT) :
+    MyHTML_STATUS_STREAM_BUFFER_ENTRY_ERROR_INIT :
     begin
       Result := 'MyHTML_STATUS_STREAM_BUFFER_ENTRY_ERROR_INIT';
     end;
 
-    mystatus_t(MyHTML_STATUS_STREAM_BUFFER_ERROR_ADD_ENTRY) :
+    MyHTML_STATUS_STREAM_BUFFER_ERROR_ADD_ENTRY :
     begin
       Result := 'MyHTML_STATUS_STREAM_BUFFER_ERROR_ADD_ENTRY';
     end;
