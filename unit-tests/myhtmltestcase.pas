@@ -65,7 +65,11 @@ end;
 function TMyHTMLParserSimpleParseTestCase.TitleFilter(
   ANode: TMyHTMLParser.TTagNode): Boolean;
 begin
-  Result := (ANode.GetTag = myhtml_tag_id_t(MyHTML_TAG_TITLE));
+  if ANode.IsOk then
+  begin
+    Result := (ANode.GetTag = myhtml_tag_id_t(MyHTML_TAG_TITLE));
+  end else
+    Result := True;
 end;
 
 procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParse;

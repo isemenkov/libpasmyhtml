@@ -83,6 +83,28 @@ type
       function Next : TTagNode;
     end;
 
+    TTagAttribute = class;
+
+    TTagAttributeFilter = function (AAttribute : TTagAttribute) : Boolean of
+      object;
+
+    { TTagAttribute }
+    (* Tag element attribute *)
+    TTagAttribute = class
+    private
+      FKey, FValue : string;
+
+      function GetValue : TStringList;
+      procedure SetValue (AValue : TStringList);
+    public
+      constructor Create;
+      constructor Create (AKey : string; AValue : string);
+      destructor Destroy; override;
+
+      property Key : string read FKey write FKey;
+      property Value : TStringList read GetValue write SetValue;
+    end;
+
     { TTagNode }
     (* Tag element *)
     TTagNode = class
@@ -90,8 +112,8 @@ type
       FNode : pmyhtml_tree_node_t;
       FNextChildrenNode : pmyhtml_tree_node_t;
       FChildrenFilter : TTagFilter;
-
-      function StringTokenize (AString : string) : TStringList;
+      FAttribute : pmyhtml_tree_attr_t;
+      FAttributeFilter : TTagAttributeFilter;
     public
       constructor Create (ANode : pmyhtml_tree_node_t);
       destructor Destroy; override;
@@ -113,8 +135,16 @@ type
       (* Return tag element parent element *)
       function GetParent : TTreeChunk;
 
+      (* Return if tag element has attributes *)
+      function HasAttribute : Boolean;
+
       (* Return if tag element has childrens *)
       function HasChildren : Boolean;
+
+      function FirstAttribute : TTagAttribute;
+      function FirstAttribute (AFilter : TTagAttributeFilter) : TTagAttribute;
+
+      function NextAttribute : TTagAttribute;
 
       (* Return first tag element inner element *)
       function FirstChildren : TTreeChunk;
@@ -149,8 +179,60 @@ type
     function Error : string;
   end;
 
+  function StringTokenize (AString : string) : TStringList;
 
 implementation
+
+function StringTokenize(AString: string): TStringList;
+var
+  Index : SizeInt;
+begin
+  Result := TStringList.Create;
+  while AString <> '' do
+  begin
+    AString := TrimLeft(AString);
+    Index := Pos(AString, #10);
+
+    if Index <> 0 then
+    begin
+      Result.Add(Trim(Copy(AString, 0, Index)));
+      Delete(AString, 0, Index);
+    end else
+    begin
+      Result.Add(AString);
+      AString := '';
+    end;
+  end;
+end;
+
+{ TMyHTMLParser.TTagAttribute }
+
+function TMyHTMLParser.TTagAttribute.GetValue: TStringList;
+begin
+  Result := StringTokenize(FValue);
+end;
+
+procedure TMyHTMLParser.TTagAttribute.SetValue(AValue: TStringList);
+begin
+  FValue := AValue.Text;
+end;
+
+constructor TMyHTMLParser.TTagAttribute.Create;
+begin
+  FKey := '';
+  FValue := '';
+end;
+
+constructor TMyHTMLParser.TTagAttribute.Create(AKey: string; AValue: string);
+begin
+  FKey := AKey;
+  FValue := AValue;
+end;
+
+destructor TMyHTMLParser.TTagAttribute.Destroy;
+begin
+  inherited Destroy;
+end;
 
 { TMyHTMLParser.TTreeChunk }
 
@@ -203,28 +285,29 @@ function TMyHTMLParser.TTreeChunk.FirstChildren: TTreeChunk;
 begin
   if IsOk then
   begin
-    FNextNode := myhtml_node_child(FNode);
-    Result := TTreeChunk.Create(FNextNode);
+    Result := TTreeChunk.Create(myhtml_node_child(FNode));
   end;
     Result := TTreeChunk.Create(nil);
 end;
 
 function TMyHTMLParser.TTreeChunk.FirstChildren(AFilter: TTagFilter
   ): TTreeChunk;
+var
+  ChildrenNode : pmyhtml_tree_node_t;
 begin
   FFilter := AFilter;
 
   if IsOk then
   begin
-    FNextNode := myhtml_node_child(FNode);
+    ChildrenNode := myhtml_node_child(FNode);
     if Assigned(FFilter) then
     begin
-      while not FFilter(TTagNode.Create(FNextNode)) do
+      while not FFilter(TTagNode.Create(ChildrenNode)) do
       begin
-        FNextNode := myhtml_node_next(FNextNode);
+        FNextNode := myhtml_node_next(ChildrenNode);
       end;
     end;
-    Result := TTreeChunk.Create(FNextNode);
+    Result := TTreeChunk.Create(ChildrenNode);
   end else
     Result := TTreeChunk.Create(nil);
 end;
@@ -240,28 +323,6 @@ begin
 end;
 
 { TMyHTMLParser.TTagNode }
-
-function TMyHTMLParser.TTagNode.StringTokenize(AString: string): TStringList;
-var
-  Index : SizeInt;
-begin
-  Result := TStringList.Create;
-  while AString <> '' do
-  begin
-    AString := TrimLeft(AString);
-    Index := Pos(AString, #10);
-
-    if Index <> 0 then
-    begin
-      Result.Add(Trim(Copy(AString, 0, Index)));
-      Delete(AString, 0, Index);
-    end else
-    begin
-      Result.Add(AString);
-      AString := '';
-    end;
-  end;
-end;
 
 constructor TMyHTMLParser.TTagNode.Create(ANode: pmyhtml_tree_node_t);
 begin
@@ -337,6 +398,15 @@ begin
     Result := TTreeChunk.Create(nil);
 end;
 
+function TMyHTMLParser.TTagNode.HasAttribute: Boolean;
+begin
+  if IsOk then
+  begin
+    Result := myhtml_node_attribute_first(FNode) <> nil;
+  end else
+    Result := False;
+end;
+
 function TMyHTMLParser.TTagNode.HasChildren: Boolean;
 begin
   if IsOk then
@@ -344,6 +414,57 @@ begin
     Result := myhtml_node_child(FNode) <> nil;
   end else
     Result := False;
+end;
+
+function TMyHTMLParser.TTagNode.FirstAttribute: TTagAttribute;
+begin
+  if IsOk then
+  begin
+    FAttribute := myhtml_node_attribute_first(FNode);
+    if FAttribute <> nil then
+    begin
+      Result := TTagAttribute.Create(myhtml_attribute_key(FAttribute, nil),
+        myhtml_attribute_value(FAttribute, nil));
+    end else
+      Result := TTagAttribute.Create;
+  end else
+    Result := TTagAttribute.Create;
+end;
+
+function TMyHTMLParser.TTagNode.FirstAttribute(AFilter: TTagAttributeFilter
+  ): TTagAttribute;
+begin
+  FAttributeFilter := AFilter;
+
+  if IsOk then
+  begin
+    FAttribute := myhtml_node_attribute_first(FNode);
+    if Assigned(FAttributeFilter) then
+    begin
+      while not FAttributeFilter(TTagAttribute.Create(
+        myhtml_attribute_key(FAttribute, nil),
+        myhtml_attribute_value(FAttribute, nil))) do
+      begin
+        FAttribute := myhtml_attribute_next(FAttribute);
+      end;
+      Result := TTagAttribute.Create(myhtml_attribute_key(FAttribute, nil),
+        myhtml_attribute_value(FAttribute, nil));
+    end else
+      Result := TTagAttribute.Create(myhtml_attribute_key(FAttribute, nil),
+        myhtml_attribute_value(FAttribute, nil));
+  end else
+    Result := TTagAttribute.Create;
+end;
+
+function TMyHTMLParser.TTagNode.NextAttribute: TTagAttribute;
+begin
+  if IsOk and (FAttribute <> nil) then
+  begin
+    FAttribute := myhtml_attribute_next(FAttribute);
+    Result := TTagAttribute.Create(myhtml_attribute_key(FAttribute, nil),
+      myhtml_attribute_value(FAttribute, nil));
+  end else
+    Result := TTagAttribute.Create;
 end;
 
 function TMyHTMLParser.TTagNode.FirstChildren: TTreeChunk;
