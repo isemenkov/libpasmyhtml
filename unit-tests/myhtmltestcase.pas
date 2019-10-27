@@ -40,9 +40,13 @@ type
     procedure TearDown; override;
 
     function TitleFilter (ANode : TMyHTMLParser.TTagNode) : Boolean;
+    function MetaFilter (ANode : TMyHTMLParser.TTagNode) : Boolean;
+    function MetaCharsetFilter (AAttribute : TMyHTMLParser.TTagAttribute)
+      : Boolean;
   published
     procedure TestDocumentParse;
     procedure TestDocumentParseTitle;
+    procedure TestDocumentParseMetaCharset;
   end;
 
 {$I htmldocuments/myhtmlsimpleparse_document.inc }
@@ -66,10 +70,24 @@ function TMyHTMLParserSimpleParseTestCase.TitleFilter(
   ANode: TMyHTMLParser.TTagNode): Boolean;
 begin
   if ANode.IsOk then
-  begin
-    Result := (ANode.GetTag = myhtml_tag_id_t(MyHTML_TAG_TITLE));
-  end else
+    Result := (ANode.GetTag = MyHTML_TAG_TITLE)
+  else
     Result := True;
+end;
+
+function TMyHTMLParserSimpleParseTestCase.MetaFilter(
+  ANode: TMyHTMLParser.TTagNode): Boolean;
+begin
+  if ANode.IsOk then
+    Result := (ANode.GetTag = MyHTML_TAG_META)
+  else
+    Result := True;
+end;
+
+function TMyHTMLParserSimpleParseTestCase.MetaCharsetFilter(
+  AAttribute: TMyHTMLParser.TTagAttribute): Boolean;
+begin
+  Result := (AAttribute.Key = 'charset');
 end;
 
 procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParse;
@@ -89,6 +107,29 @@ begin
     Fail('Empty document title node');
 
   AssertTrue('Test document title', title.GetValue = 'Document Title');
+end;
+
+procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaCharset;
+var
+  chunk : TMyHTMLParser.TTreeChunk;
+  meta : TMyHTMLParser.TTagNode;
+  charset : string;
+begin
+  chunk := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+    .FirstChildren(@MetaFilter);
+  meta := chunk.First;
+
+  charset := '';
+  while meta.IsOk and (charset = '') do
+  begin
+    if meta.HasAttribute then
+    begin
+      charset := meta.FirstAttribute(@MetaCharsetFilter).Value[0];
+    end;
+    meta := chunk.Next;
+  end;
+
+  AssertTrue('Test meta charset attribute', charset = 'utf-8');
 end;
 
 { TMyHTMLSimpleParseTestCase }

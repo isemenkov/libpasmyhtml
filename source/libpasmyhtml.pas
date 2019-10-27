@@ -602,8 +602,8 @@ type
   pmyhtml_tag_id_t = ^myhtml_tag_id_t;
   myhtml_tag_id_t = type QWord;
 
-  pmyhtml_tags = ^myhtml_tags;
-  myhtml_tags = (
+  pmyhtml_tags_t = ^myhtml_tags_t;
+  myhtml_tags_t = (
     MyHTML_TAG__UNDEF                                                   = $0000,
     MyHTML_TAG__TEXT                                                    = $0001,
     MyHTML_TAG__COMMENT                                                 = $0002,

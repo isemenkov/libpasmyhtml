@@ -49,6 +49,7 @@ type
     type
       (* Start parsing from the next element *)
       TDocumentParseFrom = (
+        DOCUMENT,      (* Start parse from document root *)
         DOCUMENT_HTML, (* Start parse from HTML tag element *)
         DOCUMENT_HEAD, (* Start parse from HEAD tag element *)
         DOCUMENT_BODY  (* Start parse from BODY tag element *)
@@ -56,43 +57,74 @@ type
 
     TTagNode = class;
 
+    (**
+     * TTagNode filter callback function
+     *)
     TTagFilter = function (ANode : TTagNode) : Boolean of object;
 
     { TTreeChunk }
-    (* Document tree or document tree chunk *)
+    { Document tree chunk }
+
     TTreeChunk = class
     private
-      FNode : pmyhtml_tree_node_t;
-      FNextNode : pmyhtml_tree_node_t;
-      FFilter : TTagFilter;
-      FChildrenFilter : TTagFilter;
+      FNode : pmyhtml_tree_node_t;       { First node }
+      FNextNode : pmyhtml_tree_node_t;   { Pointer to next node }
+      FFilter : TTagFilter;              { Next node filter callback }
+      FChildrenFilter : TTagFilter;      { Next children node fillter callback }
     public
       constructor Create (ANode : pmyhtml_tree_node_t);
       destructor Destroy; override;
 
+      (**
+       * Return True if node is exists and correct
+       *)
       function IsOk : Boolean;
 
-      (* Return first tree element node *)
+      (**
+       * Return first tree node element
+       *)
       function First : TTagNode;
+
+      (**
+       * Return first tree node element using filter callback
+       *)
       function First (AFilter : TTagFilter) : TTagNode;
 
+      (**
+       * Return next tree node element
+       *)
+      function Next : TTagNode;
+
+      (**
+       * Return first node children element
+       *)
       function FirstChildren : TTreeChunk;
+
+      (**
+       * Return first node children element using filter callback
+       *)
       function FirstChildren (AFilter : TTagFilter) : TTreeChunk;
 
-      (* Return next tree element node *)
-      function Next : TTagNode;
+      (**
+       * Return next node children element
+       *)
+      function NextChildren : TTreeChunk;
     end;
 
     TTagAttribute = class;
 
+    (**
+     * TTagAttribute filter callback function
+     *)
     TTagAttributeFilter = function (AAttribute : TTagAttribute) : Boolean of
       object;
 
     { TTagAttribute }
-    (* Tag element attribute *)
+    { Tag element attribute }
+
     TTagAttribute = class
     private
-      FKey, FValue : string;
+      FKey, FValue : string;             { Attribute Key and Value }
 
       function GetValue : TStringList;
       procedure SetValue (AValue : TStringList);
@@ -101,44 +133,69 @@ type
       constructor Create (AKey : string; AValue : string);
       destructor Destroy; override;
 
+      (**
+       * Return attribute key string
+       *)
       property Key : string read FKey write FKey;
+
+      (**
+       * Return attribute value string
+       *)
       property Value : TStringList read GetValue write SetValue;
     end;
 
     { TTagNode }
-    (* Tag element *)
+    { Tag element }
+
     TTagNode = class
     private
-      FNode : pmyhtml_tree_node_t;
-      FNextChildrenNode : pmyhtml_tree_node_t;
-      FChildrenFilter : TTagFilter;
-      FAttribute : pmyhtml_tree_attr_t;
-      FAttributeFilter : TTagAttributeFilter;
+      FNode : pmyhtml_tree_node_t;             { Current node }
+      FNextChildrenNode : pmyhtml_tree_node_t; { Next node children element }
+      FChildrenFilter : TTagFilter;            { Next children element filter }
+      FAttribute : pmyhtml_tree_attr_t;        { Tag attribute }
+      FAttributeFilter : TTagAttributeFilter;  { Tag attribute filter callback }
     public
       constructor Create (ANode : pmyhtml_tree_node_t);
       destructor Destroy; override;
 
+      (**
+       * Return True if tag node is exists and it is correct
+       *)
       function IsOk : Boolean;
 
-      (* Return tag element id *)
-      function GetTag : myhtml_tag_id_t;
+      (**
+       * Return tag element id
+       *)
+      function GetTag : myhtml_tags_t;
 
-      (* Return tag element class attributes list *)
+      (**
+       * Return tag element class attributes list
+       *)
       function GetClass : TStringList;
 
-      (* Return tag element id attributes list *)
+      (**
+       * Return tag element id attributes list
+       *)
       function GetId : TStringList;
 
-      (* Return tag element value *)
+      (**
+       * Return tag element value
+       *)
       function GetValue : string;
 
-      (* Return tag element parent element *)
+      (**
+       * Return tag element parent element
+       *)
       function GetParent : TTreeChunk;
 
-      (* Return if tag element has attributes *)
+      (**
+       * Return if tag element has attributes
+       *)
       function HasAttribute : Boolean;
 
-      (* Return if tag element has childrens *)
+      (**
+       * Return if tag element has childrens
+       *)
       function HasChildren : Boolean;
 
       function FirstAttribute : TTagAttribute;
@@ -146,11 +203,15 @@ type
 
       function NextAttribute : TTagAttribute;
 
-      (* Return first tag element inner element *)
+      (**
+       * Return first tag element inner element
+       *)
       function FirstChildren : TTreeChunk;
       function FirstChildren (AFilter : TTagFilter) : TTreeChunk;
 
-      (* Return next tag element inner element *)
+      (**
+       * Return next tag element inner element
+       *)
       function NextChildren : TTreeChunk;
     end;
 
@@ -304,12 +365,17 @@ begin
     begin
       while not FFilter(TTagNode.Create(ChildrenNode)) do
       begin
-        FNextNode := myhtml_node_next(ChildrenNode);
+        ChildrenNode := myhtml_node_next(ChildrenNode);
       end;
     end;
     Result := TTreeChunk.Create(ChildrenNode);
   end else
     Result := TTreeChunk.Create(nil);
+end;
+
+function TMyHTMLParser.TTreeChunk.NextChildren: TTreeChunk;
+begin
+
 end;
 
 function TMyHTMLParser.TTreeChunk.Next: TTagNode;
@@ -340,13 +406,13 @@ begin
   Result := FNode <> nil;
 end;
 
-function TMyHTMLParser.TTagNode.GetTag: myhtml_tag_id_t;
+function TMyHTMLParser.TTagNode.GetTag: myhtml_tags_t;
 begin
   if IsOk then
   begin
-    Result := myhtml_node_tag_id(FNode);
+    Result := myhtml_tags_t(myhtml_node_tag_id(FNode));
   end else
-    Result := myhtml_tag_id_t(MyHTML_TAG__UNDEF);
+    Result := MyHTML_TAG__UNDEF;
 end;
 
 function TMyHTMLParser.TTagNode.GetClass: TStringList;
@@ -541,6 +607,8 @@ begin
   if FError = MyHTML_STATUS_OK then
   begin
     case AParseFrom of
+      DOCUMENT :
+        Result := TTreeChunk.Create(myhtml_tree_get_document(FTree));
       DOCUMENT_HTML :
         Result := TTreeChunk.Create(myhtml_tree_get_node_html(FTree));
       DOCUMENT_HEAD :
