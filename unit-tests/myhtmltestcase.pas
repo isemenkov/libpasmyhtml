@@ -28,6 +28,7 @@ type
   published
     procedure TestDocumentParse;
     procedure TestDocumentParseTitle;
+    procedure TestDocumentParseMetaCharset;
   end;
 
   { TMyHTMLParserSimpleParseTestCase }
@@ -195,6 +196,51 @@ begin
       string(mycore_string_data(Title)) = 'Document Title');
   end else
     Fail('Test document title');
+end;
+
+procedure TMyHTMLSimpleParseTestCase.TestDocumentParseMetaCharset;
+var
+  Node : pmyhtml_tree_node_t;
+  Attribute : pmyhtml_tree_attr_t;
+  Find : Boolean;
+begin
+  myhtml_tree_clean(FTree);
+  myhtml_clean(FHTML);
+
+  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleParseDocument),
+    Length(SimpleParseDocument));
+  AssertTrue('Test parse html document', FError = mystatus_t(MyHTML_STATUS_OK));
+
+  Node := myhtml_tree_get_node_head(FTree);
+  if Node = nil then
+    Fail('Empty document head node');
+
+  Node := myhtml_node_child(Node);
+  if Node = nil then
+    Fail('Empty head children node');
+
+  Find := False;
+  while (Node <> nil) and (Find = False) do
+  begin
+    if myhtml_node_tag_id(Node) = myhtml_tag_id_t(MyHTML_TAG_META) then
+    begin
+      Attribute := myhtml_node_attribute_first(Node);
+
+      while (Attribute <> nil) and (Find = False) do
+      begin
+        if myhtml_attribute_key(Attribute, nil) = 'charset' then
+          Find := True;
+      end;
+
+    end;
+    Node := myhtml_node_next(Node);
+  end;
+
+  if Attribute = nil then
+    Fail('Meta node attribute is empty');
+
+  AssertTrue('Test document meta charset attribute',
+    myhtml_attribute_value(Attribute, nil) = 'utf-8');
 end;
 
 initialization

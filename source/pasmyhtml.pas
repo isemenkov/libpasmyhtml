@@ -218,337 +218,6 @@ begin
   end;
 end;
 
-{ TMyHTMLParser.TTreeChunkList }
-
-function TMyHTMLParser.TTreeChunkList.CheckListItem(ANode: pmyhtml_tree_node_t;
-  AAttributeFilter: TTagNodeAttributeFilter): Boolean;
-var
-  Attr : pmyhtml_tree_attr_t;
-begin
-  Result := False;
-
-  Attr := myhtml_node_attribute_first(ANode);
-  while (Attr <> nil) and
-    (not AAttributeFilter(TTagNodeAttribute.Create(Attr))) do
-    Attr := myhtml_attribute_next(Attr);
-
-  if Attr <> nil then
-    Result := True;
-end;
-
-constructor TMyHTMLParser.TTreeChunkList.Create;
-begin
-  FList := TChunkList.Create;
-end;
-
-destructor TMyHTMLParser.TTreeChunkList.Destroy;
-begin
-  FreeAndNil(FList);
-  inherited Destroy;
-end;
-
-function TMyHTMLParser.TTreeChunkList.IsOk: Boolean;
-begin
-  Result := FList.Count > 0;
-end;
-
-function TMyHTMLParser.TTreeChunkList.FirstNode(
-  AAttributeFilter: TTagNodeAttributeFilter): TTagNode;
-var
-  Attr : pmyhtml_tree_attr_t;
-begin
-  Result := TTagNode.Create(nil);
-
-  if IsOk then
-  begin
-    FAttributeFilter := AAttributeFilter;
-    FListIndex := 0;
-
-    { Apply filter if exists }
-    if Assigned(FAttributeFilter) then
-    begin
-      while  (FListIndex < FList.Count) and
-        (not CheckListItem(FList[FListIndex].FNode, FAttributeFilter)) do
-        Inc(FListIndex);
-    end;
-
-    if FListIndex <= FList.Count then
-      Result := TTagNode.Create(FList[FListIndex].FNode);
-  end;
-end;
-
-function TMyHTMLParser.TTreeChunkList.NextNode: TTagNode;
-begin
-  Result := TTagNode.Create(nil);
-
-  if IsOk and (FListIndex < FList.Count) then
-  begin
-    Inc(FListIndex);
-
-    { Apply filter if exists }
-    if Assigned(FAttributeFilter) then
-    begin
-      while  (FListIndex < FList.Count) and
-        (not CheckListItem(FList[FListIndex].FNode, FAttributeFilter)) do
-        Inc(FListIndex);
-    end;
-
-    if FListIndex <= FList.Count then
-      Result := TTagNode.Create(FList[FListIndex].FNode);
-  end;
-end;
-
-{ TMyHTMLParser.TTagNode }
-
-function TMyHTMLParser.TTagNode.GetTag: myhtml_tags_t;
-begin
-  if IsOk then
-  begin
-    Result := myhtml_tags_t(myhtml_node_tag_id(FNode));
-  end else
-    Result := MyHTML_TAG__UNDEF;
-end;
-
-function TMyHTMLParser.TTagNode.GetClassList: TStringList;
-begin
-  Result := TStringList.Create;
-end;
-
-function TMyHTMLParser.TTagNode.GetIdList: TStringList;
-begin
-  Result := TStringList.Create;
-end;
-
-function TMyHTMLParser.TTagNode.GetValue: string;
-var
-  TextNode : pmyhtml_tree_node_t;
-begin
-  Result := '';
-
-  if IsOk then
-  begin
-    TextNode := myhtml_node_child(FNode);
-    if (TextNode <> nil) and (myhtml_node_tag_id(TextNode) =
-      myhtml_tag_id_t(MyHTML_TAG__TEXT)) then
-    begin
-      Result := mycore_string_data(myhtml_node_string(TextNode));
-    end;
-  end;
-end;
-
-function TMyHTMLParser.TTagNode.GetParent: TTreeChunk;
-begin
-  if IsOk then
-  begin
-    Result := TTreeChunk.Create(myhtml_node_parent(FNode));
-  end else
-    Result := TTreeChunk.Create(nil);
-end;
-
-constructor TMyHTMLParser.TTagNode.Create(ANode: pmyhtml_tree_node_t);
-begin
-  FNode := ANode;
-end;
-
-destructor TMyHTMLParser.TTagNode.Destroy;
-begin
-  inherited Destroy;
-end;
-
-function TMyHTMLParser.TTagNode.IsOk: Boolean;
-begin
-  Result := FNode <> nil;
-end;
-
-function TMyHTMLParser.TTagNode.FirstAttribute(
-  AAtributeFilter: TTagNodeAttributeFilter): TTagNodeAttribute;
-begin
-  Result := TTagNodeAttribute.Create(nil);
-end;
-
-function TMyHTMLParser.TTagNode.NextAttribute: TTagNodeAttribute;
-begin
-  Result := TTagNodeAttribute.Create(nil);
-end;
-
-function TMyHTMLParser.TTagNode.FindAttributeByKey(AKey: string
-  ): TTagNodeAttribute;
-begin
-  Result := TTagNodeAttribute.Create(myhtml_attribute_by_key(FNode, PChar(AKey),
-    Length(AKey)));
-end;
-
-{ TMyHTMLParser.TTagNodeAttribute }
-
-function TMyHTMLParser.TTagNodeAttribute.GetKey: string;
-begin
-  if IsOk then
-  begin
-    Result := myhtml_attribute_key(FAttribute, nil);
-  end else
-    Result := '';
-end;
-
-function TMyHTMLParser.TTagNodeAttribute.GetValue: string;
-begin
-  if IsOk then
-  begin
-    Result := myhtml_attribute_value(FAttribute, nil);
-  end else
-    Result := '';
-end;
-
-constructor TMyHTMLParser.TTagNodeAttribute.Create (AAttribute :
-  pmyhtml_tree_attr_t);
-begin
-  FAttribute := AAttribute;
-end;
-
-destructor TMyHTMLParser.TTagNodeAttribute.Destroy;
-begin
-  inherited Destroy;
-end;
-
-function TMyHTMLParser.TTagNodeAttribute.IsOk: Boolean;
-begin
-  Result := FAttribute <> nil;
-end;
-
-{ TMyHTMLParser.TTreeChunk }
-
-constructor TMyHTMLParser.TTreeChunk.Create(ANode: pmyhtml_tree_node_t);
-begin
-  FNode := ANode;
-end;
-
-destructor TMyHTMLParser.TTreeChunk.Destroy;
-begin
-  inherited Destroy;
-end;
-
-function TMyHTMLParser.TTreeChunk.IsOk: Boolean;
-begin
-  Result := FNode <> nil;
-end;
-
-function TMyHTMLParser.TTreeChunk.FirstNode(ANodeFilter: TTagNodeFilter
-  ): TTagNode;
-begin
-  if IsOk then
-  begin
-    FNodeFilter := ANodeFilter;
-    FNextNode := FNode;
-
-    { Apply filter if exists }
-    if Assigned(FNodeFilter) then
-    begin
-      while not FNodeFilter(TTagNode.Create(FNextNode)) do
-        FNextNode := myhtml_node_next(FNextNode);
-    end;
-
-    Result := TTagNode.Create(FNextNode);
-  end else
-    Result := TTagNode.Create(nil);
-end;
-
-function TMyHTMLParser.TTreeChunk.NextNode: TTagNode;
-begin
-  if FNextNode <> nil then
-  begin
-
-    { Apply filter if exists }
-    if Assigned(FNodeFilter) then
-    begin
-      while not FNodeFilter(TTagNode.Create(FNextNode)) do
-        FNextNode := myhtml_node_next(FNextNode);
-    end else
-      FNextNode := myhtml_node_next(FNextNode);
-
-    Result := TTagNode.Create(FNextNode);
-  end else
-    Result := TTagNode.Create(nil);
-end;
-
-function TMyHTMLParser.TTreeChunk.FindAllNodes(ANodeFilter: TTagNodeFilter
-  ): TTreeChunkList;
-var
-  Node : pmyhtml_tree_node_t;
-begin
-  Result := TTreeChunkList.Create;
-
-  if IsOk then
-  begin
-    Node := FNode;
-
-    while Node <> nil do
-    begin
-      if Assigned(ANodeFilter) and ANodeFilter(TTagNode.Create(Node)) then
-        Result.FList.Add(TTreeChunk.Create(Node));
-
-      Node := myhtml_node_next(Node);
-    end;
-  end;
-end;
-
-function TMyHTMLParser.TTreeChunk.FirstChildrenNode(ANodeFilter: TTagNodeFilter
-  ): TTagNode;
-begin
-  if IsOk then
-  begin
-    FChildrenNodeFilter := ANodeFilter;
-    FNextChildrenNode := myhtml_node_child(FNode);
-
-    { Apply filter if exists }
-    if Assigned(FChildrenNodeFilter) then
-    begin
-      while not FChildrenNodeFilter(TTagNode.Create(FNextChildrenNode)) do
-        FNextChildrenNode := myhtml_node_next(FNextChildrenNode);
-    end;
-
-    Result := TTagNode.Create(FNextChildrenNode);
-  end else
-    Result := TTagNode.Create(nil);
-end;
-
-function TMyHTMLParser.TTreeChunk.NextChildrenNode: TTagNode;
-begin
-  if FNextChildrenNode <> nil then
-  begin
-
-    { Apply filter if exists }
-    if Assigned(FChildrenNodeFilter) then
-    begin
-      while not FNodeFilter(TTagNode.Create(FNextChildrenNode)) do
-        FNextChildrenNode := myhtml_node_next(FNextChildrenNode);
-    end else
-      FNextChildrenNode := myhtml_node_next(FNextChildrenNode);
-
-    Result := TTagNode.Create(FNextChildrenNode);
-  end else
-    Result := TTagNode.Create(nil);
-end;
-
-function TMyHTMLParser.TTreeChunk.FindAllChildrenNodes(
-  ANodeFilter: TTagNodeFilter): TTreeChunkList;
-var
-  Node : pmyhtml_tree_node_t;
-begin
-  Result := TTreeChunkList.Create;
-
-  if IsOk then
-  begin
-    Node := myhtml_node_child(FNode);
-
-    while Node <> nil do
-    begin
-      if Assigned(ANodeFilter) and ANodeFilter(TTagNode.Create(Node)) then
-        Result.FList.Add(TTreeChunk.Create(Node));
-
-      Node := myhtml_node_next(Node);
-    end;
-  end;
-end;
-
 { TMyHTMLParser }
 
 constructor TMyHTMLParser.Create(AParserOptions: myhtml_options_t;
@@ -725,6 +394,337 @@ begin
       Result := 'MyHTML_STATUS_STREAM_BUFFER_ERROR_ADD_ENTRY';
     end;
   end;
+end;
+
+{ TMyHTMLParser.TTreeChunkList }
+
+function TMyHTMLParser.TTreeChunkList.CheckListItem(ANode: pmyhtml_tree_node_t;
+  AAttributeFilter: TTagNodeAttributeFilter): Boolean;
+var
+  Attr : pmyhtml_tree_attr_t;
+begin
+  Result := False;
+
+  Attr := myhtml_node_attribute_first(ANode);
+  while (Attr <> nil) and
+    (not AAttributeFilter(TTagNodeAttribute.Create(Attr))) do
+    Attr := myhtml_attribute_next(Attr);
+
+  if Attr <> nil then
+    Result := True;
+end;
+
+constructor TMyHTMLParser.TTreeChunkList.Create;
+begin
+  FList := TChunkList.Create;
+end;
+
+destructor TMyHTMLParser.TTreeChunkList.Destroy;
+begin
+  FreeAndNil(FList);
+  inherited Destroy;
+end;
+
+function TMyHTMLParser.TTreeChunkList.IsOk: Boolean;
+begin
+  Result := FList.Count > 0;
+end;
+
+function TMyHTMLParser.TTreeChunkList.FirstNode(
+  AAttributeFilter: TTagNodeAttributeFilter): TTagNode;
+var
+  Attr : pmyhtml_tree_attr_t;
+begin
+  Result := TTagNode.Create(nil);
+
+  if IsOk then
+  begin
+    FAttributeFilter := AAttributeFilter;
+    FListIndex := 0;
+
+    { Apply filter if exists }
+    if Assigned(FAttributeFilter) then
+    begin
+      while  (FListIndex < FList.Count) and
+        (not CheckListItem(FList[FListIndex].FNode, FAttributeFilter)) do
+        Inc(FListIndex);
+    end;
+
+    if FListIndex <= FList.Count then
+      Result := TTagNode.Create(FList[FListIndex].FNode);
+  end;
+end;
+
+function TMyHTMLParser.TTreeChunkList.NextNode: TTagNode;
+begin
+  Result := TTagNode.Create(nil);
+
+  if IsOk and (FListIndex < FList.Count) then
+  begin
+    Inc(FListIndex);
+
+    { Apply filter if exists }
+    if Assigned(FAttributeFilter) then
+    begin
+      while  (FListIndex < FList.Count) and
+        (not CheckListItem(FList[FListIndex].FNode, FAttributeFilter)) do
+        Inc(FListIndex);
+    end;
+
+    if FListIndex <= FList.Count then
+      Result := TTagNode.Create(FList[FListIndex].FNode);
+  end;
+end;
+
+{ TMyHTMLParser.TTreeChunk }
+
+constructor TMyHTMLParser.TTreeChunk.Create(ANode: pmyhtml_tree_node_t);
+begin
+  FNode := ANode;
+end;
+
+destructor TMyHTMLParser.TTreeChunk.Destroy;
+begin
+  inherited Destroy;
+end;
+
+function TMyHTMLParser.TTreeChunk.IsOk: Boolean;
+begin
+  Result := FNode <> nil;
+end;
+
+function TMyHTMLParser.TTreeChunk.FirstNode(ANodeFilter: TTagNodeFilter
+  ): TTagNode;
+begin
+  if IsOk then
+  begin
+    FNodeFilter := ANodeFilter;
+    FNextNode := FNode;
+
+    { Apply filter if exists }
+    if Assigned(FNodeFilter) then
+    begin
+      while not FNodeFilter(TTagNode.Create(FNextNode)) do
+        FNextNode := myhtml_node_next(FNextNode);
+    end;
+
+    Result := TTagNode.Create(FNextNode);
+  end else
+    Result := TTagNode.Create(nil);
+end;
+
+function TMyHTMLParser.TTreeChunk.NextNode: TTagNode;
+begin
+  if FNextNode <> nil then
+  begin
+
+    { Apply filter if exists }
+    if Assigned(FNodeFilter) then
+    begin
+      while not FNodeFilter(TTagNode.Create(FNextNode)) do
+        FNextNode := myhtml_node_next(FNextNode);
+    end else
+      FNextNode := myhtml_node_next(FNextNode);
+
+    Result := TTagNode.Create(FNextNode);
+  end else
+    Result := TTagNode.Create(nil);
+end;
+
+function TMyHTMLParser.TTreeChunk.FindAllNodes(ANodeFilter: TTagNodeFilter
+  ): TTreeChunkList;
+var
+  Node : pmyhtml_tree_node_t;
+begin
+  Result := TTreeChunkList.Create;
+
+  if IsOk then
+  begin
+    Node := FNode;
+
+    while Node <> nil do
+    begin
+      if Assigned(ANodeFilter) and ANodeFilter(TTagNode.Create(Node)) then
+        Result.FList.Add(TTreeChunk.Create(Node));
+
+      Node := myhtml_node_next(Node);
+    end;
+  end;
+end;
+
+function TMyHTMLParser.TTreeChunk.FirstChildrenNode(ANodeFilter: TTagNodeFilter
+  ): TTagNode;
+begin
+  if IsOk then
+  begin
+    FChildrenNodeFilter := ANodeFilter;
+    FNextChildrenNode := myhtml_node_child(FNode);
+
+    { Apply filter if exists }
+    if Assigned(FChildrenNodeFilter) then
+    begin
+      while not FChildrenNodeFilter(TTagNode.Create(FNextChildrenNode)) do
+        FNextChildrenNode := myhtml_node_next(FNextChildrenNode);
+    end;
+
+    Result := TTagNode.Create(FNextChildrenNode);
+  end else
+    Result := TTagNode.Create(nil);
+end;
+
+function TMyHTMLParser.TTreeChunk.NextChildrenNode: TTagNode;
+begin
+  if FNextChildrenNode <> nil then
+  begin
+
+    { Apply filter if exists }
+    if Assigned(FChildrenNodeFilter) then
+    begin
+      while not FNodeFilter(TTagNode.Create(FNextChildrenNode)) do
+        FNextChildrenNode := myhtml_node_next(FNextChildrenNode);
+    end else
+      FNextChildrenNode := myhtml_node_next(FNextChildrenNode);
+
+    Result := TTagNode.Create(FNextChildrenNode);
+  end else
+    Result := TTagNode.Create(nil);
+end;
+
+function TMyHTMLParser.TTreeChunk.FindAllChildrenNodes(
+  ANodeFilter: TTagNodeFilter): TTreeChunkList;
+var
+  Node : pmyhtml_tree_node_t;
+begin
+  Result := TTreeChunkList.Create;
+
+  if IsOk then
+  begin
+    Node := myhtml_node_child(FNode);
+
+    while Node <> nil do
+    begin
+      if Assigned(ANodeFilter) and ANodeFilter(TTagNode.Create(Node)) then
+        Result.FList.Add(TTreeChunk.Create(Node));
+
+      Node := myhtml_node_next(Node);
+    end;
+  end;
+end;
+
+{ TMyHTMLParser.TTagNode }
+
+function TMyHTMLParser.TTagNode.GetTag: myhtml_tags_t;
+begin
+  if IsOk then
+  begin
+    Result := myhtml_tags_t(myhtml_node_tag_id(FNode));
+  end else
+    Result := MyHTML_TAG__UNDEF;
+end;
+
+function TMyHTMLParser.TTagNode.GetClassList: TStringList;
+begin
+  Result := TStringList.Create;
+end;
+
+function TMyHTMLParser.TTagNode.GetIdList: TStringList;
+begin
+  Result := TStringList.Create;
+end;
+
+function TMyHTMLParser.TTagNode.GetValue: string;
+var
+  TextNode : pmyhtml_tree_node_t;
+begin
+  Result := '';
+
+  if IsOk then
+  begin
+    TextNode := myhtml_node_child(FNode);
+    if (TextNode <> nil) and (myhtml_node_tag_id(TextNode) =
+      myhtml_tag_id_t(MyHTML_TAG__TEXT)) then
+    begin
+      Result := mycore_string_data(myhtml_node_string(TextNode));
+    end;
+  end;
+end;
+
+function TMyHTMLParser.TTagNode.GetParent: TTreeChunk;
+begin
+  if IsOk then
+  begin
+    Result := TTreeChunk.Create(myhtml_node_parent(FNode));
+  end else
+    Result := TTreeChunk.Create(nil);
+end;
+
+constructor TMyHTMLParser.TTagNode.Create(ANode: pmyhtml_tree_node_t);
+begin
+  FNode := ANode;
+end;
+
+destructor TMyHTMLParser.TTagNode.Destroy;
+begin
+  inherited Destroy;
+end;
+
+function TMyHTMLParser.TTagNode.IsOk: Boolean;
+begin
+  Result := FNode <> nil;
+end;
+
+function TMyHTMLParser.TTagNode.FirstAttribute(
+  AAtributeFilter: TTagNodeAttributeFilter): TTagNodeAttribute;
+begin
+  Result := TTagNodeAttribute.Create(nil);
+end;
+
+function TMyHTMLParser.TTagNode.NextAttribute: TTagNodeAttribute;
+begin
+  Result := TTagNodeAttribute.Create(nil);
+end;
+
+function TMyHTMLParser.TTagNode.FindAttributeByKey(AKey: string
+  ): TTagNodeAttribute;
+begin
+  Result := TTagNodeAttribute.Create(myhtml_attribute_by_key(FNode, PChar(AKey),
+    Length(AKey)));
+end;
+
+{ TMyHTMLParser.TTagNodeAttribute }
+
+function TMyHTMLParser.TTagNodeAttribute.GetKey: string;
+begin
+  if IsOk then
+  begin
+    Result := myhtml_attribute_key(FAttribute, nil);
+  end else
+    Result := '';
+end;
+
+function TMyHTMLParser.TTagNodeAttribute.GetValue: string;
+begin
+  if IsOk then
+  begin
+    Result := myhtml_attribute_value(FAttribute, nil);
+  end else
+    Result := '';
+end;
+
+constructor TMyHTMLParser.TTagNodeAttribute.Create (AAttribute :
+  pmyhtml_tree_attr_t);
+begin
+  FAttribute := AAttribute;
+end;
+
+destructor TMyHTMLParser.TTagNodeAttribute.Destroy;
+begin
+  inherited Destroy;
+end;
+
+function TMyHTMLParser.TTagNodeAttribute.IsOk: Boolean;
+begin
+  Result := FAttribute <> nil;
 end;
 
 end.
