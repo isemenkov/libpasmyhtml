@@ -40,8 +40,6 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
 
-    function FilterTitleNode (ANode : TMyHTMLParser.TTagNode) : Boolean;
-    function FilterMetaNode (ANode : TMyHTMLParser.TTagNode) : Boolean;
     function FilterMetaCharsetAttribute (AAttribute :
       TMyHTMLParser.TTagNodeAttribute) : Boolean;
   published
@@ -67,24 +65,6 @@ begin
   FreeAndNil(FParser);
 end;
 
-function TMyHTMLParserSimpleParseTestCase.FilterTitleNode(
-  ANode: TMyHTMLParser.TTagNode): Boolean;
-begin
-  if ANode.IsOk then
-    Result := (ANode.GetTag = MyHTML_TAG_TITLE)
-  else
-    Result := True;
-end;
-
-function TMyHTMLParserSimpleParseTestCase.FilterMetaNode(
-  ANode: TMyHTMLParser.TTagNode): Boolean;
-begin
-  if ANode.IsOk then
-    Result := (ANode.GetTag = MyHTML_TAG_META)
-  else
-    Result := True;
-end;
-
 function TMyHTMLParserSimpleParseTestCase.FilterMetaCharsetAttribute(
   AAttribute: TMyHTMLParser.TTagNodeAttribute): Boolean;
 begin
@@ -102,7 +82,7 @@ var
   title : TMyHTMLParser.TTagNode;
 begin
   title := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
-    .FirstChildrenNode(@FilterTitleNode);
+    .FirstChildrenNode(TMyHTMLParser.TTagNodeFilter.Create.Tag(MyHTML_TAG_TITLE));
 
   if not title.IsOk then
     Fail('Empty document title node');

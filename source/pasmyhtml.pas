@@ -105,7 +105,9 @@ type
         TTreeChunkList;
 
       function FirstChildrenNode (ANodeFilter : TTagNodeFilterCallback = nil) :
-        TTagNode;
+        TTagNode; overload;
+      function FirstChildrenNode (ANodeFIlter : TTagNodeFilter) : TTagNode;
+        overload;
       function NextChildrenNode : TTagNode;
 
       function FindAllChildrenNodes (ANodeFilter : TTagNodeFilterCallback = nil)
@@ -621,6 +623,22 @@ begin
     Result := TTagNode.Create(FNextChildrenNode);
   end else
     Result := TTagNode.Create(nil);
+end;
+
+function TMyHTMLParser.TTreeChunk.FirstChildrenNode(ANodeFilter: TTagNodeFilter
+  ): TTagNode;
+begin
+ if IsOk then
+ begin
+   FNextChildrenNode := myhtml_node_child(FNode);
+
+   { Apply filter if exists }
+   while not ANodeFilter.IsEqual(FNextChildrenNode) do
+     FNextChildrenNode := myhtml_node_next(FNextChildrenNode);
+
+   Result := TTagNode.Create(FNextChildrenNode);
+ end else
+   Result := TTagNode.Create(nil);
 end;
 
 function TMyHTMLParser.TTreeChunk.NextChildrenNode: TTagNode;
