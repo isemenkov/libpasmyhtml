@@ -115,7 +115,7 @@ var
   charset : string;
 begin
   charset := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
-    .FindAllChildrenNodes(@FilterMetaNode)
+    .FindAllChildrenNodes(TMyHTMLParser.TTagNodeFilter.Create.Tag(MyHTML_TAG_META))
     .FirstNode(@FilterMetaCharsetAttribute)
     .FindAttributeByKey('charset').Value;
 
