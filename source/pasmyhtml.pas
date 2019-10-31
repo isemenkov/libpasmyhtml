@@ -76,6 +76,7 @@ type
 
       function IsEqual (ATag : pmyhtml_tree_node_t) : Boolean;
 
+      function Callback (ACallback : TTagNodeFitlerCallback) : TTagNodeFilter;
       function Tag (ATag : myhtml_tags_t) : TTagNodeFilter;
     end;
 
@@ -97,6 +98,10 @@ type
 
       function IsOk : Boolean;
 
+      function Filter (ANodeFilter : TTagNodeFilter) : TTreeChunkList;
+
+
+
       function FirstNode (ANodeFilter : TTagNodeFilterCallback = nil) :
         TTagNode;
       function NextNode : TTagNode;
@@ -110,10 +115,8 @@ type
         overload;
       function NextChildrenNode : TTagNode;
 
-      function FindAllChildrenNodes (ANodeFilter : TTagNodeFilterCallback = nil)
-        : TTreeChunkList; overload;
       function FindAllChildrenNodes (ANodeFilter : TTagNodeFilter) :
-        TTreeChunkList; overload;
+        TTreeChunkList;
     end;
 
     { TTreeChunkList }
