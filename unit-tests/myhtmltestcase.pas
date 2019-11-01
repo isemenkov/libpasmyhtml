@@ -35,13 +35,13 @@ type
 
   TMyHTMLParserSimpleParseTestCase = class(TTestCase)
   private
-    FParser : TMyHTMLParser;
+    FParser : TParser;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
 
     function FilterMetaCharsetAttribute (AAttribute :
-      TMyHTMLParser.TTagNodeAttribute) : Boolean;
+      TParser.TTagNodeAttribute; AData : Pointer) : Boolean;
   published
     procedure TestDocumentParse;
     procedure TestDocumentParseTitle;
@@ -56,7 +56,7 @@ implementation
 
 procedure TMyHTMLParserSimpleParseTestCase.SetUp;
 begin
-  FParser := TMyHTMLParser.Create(MyHTML_OPTIONS_PARSE_MODE_SEPARATELY,
+  FParser := TParser.Create(MyHTML_OPTIONS_PARSE_MODE_SEPARATELY,
     MyENCODING_UTF_8, 1, 4096, MyHTML_TREE_PARSE_FLAGS_CLEAN);
 end;
 
@@ -66,7 +66,7 @@ begin
 end;
 
 function TMyHTMLParserSimpleParseTestCase.FilterMetaCharsetAttribute(
-  AAttribute: TMyHTMLParser.TTagNodeAttribute): Boolean;
+  AAttribute: TParser.TTagNodeAttribute; AData : Pointer): Boolean;
 begin
   Result := (AAttribute.Key = 'charset');
 end;
@@ -79,10 +79,10 @@ end;
 
 procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseTitle;
 var
-  title : TMyHTMLParser.TTagNode;
+  title : TParser.TTagNode;
 begin
   title := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
-    .FirstChildrenNode(TMyHTMLParser.TTagNodeFilter.Create.Tag(MyHTML_TAG_TITLE));
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TITLE));
 
   if not title.IsOk then
     Fail('Empty document title node');
@@ -94,10 +94,11 @@ procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaCharset;
 var
   charset : string;
 begin
-  charset := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
-    .FindAllChildrenNodes(TMyHTMLParser.TTagNodeFilter.Create.Tag(MyHTML_TAG_META))
-    .FirstNode(@FilterMetaCharsetAttribute)
-    .FindAttributeByKey('charset').Value;
+  charset := ''; //FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+    //.FindAllChildrenNodes(TParser.TFilter.Create.Tag(MyHTML_TAG_META));
+    //.FirstNode(TParser.TFilter.Create.TagNodeAttributeCallback(
+    //  @FilterMetaCharsetAttribute))
+    //.FindAttributeByKey('charset').Value;
 
   AssertTrue('Test document meta charset attribute', charset = 'utf-8');
 end;

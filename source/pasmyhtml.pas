@@ -57,11 +57,11 @@ type
 
       { Tag node attribute wrapper }
       TTagNodeAttribute = class;
-      TTagNodeAttributeList = class;
+      TTagNodeAttributeList = specialize TFPGObjectList<TTagNodeAttribute>;
 
       { Tag node }
       TTagNode = class;
-      TTagNodeList = class;
+      TTagNodeList = specialize TFPGObjectList<TTagNode>;
 
       { Filter callback functions }
       TTagNodeFilterCallback = function (ANode : TTagNode; AData : Pointer) :
@@ -84,11 +84,12 @@ type
         FTagNodeCallback : TTagNodeFilterCallback;
         FTagNodeData : Pointer;
 
-        FTagNodeAttributeCallback : TTagNodeAttributeCallback;
+        FTagNodeAttributeCallback : TTagNodeAttributeFilterCallback;
         FTagNodeAttributeData : Pointer;
 
-        function IsEqual (ANode : TTagNode = nil; ANodeAttribute :
-          TTagNodeAttribute = nil) : Boolean; inline;
+        function IsEqual (ANode : pmyhtml_tree_node_t = nil; ANodeAttribute :
+          pmyhtml_tree_attr_t = nil) : Boolean; inline;
+        function IsSet : Boolean; inline;
       public
         constructor Create;
         destructor Destroy; override;
@@ -98,7 +99,7 @@ type
         function TagNodeCallback (ACallback : TTagNodeFilterCallback; AData :
           Pointer = nil) : TFilter;
         function TagNodeAttributeCallback (ACallback :
-          TTagNodeAttributeCallback; AData : Pointer = nil) : TFilter;
+          TTagNodeAttributeFilterCallback; AData : Pointer = nil) : TFilter;
       end;
 
       { TTransform }
@@ -136,7 +137,11 @@ type
         FNodeAttributeFilter : TFilter;
         FNodeAttributeTransform : TTransform;
 
+        function FilterNode (ANode : pmyhtml_tree_node_t; AFilter : TFilter) :
+          pmyhtml_tree_node_t; inline;
+      private
         function GetTag :  myhtml_tags_t; inline;
+        function GetValue : string;
       public
         constructor Create (ANode : pmyhtml_tree_node_t);
         destructor Destroy; override;
@@ -164,9 +169,8 @@ type
           TTagNodeAttributeList;
       public
         property Tag : myhtml_tags_t read GetTag;
+        property Value : string read GetValue;
       end;
-
-      TTagNodeList = specialize TFPGObjectList<TTagNode>;
 
       { TTagNodeAttribute }
 
@@ -186,7 +190,6 @@ type
         property Value : string read GetValue;
       end;
 
-      TTagNodeAttributeList = specialize TFPGObjectList<TTagNodeAttribute>;
   private
     FHTML : pmyhtml_t;
     FTree : pmyhtml_tree_t;
@@ -240,10 +243,47 @@ end;
 
 { TParser.TFilter }
 
-function TParser.TFilter.IsEqual(ANode: TTagNode;
-  ANodeAttribute: TTagNodeAttribute): Boolean;
+function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t;
+  ANodeAttribute: pmyhtml_tree_attr_t): Boolean;
 begin
-  Result := (ANode = nil) and (ANodeAttribute = nil);
+  Result := True;
+
+  if (ANode = nil) and (ANodeAttribute = nil) then
+  begin
+    Exit;
+  end;
+
+  if ANode <> nil then
+  begin
+    if FTag <> MyHTML_TAG__UNDEF then
+    begin
+      Result := myhtml_tags_t(myhtml_node_tag_id(ANode)) = FTag;
+      Exit;
+    end;
+
+    if Assigned(FTagNodeCallback) and not FTagNodeCallback(TTagNode.Create(
+      ANode), FTagNodeData) then
+    begin
+      Result := False;
+      Exit;
+    end;
+  end;
+
+  if ANodeAttribute <> nil then
+  begin
+    if Assigned(FTagNodeAttributeCallback) and not FTagNodeAttributeCallback(
+      TTagNodeAttribute.Create(ANodeAttribute), FTagNodeAttributeData) then
+    begin
+      Result := False;
+      Exit;
+    end;
+  end;
+end;
+
+function TParser.TFilter.IsSet: Boolean;
+begin
+  Result := (FTag <> MyHTML_TAG__UNDEF) or Assigned(FTagNodeCallback) or
+    Assigned(FTagNodeAttributeCallback);
 end;
 
 constructor TParser.TFilter.Create;
@@ -275,7 +315,7 @@ begin
 end;
 
 function TParser.TFilter.TagNodeAttributeCallback(
-  ACallback: TTagNodeAttributeCallback; AData: Pointer): TFilter;
+  ACallback: TTagNodeAttributeFilterCallback; AData: Pointer): TFilter;
 begin
   FTagNodeAttributeCallback := ACallback;
   FTagNodeAttributeData := AData;
@@ -315,6 +355,24 @@ end;
 
 { TParser.TTagNode }
 
+function TParser.TTagNode.FilterNode(ANode: pmyhtml_tree_node_t;
+  AFilter: TFilter): pmyhtml_tree_node_t;
+var
+  Node : pmyhtml_tree_node_t;
+begin
+  Node := ANode;
+
+  if AFilter.IsSet then
+  begin
+    while (Node <> nil) and (not AFilter.IsEqual(Node, nil)) do
+    begin
+      Node := myhtml_node_next(Node);
+    end;
+  end;
+
+  Result := Node;
+end;
+
 function TParser.TTagNode.GetTag: myhtml_tags_t;
 begin
   if IsOk then
@@ -322,6 +380,23 @@ begin
     Result := myhtml_tags_t(myhtml_node_tag_id(FNode));
   end else
     Result := MyHTML_TAG__UNDEF;
+end;
+
+function TParser.TTagNode.GetValue: string;
+var
+  TextNode : pmyhtml_tree_node_t;
+begin
+  if IsOk then
+  begin
+    TextNode := myhtml_node_child(FNode);
+    if (TextNode <> nil) and (myhtml_tags_t(myhtml_node_tag_id(TextNode)) =
+      MyHTML_TAG__TEXT) then
+    begin
+      Result := myhtml_node_text(TextNode, nil);
+    end else
+      Result := '';
+  end else
+    Result := '';
 end;
 
 constructor TParser.TTagNode.Create(ANode: pmyhtml_tree_node_t);
@@ -355,7 +430,7 @@ begin
   if IsOk then
   begin
     FNodeFilter := AFilter;
-    Result := TTagNode.Create(FNode);
+    Result := TTagNode.Create(FilterNode(FNode, FNodeFilter));
   end else
     Result := TTagNode.Create(nil);
 end;
@@ -393,7 +468,7 @@ begin
   begin
     FChildrenNodeFilter := AFilter;
     FChildrenNode := myhtml_node_child(FNode);
-    Result := TTagNode.Create(FChildrenNode);
+    Result := TTagNode.Create(FilterNode(FChildrenNode, FChildrenNodeFilter));
   end else
     Result := TTagNode.Create(nil);
 end;
@@ -403,7 +478,7 @@ begin
   if FChildrenNode <> nil then
   begin
     FChildrenNode := myhtml_node_next(FChildrenNode);
-    Result := FChildrenNode;
+    Result := TTagNode.Create(FChildrenNode);
   end else
     Result := TTagNode.Create(nil);
 end;
