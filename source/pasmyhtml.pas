@@ -9,7 +9,7 @@
 (******************************************************************************)
 (*                                                                            *)
 (* Module:          Unit 'pasmyhtml'                                          *)
-(* Functionality:   Provides  TMyHTMLParser class                             *)
+(* Functionality:   Provides  TParser class                                   *)
 (*                                                                            *)
 (*                                                                            *)
 (*                                                                            *)
@@ -42,9 +42,9 @@ uses
 
 type
 
-  { TMyHTMLParser }
+  { TParser }
 
-  TMyHTMLParser = class
+  TParser = class
   public
     type
       { Start parsing from the next element }
@@ -75,12 +75,25 @@ type
       TTagNodeAttributeTransformCallback = procedure (ANodeAttribute :
         TTagNodeAttribute; AData : Pointer) of object;
 
+      { TFilter }
+
       TFilter = class
       private
+        FTag : myhtml_tags_t;
 
+        FTagNodeCallback : TTagNodeFilterCallback;
+        FTagNodeData : Pointer;
+
+        FTagNodeAttributeCallback : TTagNodeAttributeCallback;
+        FTagNodeAttributeData : Pointer;
+
+        function IsEqual (ANode : TTagNode = nil; ANodeAttribute :
+          TTagNodeAttribute = nil) : Boolean; inline;
       public
         constructor Create;
         destructor Destroy; override;
+
+        function Tag (ATag : myhtml_tags_t) : TFilter;
 
         function TagNodeCallback (ACallback : TTagNodeFilterCallback; AData :
           Pointer = nil) : TFilter;
@@ -88,9 +101,15 @@ type
           TTagNodeAttributeCallback; AData : Pointer = nil) : TFilter;
       end;
 
+      { TTransform }
+
       TTransform = class
       private
+        FTagNodeCallback : TTagNodeTransformCallback;
+        FTagNodeData : Pointer;
 
+        FTagNodeAttributeCallback : TTagNodeAttributeTransformCallback;
+        FTagNodeAttributeData : Pointer;
       public
         constructor Create;
         destructor Destroy; override;
@@ -101,14 +120,28 @@ type
           TTagNodeAttributeTransformCallback; AData : Pointer) : TTransform;
       end;
 
+      { TTagNode }
+
       TTagNode = class
       private
         FNode : pmyhtml_tree_node_t;
+        FNodeFilter : TFilter;
+        FNodeTransform : TTransform;
 
-        function GetTag :  myhtml_tags_t;
+        FChildrenNode : pmyhtml_tree_node_t;
+        FChildrenNodeFilter : TFilter;
+        FChildrenNodeTransform : TTransform;
+
+        FNodeAttribute : pmyhtml_tree_attr_t;
+        FNodeAttributeFilter : TFilter;
+        FNodeAttributeTransform : TTransform;
+
+        function GetTag :  myhtml_tags_t; inline;
       public
         constructor Create (ANode : pmyhtml_tree_node_t);
         destructor Destroy; override;
+
+        function IsOk : Boolean; inline;
 
         function FirstNode (AFilter : TFilter = nil) : TTagNode;
         function NextNode : TTagNode;
@@ -135,6 +168,8 @@ type
 
       TTagNodeList = specialize TFPGObjectList<TTagNode>;
 
+      { TTagNodeAttribute }
+
       TTagNodeAttribute = class
       private
         FAttribute : pmyhtml_tree_attr_t;
@@ -145,6 +180,7 @@ type
         constructor Create (AAttribute : pmyhtml_tree_attr_t);
         destructor Destroy; override;
 
+        function IsOk : boolean; inline;
       public
         property Key : string read GetKey;
         property Value : string read GetValue;
@@ -202,9 +238,272 @@ begin
   end;
 end;
 
-{ TMyHTMLParser }
+{ TParser.TFilter }
 
-constructor TMyHTMLParser.Create(AParserOptions: myhtml_options_t;
+function TParser.TFilter.IsEqual(ANode: TTagNode;
+  ANodeAttribute: TTagNodeAttribute): Boolean;
+begin
+  Result := (ANode = nil) and (ANodeAttribute = nil);
+end;
+
+constructor TParser.TFilter.Create;
+begin
+  FTag := MyHTML_TAG__UNDEF;
+  FTagNodeCallback := nil;
+  FTagNodeData := nil;
+  FTagNodeAttributeCallback := nil;
+  FTagNodeAttributeData := nil;
+end;
+
+destructor TParser.TFilter.Destroy;
+begin
+  inherited Destroy;
+end;
+
+function TParser.TFilter.Tag(ATag: myhtml_tags_t): TFilter;
+begin
+  FTag := ATag;
+  Result := Self;
+end;
+
+function TParser.TFilter.TagNodeCallback(
+  ACallback: TTagNodeFilterCallback; AData: Pointer): TFilter;
+begin
+  FTagNodeCallback := ACallback;
+  FTagNodeData := AData;
+  Result := Self;
+end;
+
+function TParser.TFilter.TagNodeAttributeCallback(
+  ACallback: TTagNodeAttributeCallback; AData: Pointer): TFilter;
+begin
+  FTagNodeAttributeCallback := ACallback;
+  FTagNodeAttributeData := AData;
+  Result := Self;
+end;
+
+{ TParser.TTransform }
+
+constructor TParser.TTransform.Create;
+begin
+  FTagNodeCallback := nil;
+  FTagNodeData := nil;
+  FTagNodeAttributeCallback := nil;
+  FTagNodeAttributeData := nil;
+end;
+
+destructor TParser.TTransform.Destroy;
+begin
+  inherited Destroy;
+end;
+
+function TParser.TTransform.TagNodeTransform(
+  ACallback: TTagNodeTransformCallback; AData: Pointer): TTransform;
+begin
+  FTagNodeCallback := ACallback;
+  FTagNodeData := AData;
+  Result := Self;
+end;
+
+function TParser.TTransform.TagNodeAttributeTransform(
+  ACallback: TTagNodeAttributeTransformCallback; AData: Pointer): TTransform;
+begin
+  FTagNodeAttributeCallback := ACallback;
+  FTagNodeAttributeData := AData;
+  Result := Self;
+end;
+
+{ TParser.TTagNode }
+
+function TParser.TTagNode.GetTag: myhtml_tags_t;
+begin
+  if IsOk then
+  begin
+    Result := myhtml_tags_t(myhtml_node_tag_id(FNode));
+  end else
+    Result := MyHTML_TAG__UNDEF;
+end;
+
+constructor TParser.TTagNode.Create(ANode: pmyhtml_tree_node_t);
+begin
+  FNode := ANode;
+  FChildrenNode := nil;
+  FNodeAttribute := nil;
+
+  FNodeFilter := nil;
+  FNodeTransform := nil;
+
+  FChildrenNodeFilter := nil;
+  FChildrenNodeTransform := nil;
+
+  FNodeAttributeFilter := nil;
+  FNodeAttributeTransform := nil;
+end;
+
+destructor TParser.TTagNode.Destroy;
+begin
+  inherited Destroy;
+end;
+
+function TParser.TTagNode.IsOk: Boolean;
+begin
+  Result := FNode <> nil;
+end;
+
+function TParser.TTagNode.FirstNode(AFilter: TFilter): TTagNode;
+begin
+  if IsOk then
+  begin
+    FNodeFilter := AFilter;
+    Result := TTagNode.Create(FNode);
+  end else
+    Result := TTagNode.Create(nil);
+end;
+
+function TParser.TTagNode.NextNode: TTagNode;
+begin
+  if IsOk then
+  begin
+    Result := TTagNode.Create(myhtml_node_next(FNode));
+  end else
+    Result := TTagNode.Create(nil);
+end;
+
+procedure TParser.TTagNode.EachNode(AFilter: TFilter; ATransform: TTransform);
+begin
+  if IsOk then
+  begin
+
+  end;
+end;
+
+function TParser.TTagNode.FindAllNodes(AFilter: TFilter): TTagNodeList;
+begin
+  if IsOk then
+  begin
+    Result := TTagNodeList.Create;
+
+  end else
+    Result := TTagNodeList.Create;
+end;
+
+function TParser.TTagNode.FirstChildrenNode(AFilter: TFilter): TTagNode;
+begin
+  if IsOk then
+  begin
+    FChildrenNodeFilter := AFilter;
+    FChildrenNode := myhtml_node_child(FNode);
+    Result := TTagNode.Create(FChildrenNode);
+  end else
+    Result := TTagNode.Create(nil);
+end;
+
+function TParser.TTagNode.NextChildrenNode: TTagNode;
+begin
+  if FChildrenNode <> nil then
+  begin
+    FChildrenNode := myhtml_node_next(FChildrenNode);
+    Result := FChildrenNode;
+  end else
+    Result := TTagNode.Create(nil);
+end;
+
+procedure TParser.TTagNode.EachChildrenNode(AFilter: TFilter;
+  ATransform: TTransform);
+begin
+  if IsOk then
+  begin
+
+  end;
+end;
+
+function TParser.TTagNode.FindAllChildrenNodes(AFilter: TFilter): TTagNodeList;
+begin
+  if IsOk then
+  begin
+    Result := TTagNodeList.Create;
+  end else
+    Result := TTagNodeList.Create;
+end;
+
+function TParser.TTagNode.FirstNodeAttribute(AFilter: TFilter
+  ): TTagNodeAttribute;
+begin
+ if IsOk then
+ begin
+   FNodeAttributeFilter := AFilter;
+   FNodeAttribute := myhtml_node_attribute_first(FNode);
+   Result := TTagNodeAttribute.Create(FNodeAttribute);
+ end else
+   Result := TTagNodeAttribute.Create(nil);
+end;
+
+function TParser.TTagNode.NextNodeAttribute: TTagNodeAttribute;
+begin
+  if FNodeAttribute <> nil then
+  begin
+    Result := TTagNodeAttribute.Create(myhtml_attribute_next(FNodeAttribute));
+  end else
+    Result := TTagNodeAttribute.Create(nil);
+end;
+
+procedure TParser.TTagNode.EachNodeAttribute(AFilter: TFilter;
+  ATransform: TTransform);
+begin
+  if IsOk then
+  begin
+
+  end;
+end;
+
+function TParser.TTagNode.FindAllNodeAttributes(AFilter: TFilter
+  ): TTagNodeAttributeList;
+begin
+  if IsOk then
+  begin
+    Result := TTagNodeAttributeList.Create;
+  end else
+    Result := TTagNodeAttributeList.Create;
+end;
+
+{ TParser.TTagNodeAttribute }
+
+function TParser.TTagNodeAttribute.GetKey: string;
+begin
+  if IsOk then
+  begin
+    Result := myhtml_attribute_key(FAttribute, nil);
+  end else
+    Result := '';
+end;
+
+function TParser.TTagNodeAttribute.GetValue: string;
+begin
+  if IsOk then
+  begin
+    Result := myhtml_attribute_value(FAttribute, nil);
+  end else
+    Result := '';
+end;
+
+constructor TParser.TTagNodeAttribute.Create(AAttribute: pmyhtml_tree_attr_t);
+begin
+  FAttribute := AAttribute;
+end;
+
+destructor TParser.TTagNodeAttribute.Destroy;
+begin
+  inherited Destroy;
+end;
+
+function TParser.TTagNodeAttribute.IsOk: boolean;
+begin
+  Result := FAttribute <> nil;
+end;
+
+{ TParser }
+
+constructor TParser.Create(AParserOptions: myhtml_options_t;
   AEncoding: myencoding_t; AThreadCount: QWord; AQueueSize: QWord;
   AFlags: myhtml_tree_parse_flags_t);
 begin
@@ -217,7 +516,7 @@ begin
   FError := MyHTML_STATUS_OK;
 end;
 
-destructor TMyHTMLParser.Destroy;
+destructor TParser.Destroy;
 begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
@@ -226,7 +525,7 @@ begin
   inherited Destroy;
 end;
 
-function TMyHTMLParser.Parse(AHTML: string; AParseFrom: TDocumentParseFrom
+function TParser.Parse(AHTML: string; AParseFrom: TDocumentParseFrom
   ): TTagNode;
 begin
   myhtml_tree_clean(FTree);
@@ -250,12 +549,12 @@ begin
     Result := TTagNode.Create(nil);
 end;
 
-function TMyHTMLParser.HasErrors: Boolean;
+function TParser.HasErrors: Boolean;
 begin
   Result := FError <> MyHTML_STATUS_OK;
 end;
 
-function TMyHTMLParser.Error: string;
+function TParser.Error: string;
 begin
   case FError of
     MyHTML_STATUS_OK :
