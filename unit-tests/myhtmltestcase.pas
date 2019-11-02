@@ -32,6 +32,8 @@ type
     procedure TestDocumentParseTitle;
     procedure TestDocumentParseMetaCharset;
     procedure TestDocumentParseMetaKeywords;
+    procedure TestDocumentParseMetaDescription;
+    procedure TestDocumentParseLinkStylesheet;
   end;
 
   { TMyHTMLParserSimpleParseTestCase }
@@ -47,6 +49,8 @@ type
     procedure TestDocumentParseTitle;
     procedure TestDocumentParseMetaCharset;
     procedure TestDocumentParseMetaKeywords;
+    procedure TestDocumentParseMetaDescription;
+    procedure TestDocumentParseLinkStylesheet;
   end;
 
 {$I htmldocuments/myhtmlsimpleparse_document.inc }
@@ -102,15 +106,41 @@ procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaKeywords;
 var
   Keywords : TStringList;
 begin
-  Keywords := StringTokenize(FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+  Keywords := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
     .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_META)
       .AttributeKey('name').AttributeValue('keywords'))
     .FirstNodeAttribute(TParser.TFilter.Create.AttributeKey('content'))
-    .Value);
+    .ValueList;
 
   AssertTrue('Test keywords count', Keywords.Count = 2);
   AssertTrue('Test keyword 1', Keywords[0] = 'some_keywords');
   AssertTrue('Test keyword 2', Keywords[1] = 'keywords');
+end;
+
+procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaDescription;
+var
+  Description : string;
+begin
+  Description := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_META)
+      .AttributeKey('name').AttributeValue('description'))
+    .FirstNodeAttribute(TParser.TFilter.Create.AttributeKey('content'))
+    .Value;
+
+  AssertTrue('Test meta description', Description = 'description');
+end;
+
+procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseLinkStylesheet;
+var
+  Stylesheet : string;
+begin
+  Stylesheet := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_LINK)
+      .AttributeKey('rel').AttributeValue('stylesheet'))
+    .FirstNodeAttribute(TParser.TFilter.Create.AttributeKey('href'))
+    .Value;
+
+  AssertTrue('Test link href', Stylesheet = 'style.css');
 end;
 
 { TMyHTMLSimpleParseTestCase }
@@ -145,10 +175,9 @@ var
   Index : SizeInt;
 begin
   Result := TStringList.Create;
-
   while AString <> '' do
   begin
-    AString := Trim(AString);
+    AString := TrimLeft(AString);
     Index := Pos(' ', AString);
 
     if Index <> 0 then
@@ -316,6 +345,126 @@ begin
   AssertTrue('Test kewords count', Keywords.Count = 2);
   AssertTrue('Test keyword 1', Keywords[0] = 'some_keywords');
   AssertTrue('Test keyword 2', Keywords[1] = 'keywords');
+end;
+
+procedure TMyHTMLSimpleParseTestCase.TestDocumentParseMetaDescription;
+var
+  Node : pmyhtml_tree_node_t;
+  Attribute : pmyhtml_tree_attr_t;
+  Find : Boolean;
+  Description : string;
+begin
+  myhtml_tree_clean(FTree);
+  myhtml_clean(FHTML);
+
+  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleParseDocument),
+    Length(SimpleParseDocument));
+  AssertTrue('Test parse html document', FError = mystatus_t(MyHTML_STATUS_OK));
+
+  Node := myhtml_tree_get_node_head(FTree);
+  if Node = nil then
+    Fail('Empty document head node');
+
+  Node := myhtml_node_child(Node);
+  if Node = nil then
+    Fail('Empty head children node');
+
+  Find := False;
+  while (Node <> nil) and (Find = False) do
+  begin
+    if myhtml_node_tag_id(Node) = myhtml_tag_id_t(MyHTML_TAG_META) then
+    begin
+      Attribute := myhtml_node_attribute_first(Node);
+
+      while (Attribute <> nil) and (Find = False) do
+      begin
+        if (myhtml_attribute_key(Attribute, nil) = 'name') and
+          (myhtml_attribute_value(Attribute, nil) = 'description') then
+          Find := True
+        else
+          Attribute := myhtml_attribute_next(Attribute);
+      end;
+
+    end;
+    Node := myhtml_node_next(Node);
+  end;
+
+  if Attribute = nil then
+    Fail('Meta node attribute is empty');
+
+  while Attribute <> nil do
+  begin
+    if myhtml_attribute_key(Attribute, nil) = 'content' then
+    begin
+      Description := myhtml_attribute_value(Attribute, nil);
+    end;
+
+    Attribute := myhtml_attribute_next(Attribute);
+  end;
+
+  AssertTrue('Test meta description', Description = 'description');
+end;
+
+procedure TMyHTMLSimpleParseTestCase.TestDocumentParseLinkStylesheet;
+var
+  Node, Link : pmyhtml_tree_node_t;
+  Attribute : pmyhtml_tree_attr_t;
+  Find : Boolean;
+  Stylesheet : string;
+begin
+  myhtml_tree_clean(FTree);
+  myhtml_clean(FHTML);
+
+  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleParseDocument),
+    Length(SimpleParseDocument));
+  AssertTrue('Test parse html document', FError = mystatus_t(MyHTML_STATUS_OK));
+
+  Node := myhtml_tree_get_node_head(FTree);
+  if Node = nil then
+    Fail('Empty document head node');
+
+  Node := myhtml_node_child(Node);
+  if Node = nil then
+    Fail('Empty head children node');
+
+  Find := False;
+  while (Node <> nil) and (Find = False) do
+  begin
+    if myhtml_node_tag_id(Node) = myhtml_tag_id_t(MyHTML_TAG_LINK) then
+    begin
+      Attribute := myhtml_node_attribute_first(Node);
+
+      while (Attribute <> nil) and (Find = False) do
+      begin
+        if (myhtml_attribute_key(Attribute, nil) = 'rel') and
+          (myhtml_attribute_value(Attribute, nil) = 'stylesheet') then
+          begin
+            Find := True;
+            Link := Node;
+          end
+        else
+          Attribute := myhtml_attribute_next(Attribute);
+      end;
+
+    end;
+    Node := myhtml_node_next(Node);
+  end;
+
+  if Attribute = nil then
+    Fail('Link node attribute is empty');
+
+  Attribute := myhtml_node_attribute_first(Link);
+  while Attribute <> nil do
+  begin
+    if myhtml_attribute_key(Attribute, nil) = 'href' then
+    begin
+      Stylesheet := myhtml_attribute_value(Attribute, nil);
+    end;
+
+    Attribute := myhtml_attribute_next(Attribute);
+  end;
+
+  AssertTrue('Test link stylesheet', Stylesheet = 'style.css');
 end;
 
 initialization

@@ -255,11 +255,17 @@ type
       private
         FAttribute : pmyhtml_tree_attr_t;
 
+        { Tokenize string by space }
+        function StringTokenize (AString : string) : TStringList;
+      private
         { Return attribute key }
         function GetKey : string;
 
         { Return attribute value }
         function GetValue : string;
+
+        { Return attribute values tokenize by space }
+        function GetValueList : TStringList;
       public
         constructor Create (AAttribute : pmyhtml_tree_attr_t);
         destructor Destroy; override;
@@ -272,6 +278,9 @@ type
 
         { Return attribute value }
         property Value : string read GetValue;
+
+        { Return attribute values tokenize by space }
+        property ValueList : TStringList read GetValueList;
       end;
 
   private
@@ -301,31 +310,7 @@ type
 
   { operator in (ANode: TTagNode; AList: TTagNodeList) Result: Boolean; }
 
-  function StringTokenize (AString : string) : TStringList;
-
 implementation
-
-function StringTokenize(AString: string): TStringList;
-var
-  Index : SizeInt;
-begin
-  Result := TStringList.Create;
-  while AString <> '' do
-  begin
-    AString := TrimLeft(AString);
-    Index := Pos(' ', AString);
-
-    if Index <> 0 then
-    begin
-      Result.Add(Trim(Copy(AString, 0, Index)));
-      AString := Copy(AString, Index, Length(AString) - Index + 1);
-    end else
-    begin
-      Result.Add(AString);
-      AString := '';
-    end;
-  end;
-end;
 
 { TParser.TFilter }
 
@@ -405,9 +390,9 @@ function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t;
       inline;
     begin
       Result := ((FTagNodeAttributeKey = '') or AttributeKeyEqual(AAttribute))
-        and ((FTagNodeAttributeValue = '') or AttributeValueEqual(AAttribute));
-        //and (not Assigned(FTagNodeAttributeCallback)) or
-        //  AttributeCallbackEqual(AAttribute);
+        and ((FTagNodeAttributeValue = '') or AttributeValueEqual(AAttribute))
+        and ((not Assigned(FTagNodeAttributeCallback)) or
+          AttributeCallbackEqual(AAttribute));
     end;
 
     { Check all node attributes start from ANodeAttribute }
@@ -703,8 +688,6 @@ end;
 
 function TParser.TTagNode.FirstNodeAttribute(AFilter: TFilter
   ): TTagNodeAttribute;
-var
-  Attr : pmyhtml_tree_attr_t;
 begin
  if IsOk then
  begin
@@ -747,6 +730,28 @@ end;
 
 { TParser.TTagNodeAttribute }
 
+function TParser.TTagNodeAttribute.StringTokenize(AString: string): TStringList;
+var
+  Index : SizeInt;
+begin
+  Result := TStringList.Create;
+  while AString <> '' do
+  begin
+    AString := TrimLeft(AString);
+    Index := Pos(' ', AString);
+
+    if Index <> 0 then
+    begin
+      Result.Add(Trim(Copy(AString, 0, Index)));
+      AString := Copy(AString, Index, Length(AString) - Index + 1);
+    end else
+    begin
+      Result.Add(AString);
+      AString := '';
+    end;
+  end;
+end;
+
 function TParser.TTagNodeAttribute.GetKey: string;
 begin
   if IsOk then
@@ -763,6 +768,15 @@ begin
     Result := myhtml_attribute_value(FAttribute, nil);
   end else
     Result := '';
+end;
+
+function TParser.TTagNodeAttribute.GetValueList: TStringList;
+begin
+  if IsOk then
+  begin
+    Result := StringTokenize(myhtml_attribute_value(FAttribute, nil));
+  end else
+    Result := TStringList.Create;
 end;
 
 constructor TParser.TTagNodeAttribute.Create(AAttribute: pmyhtml_tree_attr_t);
