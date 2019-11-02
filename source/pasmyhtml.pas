@@ -84,6 +84,9 @@ type
         FTagNodeCallback : TTagNodeFilterCallback;
         FTagNodeData : Pointer;
 
+        FTagNodeAttributeKey : string;
+        FTagNodeAttributeValue : string;
+
         FTagNodeAttributeCallback : TTagNodeAttributeFilterCallback;
         FTagNodeAttributeData : Pointer;
 
@@ -95,6 +98,9 @@ type
         destructor Destroy; override;
 
         function Tag (ATag : myhtml_tags_t) : TFilter;
+
+        function AttributeKey (AKey : string) : TFilter;
+        function AttributeValue (AValue : string) : TFilter;
 
         function TagNodeCallback (ACallback : TTagNodeFilterCallback; AData :
           Pointer = nil) : TFilter;
@@ -141,7 +147,7 @@ type
           pmyhtml_tree_node_t; inline;
       private
         function GetTag :  myhtml_tags_t; inline;
-        function GetValue : string;
+        function GetValue : string; inline;
       public
         constructor Create (ANode : pmyhtml_tree_node_t);
         destructor Destroy; override;
@@ -215,6 +221,8 @@ type
     function Error : string;
   end;
 
+  { operator in (ANode: TTagNode; AList: TTagNodeList) Result: Boolean; }
+
   function StringTokenize (AString : string) : TStringList;
 
 implementation
@@ -245,44 +253,89 @@ end;
 
 function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t;
   ANodeAttribute: pmyhtml_tree_attr_t): Boolean;
+
+  function NodeEqual : Boolean;
+
+    function TagEqual : Boolean; inline;
+    begin
+      Result := (FTag <> MyHTML_TAG__UNDEF) and (FTag =
+        myhtml_tags_t(myhtml_node_tag_id(ANode)));
+    end;
+
+    function TagCallbackEqual : Boolean; inline;
+    begin
+      if Assigned(FTagNodeCallback) then
+        Result := FTagNodeCallback(TTagNode.Create(ANode), FTagNodeData)
+      else
+        Result := True;
+    end;
+
+  begin
+    if ANode = nil then
+    begin
+      if (FTag = MyHTML_TAG__UNDEF) then
+        Result := True
+      else
+        Result := False;
+    end
+    else begin
+      Result := TagEqual and TagCallbackEqual;
+    end;
+  end;
+
+  function NodeAttributeEqual : Boolean;
+
+    function AttributeKeyEqual : Boolean; inline;
+    begin
+      if FTagNodeAttributeKey <> '' then
+      begin
+        Result := FTagNodeAttributeKey = myhtml_attribute_key(ANodeAttribute,
+          nil);
+      end else
+        Result := True;
+    end;
+
+    function AttributeValueEqual : Boolean; inline;
+    begin
+      if FTagNodeAttributeValue <> '' then
+      begin
+        Result := FTagNodeAttributeValue =
+          myhtml_attribute_value(ANodeAttribute, nil);
+      end else
+        Result := True;
+    end;
+
+    function AttributeCallbackEqual : Boolean; inline;
+    begin
+      if Assigned(FTagNodeAttributeCallback) then
+        Result := FTagNodeAttributeCallback(TTagNodeAttribute.Create(
+          ANodeAttribute), FTagNodeAttributeData)
+      else
+        Result := True;
+    end;
+
+  begin
+    if (ANodeAttribute = nil) then
+    begin
+      if (FTagNodeAttributeKey = '') and (FTagNodeAttributeValue = '') then
+        Result := True
+      else
+        Result := False;
+    end
+    else begin
+      Result := AttributeKeyEqual and AttributeValueEqual and
+        AttributeCallbackEqual;
+    end;
+  end;
+
 begin
-  Result := True;
-
-  if (ANode = nil) and (ANodeAttribute = nil) then
-  begin
-    Exit;
-  end;
-
-  if ANode <> nil then
-  begin
-    if FTag <> MyHTML_TAG__UNDEF then
-    begin
-      Result := myhtml_tags_t(myhtml_node_tag_id(ANode)) = FTag;
-      Exit;
-    end;
-
-    if Assigned(FTagNodeCallback) and not FTagNodeCallback(TTagNode.Create(
-      ANode), FTagNodeData) then
-    begin
-      Result := False;
-      Exit;
-    end;
-  end;
-
-  if ANodeAttribute <> nil then
-  begin
-    if Assigned(FTagNodeAttributeCallback) and not FTagNodeAttributeCallback(
-      TTagNodeAttribute.Create(ANodeAttribute), FTagNodeAttributeData) then
-    begin
-      Result := False;
-      Exit;
-    end;
-  end;
+  Result := NodeEqual and NodeAttributeEqual;
 end;
 
 function TParser.TFilter.IsSet: Boolean;
 begin
-  Result := (FTag <> MyHTML_TAG__UNDEF) or Assigned(FTagNodeCallback) or
+  Result := (FTag <> MyHTML_TAG__UNDEF) or (FTagNodeAttributeKey <> '') or
+    (FTagNodeAttributeValue <> '') or Assigned(FTagNodeCallback) or
     Assigned(FTagNodeAttributeCallback);
 end;
 
@@ -291,6 +344,8 @@ begin
   FTag := MyHTML_TAG__UNDEF;
   FTagNodeCallback := nil;
   FTagNodeData := nil;
+  FTagNodeAttributeKey := '';
+  FTagNodeAttributeValue := '';
   FTagNodeAttributeCallback := nil;
   FTagNodeAttributeData := nil;
 end;
@@ -303,6 +358,18 @@ end;
 function TParser.TFilter.Tag(ATag: myhtml_tags_t): TFilter;
 begin
   FTag := ATag;
+  Result := Self;
+end;
+
+function TParser.TFilter.AttributeKey(AKey: string): TFilter;
+begin
+  FTagNodeAttributeKey := AKey;
+  Result := Self;
+end;
+
+function TParser.TFilter.AttributeValue(AValue: string): TFilter;
+begin
+  FTagNodeAttributeValue := AValue;
   Result := Self;
 end;
 
@@ -364,7 +431,8 @@ begin
 
   if AFilter.IsSet then
   begin
-    while (Node <> nil) and (not AFilter.IsEqual(Node, nil)) do
+    while (Node <> nil) and (not AFilter.IsEqual(Node,
+      myhtml_node_attribute_first(Node))) do
     begin
       Node := myhtml_node_next(Node);
     end;

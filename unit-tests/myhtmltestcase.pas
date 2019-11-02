@@ -94,11 +94,11 @@ procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaCharset;
 var
   charset : string;
 begin
-  charset := ''; //FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
-    //.FindAllChildrenNodes(TParser.TFilter.Create.Tag(MyHTML_TAG_META));
-    //.FirstNode(TParser.TFilter.Create.TagNodeAttributeCallback(
-    //  @FilterMetaCharsetAttribute))
-    //.FindAttributeByKey('charset').Value;
+  charset := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_META)
+      .AttributeKey('charset'))
+    .FirstNodeAttribute(TParser.TFilter.Create.AttributeKey('charset'))
+      .Value;
 
   AssertTrue('Test document meta charset attribute', charset = 'utf-8');
 end;
