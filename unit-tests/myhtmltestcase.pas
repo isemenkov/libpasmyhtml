@@ -25,10 +25,13 @@ type
   protected
     procedure SetUp; override;
     procedure TearDown; override;
+
+    function StringTokenize (AString : string) : TStringList;
   published
     procedure TestDocumentParse;
     procedure TestDocumentParseTitle;
     procedure TestDocumentParseMetaCharset;
+    procedure TestDocumentParseMetaKeywords;
   end;
 
   { TMyHTMLParserSimpleParseTestCase }
@@ -39,13 +42,11 @@ type
   protected
     procedure SetUp; override;
     procedure TearDown; override;
-
-    function FilterMetaCharsetAttribute (AAttribute :
-      TParser.TTagNodeAttribute; AData : Pointer) : Boolean;
   published
     procedure TestDocumentParse;
     procedure TestDocumentParseTitle;
     procedure TestDocumentParseMetaCharset;
+    procedure TestDocumentParseMetaKeywords;
   end;
 
 {$I htmldocuments/myhtmlsimpleparse_document.inc }
@@ -63,12 +64,6 @@ end;
 procedure TMyHTMLParserSimpleParseTestCase.TearDown;
 begin
   FreeAndNil(FParser);
-end;
-
-function TMyHTMLParserSimpleParseTestCase.FilterMetaCharsetAttribute(
-  AAttribute: TParser.TTagNodeAttribute; AData : Pointer): Boolean;
-begin
-  Result := (AAttribute.Key = 'charset');
 end;
 
 procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParse;
@@ -98,9 +93,24 @@ begin
     .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_META)
       .AttributeKey('charset'))
     .FirstNodeAttribute(TParser.TFilter.Create.AttributeKey('charset'))
-      .Value;
+    .Value;
 
   AssertTrue('Test document meta charset attribute', charset = 'utf-8');
+end;
+
+procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaKeywords;
+var
+  Keywords : TStringList;
+begin
+  Keywords := StringTokenize(FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_META)
+      .AttributeKey('name').AttributeValue('keywords'))
+    .FirstNodeAttribute(TParser.TFilter.Create.AttributeKey('content'))
+    .Value);
+
+  AssertTrue('Test keywords count', Keywords.Count = 2);
+  AssertTrue('Test keyword 1', Keywords[0] = 'some_keywords');
+  AssertTrue('Test keyword 2', Keywords[1] = 'keywords');
 end;
 
 { TMyHTMLSimpleParseTestCase }
@@ -127,6 +137,30 @@ begin
   myhtml_clean(FHTML);
   myhtml_tree_destroy(FTree);
   myhtml_destroy(FHTML);
+end;
+
+function TMyHTMLSimpleParseTestCase.StringTokenize(AString: string
+  ): TStringList;
+var
+  Index : SizeInt;
+begin
+  Result := TStringList.Create;
+
+  while AString <> '' do
+  begin
+    AString := Trim(AString);
+    Index := Pos(' ', AString);
+
+    if Index <> 0 then
+    begin
+      Result.Add(Trim(Copy(AString, 0, Index)));
+      AString := Copy(AString, Index, Length(AString) - Index + 1);
+    end else
+    begin
+      Result.Add(AString);
+      AString := '';
+    end;
+  end;
 end;
 
 procedure TMyHTMLSimpleParseTestCase.TestDocumentParse;
@@ -222,6 +256,66 @@ begin
 
   AssertTrue('Test document meta charset attribute',
     myhtml_attribute_value(Attribute, nil) = 'utf-8');
+end;
+
+procedure TMyHTMLSimpleParseTestCase.TestDocumentParseMetaKeywords;
+var
+  Node : pmyhtml_tree_node_t;
+  Attribute : pmyhtml_tree_attr_t;
+  Find : Boolean;
+  Keywords : TStringList;
+begin
+  myhtml_tree_clean(FTree);
+  myhtml_clean(FHTML);
+
+  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleParseDocument),
+    Length(SimpleParseDocument));
+  AssertTrue('Test parse html document', FError = mystatus_t(MyHTML_STATUS_OK));
+
+  Node := myhtml_tree_get_node_head(FTree);
+  if Node = nil then
+    Fail('Empty document head node');
+
+  Node := myhtml_node_child(Node);
+  if Node = nil then
+    Fail('Empty head children node');
+
+  Find := False;
+  while (Node <> nil) and (Find = False) do
+  begin
+    if myhtml_node_tag_id(Node) = myhtml_tag_id_t(MyHTML_TAG_META) then
+    begin
+      Attribute := myhtml_node_attribute_first(Node);
+
+      while (Attribute <> nil) and (Find = False) do
+      begin
+        if (myhtml_attribute_key(Attribute, nil) = 'name') and
+          (myhtml_attribute_value(Attribute, nil) = 'keywords') then
+          Find := True
+        else
+          Attribute := myhtml_attribute_next(Attribute);
+      end;
+
+    end;
+    Node := myhtml_node_next(Node);
+  end;
+
+  if Attribute = nil then
+    Fail('Meta node attribute is empty');
+
+  while Attribute <> nil do
+  begin
+    if myhtml_attribute_key(Attribute, nil) = 'content' then
+    begin
+      Keywords := StringTokenize(myhtml_attribute_value(Attribute, nil));
+    end;
+
+    Attribute := myhtml_attribute_next(Attribute);
+  end;
+
+  AssertTrue('Test kewords count', Keywords.Count = 2);
+  AssertTrue('Test keyword 1', Keywords[0] = 'some_keywords');
+  AssertTrue('Test keyword 2', Keywords[1] = 'keywords');
 end;
 
 initialization

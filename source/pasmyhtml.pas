@@ -101,7 +101,8 @@ type
 
         { Check if ANode is equal to defined filter }
         function IsEqual (ANode : pmyhtml_tree_node_t = nil; ANodeAttribute :
-          pmyhtml_tree_attr_t = nil) : Boolean; inline;
+          pmyhtml_tree_attr_t = nil; ACheckAllAttributes : Boolean = False) :
+          Boolean; inline;
 
         { Return TRUE if filter isn't empty }
         function IsSet : Boolean; inline;
@@ -312,12 +313,12 @@ begin
   while AString <> '' do
   begin
     AString := TrimLeft(AString);
-    Index := Pos(AString, #10);
+    Index := Pos(' ', AString);
 
     if Index <> 0 then
     begin
       Result.Add(Trim(Copy(AString, 0, Index)));
-      Delete(AString, 0, Index);
+      AString := Copy(AString, Index, Length(AString) - Index + 1);
     end else
     begin
       Result.Add(AString);
@@ -329,7 +330,7 @@ end;
 { TParser.TFilter }
 
 function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t;
-  ANodeAttribute: pmyhtml_tree_attr_t): Boolean;
+  ANodeAttribute: pmyhtml_tree_attr_t; ACheckAllAttributes : Boolean): Boolean;
 
   { Return TRUE if ANode is equal to TFilter.Tag }
   function NodeEqual : Boolean;
@@ -399,19 +400,33 @@ function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t;
         Result := True;
     end;
 
+    { Check concrete node attribute }
+    function CheckNodeAttribute (AAttribute : pmyhtml_tree_attr_t) : Boolean;
+      inline;
+    begin
+      Result := ((FTagNodeAttributeKey = '') or AttributeKeyEqual(AAttribute))
+        and ((FTagNodeAttributeValue = '') or AttributeValueEqual(AAttribute));
+        //and (not Assigned(FTagNodeAttributeCallback)) or
+        //  AttributeCallbackEqual(AAttribute);
+    end;
+
     { Check all node attributes start from ANodeAttribute }
     function CheckNodeAttributes : Boolean; inline;
     var
       NodeAttr : pmyhtml_tree_attr_t;
     begin
       NodeAttr := ANodeAttribute;
-      while (NodeAttr <> nil) and not (AttributeKeyEqual(NodeAttr) and
-        AttributeValueEqual(NodeAttr) and AttributeCallbackEqual(NodeAttr)) do
-      begin
-        NodeAttr := myhtml_attribute_next(NodeAttr);
-      end;
 
-      Result := NodeAttr <> nil;
+      if ACheckAllAttributes then
+      begin
+        while (NodeAttr <> nil) and not CheckNodeAttribute(NodeAttr) do
+        begin
+          NodeAttr := myhtml_attribute_next(NodeAttr);
+        end;
+
+        Result := NodeAttr <> nil;
+      end else
+        Result := CheckNodeAttribute(NodeAttr);
     end;
 
   begin
@@ -531,7 +546,7 @@ begin
   if AFilter.IsSet then
   begin
     while (Node <> nil) and (not AFilter.IsEqual(Node,
-      myhtml_node_attribute_first(Node))) do
+      myhtml_node_attribute_first(Node), True)) do
     begin
       Node := myhtml_node_next(Node);
     end;
@@ -549,7 +564,7 @@ begin
 
   if AFilter.IsSet then
   begin
-    while (Attr <> nil) and (not AFilter.IsEqual(nil, Attr)) do
+    while (Attr <> nil) and (not AFilter.IsEqual(nil, Attr, False)) do
     begin
       Attr := myhtml_attribute_next(Attr);
     end;
@@ -688,6 +703,8 @@ end;
 
 function TParser.TTagNode.FirstNodeAttribute(AFilter: TFilter
   ): TTagNodeAttribute;
+var
+  Attr : pmyhtml_tree_attr_t;
 begin
  if IsOk then
  begin
