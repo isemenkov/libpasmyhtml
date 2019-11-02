@@ -55,28 +55,37 @@ type
         DOCUMENT_BODY  { Start parse from BODY tag element }
       );
 
-      { Tag node attribute wrapper }
+      { Tag node attribute }
+      { Class which implements HTML tag attribute and functions to operation
+        with it }
       TTagNodeAttribute = class;
       TTagNodeAttributeList = specialize TFPGObjectList<TTagNodeAttribute>;
 
       { Tag node }
+      { Class implements HTML tag and functions to operation with it }
       TTagNode = class;
       TTagNodeList = specialize TFPGObjectList<TTagNode>;
 
-      { Filter callback functions }
+      { Filter }
+      { HTML tag filter callback }
       TTagNodeFilterCallback = function (ANode : TTagNode; AData : Pointer) :
         Boolean of object;
+
+      { HTML tag attribute filter callback }
       TTagNodeAttributeFilterCallback = function (ANodeAttribute :
         TTagNodeAttribute; AData : Pointer) : Boolean of object;
 
-      { Transform callbacks }
+      { Transform }
+      { HTML tag node transform callback }
       TTagNodeTransformCallback = procedure (ANode : TTagNode; AData : Pointer)
         of object;
+
+      { HTML tag attribute transform callback }
       TTagNodeAttributeTransformCallback = procedure (ANodeAttribute :
         TTagNodeAttribute; AData : Pointer) of object;
 
       { TFilter }
-
+      { Class realize filter concept which can be used to find elements }
       TFilter = class
       private
         FTag : myhtml_tags_t;
@@ -90,26 +99,38 @@ type
         FTagNodeAttributeCallback : TTagNodeAttributeFilterCallback;
         FTagNodeAttributeData : Pointer;
 
+        { Check if ANode is equal to defined filter }
         function IsEqual (ANode : pmyhtml_tree_node_t = nil; ANodeAttribute :
           pmyhtml_tree_attr_t = nil) : Boolean; inline;
+
+        { Return TRUE if filter isn't empty }
         function IsSet : Boolean; inline;
       public
         constructor Create;
         destructor Destroy; override;
 
+        { Set tag id for filtering }
         function Tag (ATag : myhtml_tags_t) : TFilter;
 
+        { Set tag attribute key for filtering }
         function AttributeKey (AKey : string) : TFilter;
+
+        { Set tag attribute value for filtering }
         function AttributeValue (AValue : string) : TFilter;
 
+        { Set tag filtering callback. Set AData pointer to pass it to callback.
+          Return self }
         function TagNodeCallback (ACallback : TTagNodeFilterCallback; AData :
           Pointer = nil) : TFilter;
+
+        { Set tag attribute filtering callback. Set AData pointer to pass it to
+          callback. Return self }
         function TagNodeAttributeCallback (ACallback :
           TTagNodeAttributeFilterCallback; AData : Pointer = nil) : TFilter;
       end;
 
       { TTransform }
-
+      { Class provides transform callback wrapper which apply to tag element }
       TTransform = class
       private
         FTagNodeCallback : TTagNodeTransformCallback;
@@ -121,14 +142,19 @@ type
         constructor Create;
         destructor Destroy; override;
 
+        { Set tag transform callback function. Set AData to pass it to transform
+          callback. Return self }
         function TagNodeTransform (ACallback : TTagNodeTransformCallback;
           AData : Pointer = nil) : TTransform;
+
+        { Set tag attribute callback function. Set AData to pass it to transform
+          callback. Return self }
         function TagNodeAttributeTransform (ACallback :
           TTagNodeAttributeTransformCallback; AData : Pointer) : TTransform;
       end;
 
       { TTagNode }
-
+      { Class implements HTML tag and functions to operation with it }
       TTagNode = class
       private
         FNode : pmyhtml_tree_node_t;
@@ -143,56 +169,102 @@ type
         FNodeAttributeFilter : TFilter;
         FNodeAttributeTransform : TTransform;
 
+        { Apply AFilter to ANode element if it is. Return pmyhtml_tree_node_t if
+          element find or nil }
         function FilterNode (ANode : pmyhtml_tree_node_t; AFilter : TFilter) :
           pmyhtml_tree_node_t; inline;
       private
+        { Return tag id }
         function GetTag :  myhtml_tags_t; inline;
+
+        { Return tag text value }
         function GetValue : string; inline;
       public
         constructor Create (ANode : pmyhtml_tree_node_t);
         destructor Destroy; override;
 
+        { Return TRUE if tag element is correct }
         function IsOk : Boolean; inline;
 
+        { If AFilter is set return first filtered node else return self }
         function FirstNode (AFilter : TFilter = nil) : TTagNode;
+
+        { If FirstNode AFilter is set apply it to try to find next element else
+          return next node or nil if isn't }
         function NextNode : TTagNode;
+
+        { For each node (if AFilter is present for filtered nodes, else for each
+          nodes) apply ATransform callback. If ATransform isn't do nothing }
         procedure EachNode (AFilter : TFilter = nil; ATransform : TTransform
           = nil);
+
+        { Return all AFilter match nodes list. If AFilter is not present return
+          all nodes list }
         function FindAllNodes (AFilter : TFilter = nil) : TTagNodeList;
 
+        { Return first filtered current node children. If AFilter isn't return
+          first children node. If node not found return broken node }
         function FirstChildrenNode (AFilter : TFilter = nil) : TTagNode;
+
+        { Return next filtered children node. If node node fount return brken
+          node }
         function NextChildrenNode : TTagNode;
+
+        { For each filtered current node childrens applies ATransfrom callback.
+          If ATransform isn't do nothing }
         procedure EachChildrenNode (AFilter : TFilter = nil; ATransform :
           TTransform = nil);
+
+        { Return all current node filtered childrens list. If AFilter is not
+          present return all children nodes list }
         function FindAllChildrenNodes (AFilter : TFilter = nil) : TTagNodeList;
 
+        { Find first node attribute using AFilter if it is else return first
+          attribute. If node haven't attributes return broken attribute }
         function FirstNodeAttribute (AFilter : TFilter = nil) :
           TTagNodeAttribute;
+
+        { Return next node attribute appling FirstNodeAttribute AFilter if
+          exists. If node attribute not exists return broken attribute }
         function NextNodeAttribute : TTagNodeAttribute;
         procedure EachNodeAttribute (AFilter : TFilter = nil; ATransform :
           TTransform = nil);
+
+        { Find all filtered node attributes. If AFilter isn't return all
+          attributes }
         function FindAllNodeAttributes (AFilter : TFilter = nil) :
           TTagNodeAttributeList;
       public
+        { Return tag id }
         property Tag : myhtml_tags_t read GetTag;
+
+        { Return tag text value }
         property Value : string read GetValue;
       end;
 
       { TTagNodeAttribute }
-
+      { Class which implements HTML tag attribute and functions to operation
+        with it }
       TTagNodeAttribute = class
       private
         FAttribute : pmyhtml_tree_attr_t;
 
+        { Return attribute key }
         function GetKey : string;
+
+        { Return attribute value }
         function GetValue : string;
       public
         constructor Create (AAttribute : pmyhtml_tree_attr_t);
         destructor Destroy; override;
 
+        { Check if attribute is correct }
         function IsOk : boolean; inline;
       public
+        { Return attribute key }
         property Key : string read GetKey;
+
+        { Return attribute value }
         property Value : string read GetValue;
       end;
 
