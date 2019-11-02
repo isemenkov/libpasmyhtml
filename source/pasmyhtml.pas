@@ -173,6 +173,11 @@ type
           element find or nil }
         function FilterNode (ANode : pmyhtml_tree_node_t; AFilter : TFilter) :
           pmyhtml_tree_node_t; inline;
+
+        { Apply AFilter to AAttribute if it is. Return filtered
+          pmyhtml_tree_attr_t element if find or nil }
+        function FilterAttribute (AAttribute : pmyhtml_tree_attr_t; AFilter :
+          TFilter) : pmyhtml_tree_attr_t; inline;
       private
         { Return tag id }
         function GetTag :  myhtml_tags_t; inline;
@@ -326,16 +331,18 @@ end;
 function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t;
   ANodeAttribute: pmyhtml_tree_attr_t): Boolean;
 
+  { Return TRUE if ANode is equal to TFilter.Tag }
   function NodeEqual : Boolean;
 
     function TagEqual : Boolean; inline;
     begin
-      Result := (FTag <> MyHTML_TAG__UNDEF) and (FTag =
-        myhtml_tags_t(myhtml_node_tag_id(ANode)));
+      Result := (FTag <> MyHTML_TAG__UNDEF) { node id is filtered }
+        and (FTag = myhtml_tags_t(myhtml_node_tag_id(ANode)));
     end;
 
     function TagCallbackEqual : Boolean; inline;
     begin
+      { node filter callback is present }
       if Assigned(FTagNodeCallback) then
         Result := FTagNodeCallback(TTagNode.Create(ANode), FTagNodeData)
       else
@@ -343,9 +350,9 @@ function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t;
     end;
 
   begin
-    if ANode = nil then
+    if ANode = nil then { node isn't present }
     begin
-      if (FTag = MyHTML_TAG__UNDEF) then
+      if (FTag = MyHTML_TAG__UNDEF) then { node not filtering }
         Result := True
       else
         Result := False;
@@ -355,39 +362,60 @@ function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t;
     end;
   end;
 
+  { Check if ANodeAttribute is equal to TFilter.Attribute }
   function NodeAttributeEqual : Boolean;
 
-    function AttributeKeyEqual : Boolean; inline;
+    function AttributeKeyEqual (AAttribute : pmyhtml_tree_attr_t) : Boolean;
+      inline;
     begin
+      { node attribute is filtering by key }
       if FTagNodeAttributeKey <> '' then
       begin
-        Result := FTagNodeAttributeKey = myhtml_attribute_key(ANodeAttribute,
-          nil);
+        Result := FTagNodeAttributeKey = myhtml_attribute_key(AAttribute, nil);
       end else
         Result := True;
     end;
 
-    function AttributeValueEqual : Boolean; inline;
+    function AttributeValueEqual (AAttribute : pmyhtml_tree_attr_t) : Boolean;
+      inline;
     begin
+      { node attribute is filtering by value }
       if FTagNodeAttributeValue <> '' then
       begin
         Result := FTagNodeAttributeValue =
-          myhtml_attribute_value(ANodeAttribute, nil);
+          myhtml_attribute_value(AAttribute, nil);
       end else
         Result := True;
     end;
 
-    function AttributeCallbackEqual : Boolean; inline;
+    function AttributeCallbackEqual (AAttribute : pmyhtml_tree_attr_t) :
+      Boolean; inline;
     begin
+      { node attribute filtering callback is present }
       if Assigned(FTagNodeAttributeCallback) then
         Result := FTagNodeAttributeCallback(TTagNodeAttribute.Create(
-          ANodeAttribute), FTagNodeAttributeData)
+          AAttribute), FTagNodeAttributeData)
       else
         Result := True;
     end;
 
+    { Check all node attributes start from ANodeAttribute }
+    function CheckNodeAttributes : Boolean; inline;
+    var
+      NodeAttr : pmyhtml_tree_attr_t;
+    begin
+      NodeAttr := ANodeAttribute;
+      while (NodeAttr <> nil) and not (AttributeKeyEqual(NodeAttr) and
+        AttributeValueEqual(NodeAttr) and AttributeCallbackEqual(NodeAttr)) do
+      begin
+        NodeAttr := myhtml_attribute_next(NodeAttr);
+      end;
+
+      Result := NodeAttr <> nil;
+    end;
+
   begin
-    if (ANodeAttribute = nil) then
+    if (ANodeAttribute = nil) then { node is not filtering by tag }
     begin
       if (FTagNodeAttributeKey = '') and (FTagNodeAttributeValue = '') then
         Result := True
@@ -395,8 +423,7 @@ function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t;
         Result := False;
     end
     else begin
-      Result := AttributeKeyEqual and AttributeValueEqual and
-        AttributeCallbackEqual;
+      Result := CheckNodeAttributes;
     end;
   end;
 
@@ -513,6 +540,24 @@ begin
   Result := Node;
 end;
 
+function TParser.TTagNode.FilterAttribute(AAttribute: pmyhtml_tree_attr_t;
+  AFilter: TFilter): pmyhtml_tree_attr_t;
+var
+  Attr : pmyhtml_tree_attr_t;
+begin
+  Attr := AAttribute;
+
+  if AFilter.IsSet then
+  begin
+    while (Attr <> nil) and (not AFilter.IsEqual(nil, Attr)) do
+    begin
+      Attr := myhtml_attribute_next(Attr);
+    end;
+  end;
+
+  Result := Attr;
+end;
+
 function TParser.TTagNode.GetTag: myhtml_tags_t;
 begin
   if IsOk then
@@ -579,7 +624,7 @@ function TParser.TTagNode.NextNode: TTagNode;
 begin
   if IsOk then
   begin
-    Result := TTagNode.Create(myhtml_node_next(FNode));
+    Result := TTagNode.Create(FilterNode(myhtml_node_next(FNode), FNodeFilter));
   end else
     Result := TTagNode.Create(nil);
 end;
@@ -618,7 +663,7 @@ begin
   if FChildrenNode <> nil then
   begin
     FChildrenNode := myhtml_node_next(FChildrenNode);
-    Result := TTagNode.Create(FChildrenNode);
+    Result := TTagNode.Create(FilterNode(FChildrenNode, FChildrenNodeFilter));
   end else
     Result := TTagNode.Create(nil);
 end;
@@ -648,7 +693,8 @@ begin
  begin
    FNodeAttributeFilter := AFilter;
    FNodeAttribute := myhtml_node_attribute_first(FNode);
-   Result := TTagNodeAttribute.Create(FNodeAttribute);
+   Result := TTagNodeAttribute.Create(FilterAttribute(FNodeAttribute,
+     FNodeAttributeFilter));
  end else
    Result := TTagNodeAttribute.Create(nil);
 end;
@@ -657,7 +703,8 @@ function TParser.TTagNode.NextNodeAttribute: TTagNodeAttribute;
 begin
   if FNodeAttribute <> nil then
   begin
-    Result := TTagNodeAttribute.Create(myhtml_attribute_next(FNodeAttribute));
+    Result := TTagNodeAttribute.Create(FilterAttribute(
+      myhtml_attribute_next(FNodeAttribute), FNodeAttributeFilter));
   end else
     Result := TTagNodeAttribute.Create(nil);
 end;
