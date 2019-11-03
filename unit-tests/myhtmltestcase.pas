@@ -44,13 +44,33 @@ type
   protected
     procedure SetUp; override;
     procedure TearDown; override;
+
+    function TagTitleCallback (ANode : TParser.TTagNode; AData : Pointer)
+      : Boolean;
+    function TagMetaCallback (ANode : TParser.TTagNode; AData : Pointer)
+      : Boolean;
+    function TagAttributeCharsetKeyCallback (AAttribute :
+      TParser.TTagNodeAttribute; AData : Pointer) : Boolean;
+    function TagAttributeContentKeyCallback (AAttribute :
+      TParser.TTagNodeAttribute; AData : Pointer) : Boolean;
+    function TagAttributeNameKeywordsCallback (AAttribute :
+      TParser.TTagNodeAttribute; AData : Pointer) : Boolean;
+    function TagLinkCallback (ANode : TParser.TTagNode; AData : Pointer)
+      : Boolean;
+    function TagAttributeRelStylesheet (AAttribute :
+      TParser.TTagNodeAttribute; AData : Pointer) : Boolean;
   published
     procedure TestDocumentParse;
     procedure TestDocumentParseTitle;
+    procedure TestDocumentParseTitleCallback;
     procedure TestDocumentParseMetaCharset;
+    procedure TestDocumentParseMetaCharsetCallback;
     procedure TestDocumentParseMetaKeywords;
+    procedure TestDocumentParseMetaKeywordsCallback;
     procedure TestDocumentParseMetaDescription;
+    procedure TestDocumentParseMetaDescriptionCallback;
     procedure TestDocumentParseLinkStylesheet;
+    procedure TestDocumentParseLinkStylesheetCallback;
   end;
 
 {$I htmldocuments/myhtmlsimpleparse_document.inc }
@@ -68,6 +88,62 @@ end;
 procedure TMyHTMLParserSimpleParseTestCase.TearDown;
 begin
   FreeAndNil(FParser);
+end;
+
+function TMyHTMLParserSimpleParseTestCase.TagTitleCallback(ANode:
+  TParser.TTagNode; AData: Pointer): Boolean;
+begin
+  Result := ANode.Tag = MyHTML_TAG_TITLE;
+
+  AssertTrue('Title tag callback data not nil', AData <> nil);
+end;
+
+function TMyHTMLParserSimpleParseTestCase.TagMetaCallback(
+  ANode: TParser.TTagNode; AData: Pointer): Boolean;
+begin
+  Result := ANode.Tag = MyHTML_TAG_META;
+
+  AssertTrue('Meta tag callback data not nil', AData <> nil);
+end;
+
+function TMyHTMLParserSimpleParseTestCase.TagAttributeCharsetKeyCallback(
+  AAttribute: TParser.TTagNodeAttribute; AData: Pointer): Boolean;
+begin
+  Result := AAttribute.Key = 'charset';
+
+  AssertTrue('Tag attribute charset callback data not nil', AData <> nil);
+end;
+
+function TMyHTMLParserSimpleParseTestCase.TagAttributeContentKeyCallback(
+  AAttribute: TParser.TTagNodeAttribute; AData: Pointer): Boolean;
+begin
+  Result := AAttribute.Key = 'content';
+
+  AssertTrue('Tag attribute content key callback data not nil', AData <> nil);
+end;
+
+function TMyHTMLParserSimpleParseTestCase.TagAttributeNameKeywordsCallback(
+  AAttribute: TParser.TTagNodeAttribute; AData: Pointer): Boolean;
+begin
+  Result := (AAttribute.Key = 'name') and (AAttribute.Value = 'keywords');
+
+  AssertTrue('Tag attribute name keywords callback data not nil', AData <> nil);
+end;
+
+function TMyHTMLParserSimpleParseTestCase.TagLinkCallback(
+  ANode: TParser.TTagNode; AData: Pointer): Boolean;
+begin
+  AssertTrue('Tag link callback', ANode.Tag = MyHTML_TAG_LINK);
+  Result := True;
+end;
+
+function TMyHTMLParserSimpleParseTestCase.TagAttributeRelStylesheet(
+  AAttribute: TParser.TTagNodeAttribute; AData: Pointer): Boolean;
+begin
+  Result := (AAttribute.Key = 'rel') and (AAttribute.Value = 'stylesheet');
+
+  AssertTrue('Tag attribute rel stylesheet callback data not nil', AData <>
+    nil);
 end;
 
 procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParse;
@@ -89,6 +165,18 @@ begin
   AssertTrue('Test document title', title.Value = 'Document Title');
 end;
 
+procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseTitleCallback;
+var
+  title : string;
+begin
+  title := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+    .FirstChildrenNode(TParser.TFilter.Create.TagNodeCallback(
+      @TagTitleCallback, @Self))
+    .Value;
+
+  AssertTrue('Test document title callback', title = 'Document Title');
+end;
+
 procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaCharset;
 var
   charset : string;
@@ -100,6 +188,22 @@ begin
     .Value;
 
   AssertTrue('Test document meta charset attribute', charset = 'utf-8');
+end;
+
+procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaCharsetCallback;
+var
+  charset : string;
+begin
+  charset := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+    .FirstChildrenNode(TParser.TFilter.Create.TagNodeCallback(@TagMetaCallback,
+      @Self)
+      .TagNodeAttributeCallback(@TagAttributeCharsetKeyCallback, @Self))
+    .FirstNodeAttribute(TParser.TFilter.Create.TagNodeAttributeCallback(
+      @TagAttributeCharsetKeyCallback, @Self))
+    .Value;
+
+  AssertTrue('Test document meta charset attribute callback', charset =
+    'utf-8');
 end;
 
 procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaKeywords;
@@ -117,6 +221,23 @@ begin
   AssertTrue('Test keyword 2', Keywords[1] = 'keywords');
 end;
 
+procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaKeywordsCallback;
+var
+  Keywords : TStringList;
+begin
+  Keywords := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+    .FirstChildrenNode(TParser.TFilter.Create.TagNodeCallback(@TagMetaCallback,
+      @Self)
+      .TagNodeAttributeCallback(@TagAttributeNameKeywordsCallback, @Self))
+    .FirstNodeAttribute(TParser.TFilter.Create.TagNodeAttributeCallback(
+      @TagAttributeContentKeyCallback, @Self))
+    .ValueList;
+
+  AssertTrue('Test keywords count callback', Keywords.Count = 2);
+  AssertTrue('Test keyword 1 callback', Keywords[0] = 'some_keywords');
+  AssertTrue('Test keyword 2 callback', Keywords[1] = 'keywords');
+end;
+
 procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaDescription;
 var
   Description : string;
@@ -130,6 +251,21 @@ begin
   AssertTrue('Test meta description', Description = 'description');
 end;
 
+procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaDescriptionCallback;
+var
+  Description : string;
+begin
+  Description := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+    .FirstChildrenNode(TParser.TFilter.Create.TagNodeCallback(@TagMetaCallback,
+      @Self)
+      .AttributeKey('name').AttributeValue('description'))
+    .FirstNodeAttribute(TParser.TFilter.Create.TagNodeAttributeCallback(
+      @TagAttributeContentKeyCallback, @Self))
+    .Value;
+
+  AssertTrue('Test meta description callback', Description = 'description');
+end;
+
 procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseLinkStylesheet;
 var
   Stylesheet : string;
@@ -141,6 +277,20 @@ begin
     .Value;
 
   AssertTrue('Test link href', Stylesheet = 'style.css');
+end;
+
+procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseLinkStylesheetCallback;
+var
+  Stylesheet : string;
+begin
+  Stylesheet := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_LINK)
+      .TagNodeCallback(@TagLinkCallback, @Self)
+      .TagNodeAttributeCallback(@TagAttributeRelStylesheet, @Self))
+    .FirstNodeAttribute(TParser.TFilter.Create.AttributeKey('href'))
+    .Value;
+
+  AssertTrue('Test link href callback', Stylesheet = 'style.css');
 end;
 
 { TMyHTMLSimpleParseTestCase }

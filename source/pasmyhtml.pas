@@ -322,8 +322,8 @@ function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t;
 
     function TagEqual : Boolean; inline;
     begin
-      Result := (FTag <> MyHTML_TAG__UNDEF) { node id is filtered }
-        and (FTag = myhtml_tags_t(myhtml_node_tag_id(ANode)));
+      Result := (FTag = MyHTML_TAG__UNDEF) { node id is filtered }
+        or (FTag = myhtml_tags_t(myhtml_node_tag_id(ANode)));
     end;
 
     function TagCallbackEqual : Boolean; inline;
