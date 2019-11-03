@@ -96,6 +96,9 @@ type
         FTagNodeAttributeKey : string;
         FTagNodeAttributeValue : string;
 
+        FTagNodeAttributeClass : TStringList;
+        FTagNodeAttributeId : TStringList;
+
         FTagNodeAttributeCallback : TTagNodeAttributeFilterCallback;
         FTagNodeAttributeData : Pointer;
 
@@ -114,10 +117,20 @@ type
         function Tag (ATag : myhtml_tags_t) : TFilter;
 
         { Set tag attribute key for filtering }
+        { If atribute key is exists it is rewrites }
         function AttributeKey (AKey : string) : TFilter;
 
         { Set tag attribute value for filtering }
+        { If attribute value is setup it is rewrites }
         function AttributeValue (AValue : string) : TFilter;
+
+        { Set class which must be in attribute "class" list }
+        { If "class" attrbute is exists new class is added in list }
+        function ContainsClass (AClass : string) : TFilter;
+
+        { Set class only which must be in attribute }
+        { If "class" attribute is exists in list it is rewriting }
+        function ContainsClassOnly (AClass : string) : TFilter;
 
         { Set tag filtering callback. Set AData pointer to pass it to callback.
           Return self }
@@ -256,7 +269,7 @@ type
         FAttribute : pmyhtml_tree_attr_t;
 
         { Tokenize string by space }
-        function StringTokenize (AString : string) : TStringList;
+        class function StringTokenize (AString : string) : TStringList;
       private
         { Return attribute key }
         function GetKey : string;
@@ -374,6 +387,62 @@ function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t;
         Result := True;
     end;
 
+    function AttributeClassEqual (AAttribute : pmyhtml_tree_attr_t) : Boolean;
+      inline;
+    var
+      ClassList : TStringList;
+      ClassElement : string;
+    begin
+      if (FTagNodeAttributeClass.Count > 0) and
+        (myhtml_attribute_key(AAttribute, nil) = 'class') then
+      begin
+        ClassList := TTagNodeAttribute.StringTokenize(myhtml_attribute_value(
+          AAttribute, nil));
+        if (ClassList.Count < FTagNodeAttributeClass.Count) then
+          Result := False
+        else begin
+          Result := True;
+          for ClassElement in FTagNodeAttributeClass do
+          begin
+            if ClassList.IndexOf(ClassElement) = -1 then
+            begin
+              Result := False;
+              Break;
+            end;
+          end;
+        end;
+      end else
+        Result := True;
+    end;
+
+    function AttributeIdEqual (AAttribute : pmyhtml_tree_attr_t) : Boolean;
+      inline;
+    var
+      IdList : TStringList;
+      IdElement : string;
+    begin
+      if (FTagNodeAttributeId.Count > 0) and
+        (myhtml_attribute_key(AAttribute, nil) = 'id') then
+      begin
+        IdList := TTagNodeAttribute.StringTokenize(myhtml_attribute_value(
+          AAttribute, nil));
+        if (IdList.Count < FTagNodeAttributeId.Count) then
+          Result := False
+        else begin
+          Result := True;
+          for IdElement in FTagNodeAttributeId do
+          begin
+            if IdList.IndexOf(IdElement) = -1 then
+            begin
+              Result := False;
+              Break;
+            end;
+          end;
+        end;
+      end else
+        Result := True;
+    end;
+
     function AttributeCallbackEqual (AAttribute : pmyhtml_tree_attr_t) :
       Boolean; inline;
     begin
@@ -392,7 +461,10 @@ function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t;
       Result := ((FTagNodeAttributeKey = '') or AttributeKeyEqual(AAttribute))
         and ((FTagNodeAttributeValue = '') or AttributeValueEqual(AAttribute))
         and ((not Assigned(FTagNodeAttributeCallback)) or
-          AttributeCallbackEqual(AAttribute));
+          AttributeCallbackEqual(AAttribute))
+        and ((FTagNodeAttributeClass.Count = 0) or
+          AttributeClassEqual(AAttribute))
+        and ((FTagNodeAttributeId.Count = 0) or AttributeIdEqual(AAttribute));
     end;
 
     { Check all node attributes start from ANodeAttribute }
@@ -417,7 +489,9 @@ function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t;
   begin
     if (ANodeAttribute = nil) then { node is not filtering by tag }
     begin
-      if (FTagNodeAttributeKey = '') and (FTagNodeAttributeValue = '') then
+      if (FTagNodeAttributeKey = '') and (FTagNodeAttributeClass.Count = 0)
+        and (FTagNodeAttributeValue = '') and (FTagNodeAttributeId.Count = 0)
+      then
         Result := True
       else
         Result := False;
@@ -434,6 +508,7 @@ end;
 function TParser.TFilter.IsSet: Boolean;
 begin
   Result := (FTag <> MyHTML_TAG__UNDEF) or (FTagNodeAttributeKey <> '') or
+    (FTagNodeAttributeClass.Count > 0) or (FTagNodeAttributeId.Count > 0) or
     (FTagNodeAttributeValue <> '') or Assigned(FTagNodeCallback) or
     Assigned(FTagNodeAttributeCallback);
 end;
@@ -445,12 +520,16 @@ begin
   FTagNodeData := nil;
   FTagNodeAttributeKey := '';
   FTagNodeAttributeValue := '';
+  FTagNodeAttributeClass := TStringList.Create;
+  FTagNodeAttributeId := TStringList.Create;
   FTagNodeAttributeCallback := nil;
   FTagNodeAttributeData := nil;
 end;
 
 destructor TParser.TFilter.Destroy;
 begin
+  FreeAndNil(FTagNodeAttributeClass);
+  FreeAndNil(FTagNodeAttributeId);
   inherited Destroy;
 end;
 
@@ -469,6 +548,19 @@ end;
 function TParser.TFilter.AttributeValue(AValue: string): TFilter;
 begin
   FTagNodeAttributeValue := AValue;
+  Result := Self;
+end;
+
+function TParser.TFilter.ContainsClass(AClass: string): TFilter;
+begin
+  FTagNodeAttributeClass.AddStrings(TTagNodeAttribute.StringTokenize(AClass));
+  Result := Self;
+end;
+
+function TParser.TFilter.ContainsClassOnly(AClass: string): TFilter;
+begin
+  FTagNodeAttributeClass.Clear;
+  FTagNodeAttributeClass.AddStrings(TTagNodeAttribute.StringTokenize(AClass));
   Result := Self;
 end;
 
@@ -528,7 +620,7 @@ var
 begin
   Node := ANode;
 
-  if AFilter.IsSet then
+  if (AFilter <> nil) and AFilter.IsSet then
   begin
     while (Node <> nil) and (not AFilter.IsEqual(Node,
       myhtml_node_attribute_first(Node), True)) do
@@ -730,7 +822,8 @@ end;
 
 { TParser.TTagNodeAttribute }
 
-function TParser.TTagNodeAttribute.StringTokenize(AString: string): TStringList;
+class function TParser.TTagNodeAttribute.StringTokenize(AString: string):
+  TStringList;
 var
   Index : SizeInt;
 begin
@@ -820,6 +913,8 @@ end;
 
 function TParser.Parse(AHTML: string; AParseFrom: TDocumentParseFrom
   ): TTagNode;
+var
+  tag : myhtml_tag_id_t;
 begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
@@ -840,6 +935,8 @@ begin
     end;
   end else
     Result := TTagNode.Create(nil);
+
+  tag := myhtml_node_tag_id(Result.FNode);
 end;
 
 function TParser.HasErrors: Boolean;

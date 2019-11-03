@@ -65,6 +65,11 @@
       <OtherUnitFiles Value="../source"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
+    <CodeGeneration>
+      <Optimizations>
+        <OptimizationLevel Value="0"/>
+      </Optimizations>
+    </CodeGeneration>
     <Linking>
       <Options>
         <Win32>

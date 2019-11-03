@@ -71,6 +71,8 @@ type
     procedure TestDocumentParseMetaDescriptionCallback;
     procedure TestDocumentParseLinkStylesheet;
     procedure TestDocumentParseLinkStylesheetCallback;
+
+    procedure TestDocumentParseHeader;
   end;
 
 {$I htmldocuments/myhtmlsimpleparse_document.inc }
@@ -135,6 +137,8 @@ function TMyHTMLParserSimpleParseTestCase.TagLinkCallback(
 begin
   AssertTrue('Tag link callback', ANode.Tag = MyHTML_TAG_LINK);
   Result := True;
+
+  AssertTrue('Tag link callback data not nil', AData <> nil);
 end;
 
 function TMyHTMLParserSimpleParseTestCase.TagAttributeRelStylesheet(
@@ -291,6 +295,25 @@ begin
     .Value;
 
   AssertTrue('Test link href callback', Stylesheet = 'style.css');
+end;
+
+procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseHeader;
+var
+  Value : myhtml_tags_t;
+  Tag : TParser.TTagNode;
+begin
+  {Value := FParser.Parse(SimpleParseDocument, DOCUMENT_BODY)
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsClass('wrapper'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsClass('header'))
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_STRONG))
+    .Value;
+  }
+  Tag := FParser.Parse(SimpleParseDocument, DOCUMENT_BODY)
+    .FirstChildrenNode;
+
+  Value := Tag.Tag;
+
+  //AssertTrue('Test body tag class filter', Value = 'Header:');
 end;
 
 { TMyHTMLSimpleParseTestCase }
