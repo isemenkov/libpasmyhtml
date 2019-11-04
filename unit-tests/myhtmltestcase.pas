@@ -71,8 +71,8 @@ type
     procedure TestDocumentParseMetaDescriptionCallback;
     procedure TestDocumentParseLinkStylesheet;
     procedure TestDocumentParseLinkStylesheetCallback;
-
     procedure TestDocumentParseHeader;
+    procedure TestDocumentParseContent;
   end;
 
 {$I htmldocuments/myhtmlsimpleparse_document.inc }
@@ -299,21 +299,30 @@ end;
 
 procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseHeader;
 var
-  Value : myhtml_tags_t;
-  Tag : TParser.TTagNode;
+  Value : string;
 begin
-  {Value := FParser.Parse(SimpleParseDocument, DOCUMENT_BODY)
+  Value := FParser.Parse(SimpleParseDocument, DOCUMENT_BODY)
     .FirstChildrenNode(TParser.TFilter.Create.ContainsClass('wrapper'))
     .FirstChildrenNode(TParser.TFilter.Create.ContainsClass('header'))
     .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_STRONG))
     .Value;
-  }
-  Tag := FParser.Parse(SimpleParseDocument, DOCUMENT_BODY)
-    .FirstChildrenNode;
 
-  Value := Tag.Tag;
+  AssertTrue('Test body tag class filter header', Value = 'Header:');
+end;
 
-  //AssertTrue('Test body tag class filter', Value = 'Header:');
+procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseContent;
+var
+  Value : string;
+begin
+  Value := FParser.Parse(SimpleParseDocument, DOCUMENT_BODY)
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsClass('wrapper'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsClass('middle'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsClass('container'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsClass('content'))
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_STRONG))
+    .Value;
+
+  AssertTrue('Test body tag class filter content', Value = 'Content:');
 end;
 
 { TMyHTMLSimpleParseTestCase }

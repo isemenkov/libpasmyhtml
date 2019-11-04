@@ -117,11 +117,9 @@ type
         function Tag (ATag : myhtml_tags_t) : TFilter;
 
         { Set tag attribute key for filtering }
-        { If atribute key is exists it is rewrites }
         function AttributeKey (AKey : string) : TFilter;
 
         { Set tag attribute value for filtering }
-        { If attribute value is setup it is rewrites }
         function AttributeValue (AValue : string) : TFilter;
 
         { Set class which must be in attribute "class" list }
@@ -246,6 +244,10 @@ type
         { Return next node attribute appling FirstNodeAttribute AFilter if
           exists. If node attribute not exists return broken attribute }
         function NextNodeAttribute : TTagNodeAttribute;
+
+        { For each node node attribute (if AFilter is present for filtered
+          attributes, else for each node attributes) apply ATransform callback.
+          If ATransform isn't do nothing }
         procedure EachNodeAttribute (AFilter : TFilter = nil; ATransform :
           TTransform = nil);
 
@@ -913,8 +915,6 @@ end;
 
 function TParser.Parse(AHTML: string; AParseFrom: TDocumentParseFrom
   ): TTagNode;
-var
-  tag : myhtml_tag_id_t;
 begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
@@ -930,13 +930,17 @@ begin
         Result := TTagNode.Create(myhtml_tree_get_node_html(FTree));
       DOCUMENT_HEAD :
         Result := TTagNode.Create(myhtml_tree_get_node_head(FTree));
-      DOCUMENT_BODY :
-        Result := TTagNode.Create(myhtml_tree_get_node_body(FTree));
+     DOCUMENT_BODY :
+     begin
+       { Function myhtml_tree_get_node_body contains bug }
+       { When you can take children node its tag id is MyHTML_TAG__TEXT }
+       { Result := TTagNode.Create(myhtml_tree_get_node_body(FTree)); }
+       Result := TTagNode.Create(myhtml_tree_get_node_html(FTree));
+       Result := Result.FirstChildrenNode(TFilter.Create.Tag(MyHTML_TAG_BODY));
+     end;
     end;
   end else
     Result := TTagNode.Create(nil);
-
-  tag := myhtml_node_tag_id(Result.FNode);
 end;
 
 function TParser.HasErrors: Boolean;
