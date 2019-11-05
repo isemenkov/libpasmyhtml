@@ -130,6 +130,14 @@ type
         { If "class" attribute is exists in list it is rewriting }
         function ContainsClassOnly (AClass : string) : TFilter;
 
+        { Set id which must be in attribute "id" list }
+        { If "id" attrbute is exists new id is added in list }
+        function ContainsId (AId : string) : TFilter;
+
+        { Set id only which must be in attribute }
+        { If "id" attribute is exists in list it is rewriting }
+        function ContainsIdOnly (AId : string) : TFilter;
+
         { Set tag filtering callback. Set AData pointer to pass it to callback.
           Return self }
         function TagNodeCallback (ACallback : TTagNodeFilterCallback; AData :
@@ -563,6 +571,19 @@ function TParser.TFilter.ContainsClassOnly(AClass: string): TFilter;
 begin
   FTagNodeAttributeClass.Clear;
   FTagNodeAttributeClass.AddStrings(TTagNodeAttribute.StringTokenize(AClass));
+  Result := Self;
+end;
+
+function TParser.TFilter.ContainsId(AId: string): TFilter;
+begin
+  FTagNodeAttributeId.AddStrings(TTagNodeAttribute.StringTokenize(AId));
+  Result := Self;
+end;
+
+function TParser.TFilter.ContainsIdOnly(AId: string): TFilter;
+begin
+  FTagNodeAttributeId.Clear;
+  FTagNodeAttributeId.AddStrings(TTagNodeAttribute.StringTokenize(AId));
   Result := Self;
 end;
 

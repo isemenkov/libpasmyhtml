@@ -32,7 +32,7 @@
         <PackageName Value="FCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="5">
+    <Units Count="6">
       <Unit0>
         <Filename Value="libpasmyhtml_testproject.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -53,6 +53,10 @@
         <Filename Value="htmldocuments/myhtmlsimpleparse_document.inc"/>
         <IsPartOfProject Value="True"/>
       </Unit4>
+      <Unit5>
+        <Filename Value="htmldocuments/teamten.com.inc"/>
+        <IsPartOfProject Value="True"/>
+      </Unit5>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
