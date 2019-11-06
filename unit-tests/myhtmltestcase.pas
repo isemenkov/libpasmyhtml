@@ -75,9 +75,35 @@ type
     procedure TestDocumentParseContent;
   end;
 
-{$I htmldocuments/myhtmlsimpleparse_document.inc }
+  { TMyHTMLParserTeamtenTestCase }
+
+  TMyHTMLParserTeamtenTestCase = class(TTestCase)
+  private
+    FParser : TParser;
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+
+  end;
+
+{$I htmldocuments/myhtmlsimpleparse_document.inc}
+{$I htmldocuments/myhtmlteamtenparse_document.inc}
 
 implementation
+
+{ TMyHTMLParserTeamtenTestCase }
+
+procedure TMyHTMLParserTeamtenTestCase.SetUp;
+begin
+  FParser := TParser.Create(MyHTML_OPTIONS_PARSE_MODE_SEPARATELY,
+    MyENCODING_UTF_8, 1, 4096, MyHTML_TREE_PARSE_FLAGS_CLEAN);
+end;
+
+procedure TMyHTMLParserTeamtenTestCase.TearDown;
+begin
+  FreeAndNil(FParser);
+end;
 
 { TMyHTMLParserSimpleTestCase }
 
