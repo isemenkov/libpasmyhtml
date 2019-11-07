@@ -753,10 +753,19 @@ begin
 end;
 
 function TParser.TTagNode.FindAllNodes(AFilter: TFilter): TTagNodeList;
+var
+  Node : TTagNode;
 begin
   if IsOk then
   begin
     Result := TTagNodeList.Create;
+
+    Node := FirstNode(AFilter);
+    while Node.IsOk do
+    begin
+      Result.Add(Node);
+      Node := NextNode;
+    end;
 
   end else
     Result := TTagNodeList.Create;
@@ -793,10 +802,20 @@ begin
 end;
 
 function TParser.TTagNode.FindAllChildrenNodes(AFilter: TFilter): TTagNodeList;
+var
+  Node : TTagNode;
 begin
   if IsOk then
   begin
     Result := TTagNodeList.Create;
+
+    Node := FirstChildrenNode(AFilter);
+    while Node.IsOk do
+    begin
+      Result.Add(Node);
+      Node := NextChildrenNode;
+    end;
+
   end else
     Result := TTagNodeList.Create;
 end;
@@ -835,10 +854,20 @@ end;
 
 function TParser.TTagNode.FindAllNodeAttributes(AFilter: TFilter
   ): TTagNodeAttributeList;
+var
+  Attribute : TTagNodeAttribute;
 begin
   if IsOk then
   begin
     Result := TTagNodeAttributeList.Create;
+
+    Attribute := FirstNodeAttribute(AFilter);
+    while Attribute.IsOk do
+    begin
+      Result.Add(Attribute);
+      Attribute := NextNodeAttribute;
+    end;
+
   end else
     Result := TTagNodeAttributeList.Create;
 end;
