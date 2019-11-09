@@ -40,17 +40,26 @@ uses
   Classes, SysUtils, Graphics, fgl, pascurl, pasmyhtml;
 
 type
+
+  { TRootDomainZones }
+  { Parse domain zones from: }
+  { https://www.iana.org/domains/root/db }
+  { https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains#Country_code_top-level_domains }
+  { https://publicsuffix.org/list/effective_tld_names.dat }
+
   TRootDomainZones = class
   public
     type
-      TDomaintType = (
+      TDomainZoneType = (
         DOMAIN_GENERIC,
         DOMAIN_GENERIC_RESTRICTED,
         DOMAIN_COUNTRY_CODE,
         DOMAIN_SPONSORED
       );
 
-      TDomainInfo = record
+      { TDomainZoneInfo }
+
+      TDomainZoneInfo = class
         Name : string;          { domain suffix, like .com or .co.uk }
         Entity : string;        { intended use }
         IconPath : string;      { URL to icon }
@@ -58,26 +67,129 @@ type
         Note : string;          { general remarks }
         DNSName : string;       {  }
         Manager : string;       { entity the registry has been delegated to }
-        TypeInfo : TDomainType; {  }
+        TypeInfo : TDomainZoneType; {  }
         Language : string;      {  }
       end;
 
-      TDomainsList = specialize TFPGList<TDomainInfo>;
+      TDomainZonesList = specialize TFPGList<TDomainZoneInfo>;
   private
     FSession : TSession;
+    FCloseSession : Boolean;
     FResponse : TResponse;
     FParser : TParser;
+    FDomainZones : TDomainZonesList;
+
+    function GetDomainZonesList : TDomainZonesList; inline;
+    procedure SetSession (ASession : TSession); inline;
   public
     constructor Create; overload;
-    constructor Create(ASession : TSession); overload;
-
+    constructor Create (ASession : TSession; ADomainZones :
+      TDomainZonesList = nil); overload;
+    constructor Create (ADomainZones : TDomainZonesList); overload;
     destructor Destroy; override;
 
+    function CheckDomainZone (AZone : string) : Boolean;
+    function ExtractDomainZone (AURL : string) : TDomainZoneInfo;
+    function GetDomainZoneInfo (AZone : string) : TDomainZoneInfo;
   published
-
+    property DomainZones : TDomainZonesList read GetDomainZonesList;
+    property Session : TSession write SetSession;
   end;
 
 implementation
+
+{ TRootDomainZones }
+
+function TRootDomainZones.GetDomainZonesList: TDomainZonesList;
+begin
+  Result := FDomainZones;
+end;
+
+procedure TRootDomainZones.SetSession(ASession: TSession);
+begin
+  if (FSession <> nil) and FCloseSession then
+    FreeAndNil(FSession);
+
+  FSession := ASession;
+  FCloseSession := True;
+end;
+
+constructor TRootDomainZones.Create;
+begin
+  FSession := TSession.Create;
+  FCloseSession := True;
+  FParser := TParser.Create;
+  FDomainZones := TDomainZonesList.Create;
+end;
+
+constructor TRootDomainZones.Create(ASession: TSession; ADomainZones :
+  TDomainZonesList);
+begin
+  if ASession <> nil then
+  begin
+    FSession := ASession;
+    FCloseSession := False;
+  end else begin
+    FSession := TSession.Create;
+    FCloseSession := True;
+  end;
+
+  FParser := TParser.Create;
+
+  if ADomainZones <> nil then
+    FDomainZones := ADomainZones
+  else
+    FDomainZones := TDomainZonesList.Create;
+end;
+
+constructor TRootDomainZones.Create(ADomainZones: TDomainZonesList);
+begin
+  FSession := TSession.Create;
+  FCloseSession := True;
+  FParser := TParser.Create;
+
+  if ADomainZones <> nil then
+    FDomainZones := ADomainZones
+  else
+    FDomainZones := TDomainZonesList.Create;
+end;
+
+destructor TRootDomainZones.Destroy;
+begin
+  FreeAndNil(FResponse);
+
+  if FCloseSession then
+    FreeAndNil(FSession);
+
+  FreeAndNil(FParser);
+  FreeAndNil(FDomainZones);
+  inherited Destroy;
+end;
+
+function TRootDomainZones.CheckDomainZone(AZone: string): Boolean;
+begin
+  Result := False;
+end;
+
+function TRootDomainZones.ExtractDomainZone(AURL: string): TDomainZoneInfo;
+begin
+  Result := TDomainZoneInfo.Create;
+
+  if FDomainZones.Count > 0 then
+  begin
+
+  end;
+end;
+
+function TRootDomainZones.GetDomainZoneInfo(AZone: string): TDomainZoneInfo;
+begin
+  Result := TDomainZoneInfo.Create;
+
+  if FDomainZones.Count > 0 then
+  begin
+
+  end;
+end;
 
 end.
 
