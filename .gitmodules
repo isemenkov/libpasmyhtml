@@ -1,0 +1,3 @@
+[submodule "examples/whois/libpascurl"]
+	path = examples/whois/libpascurl
+	url = git://github.com/isemenkov/libpascurl.git
