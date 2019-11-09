@@ -24,7 +24,12 @@
       <FormatVersion Value="2"/>
       <Modes Count="0"/>
     </RunParams>
-    <Units Count="3">
+    <RequiredPackages Count="1">
+      <Item1>
+        <PackageName Value="LCL"/>
+      </Item1>
+    </RequiredPackages>
+    <Units Count="4">
       <Unit0>
         <Filename Value="Whois.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -37,6 +42,11 @@
         <Filename Value="libpascurl/source/pascurl.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit2>
+      <Unit3>
+        <Filename Value="rootzones.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="RootZones"/>
+      </Unit3>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

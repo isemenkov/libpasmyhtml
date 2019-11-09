@@ -38,7 +38,7 @@ uses
   {$IFDEF UNIX}{$IFDEF UseCThreads}
   cthreads,
   {$ENDIF}{$ENDIF}
-  Classes, SysUtils, CustApp, pasmyhtml, pascurl;
+  Classes, SysUtils, CustApp, pasmyhtml, pascurl, RootZones;
 
 type
 
