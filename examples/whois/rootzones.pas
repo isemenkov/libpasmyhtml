@@ -42,10 +42,11 @@ uses
 type
 
   { TRootDomainZones }
+
   { Parse domain zones from: }
   { https://www.iana.org/domains/root/db }
-  { https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains#Country_code_top-level_domains }
   { https://publicsuffix.org/list/effective_tld_names.dat }
+  { https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains#Country_code_top-level_domains }
 
   TRootDomainZones = class
   public
@@ -60,6 +61,7 @@ type
       { TDomainZoneInfo }
 
       TDomainZoneInfo = class
+      public
         Name : string;          { domain suffix, like .com or .co.uk }
         Entity : string;        { intended use }
         IconPath : string;      { URL to icon }
@@ -69,9 +71,17 @@ type
         Manager : string;       { entity the registry has been delegated to }
         TypeInfo : TDomainZoneType; {  }
         Language : string;      {  }
+      public
+        procedure LoadFromStream (AStream : TStream);
+        procedure SaveToStream (AStream : TStream);
       end;
 
       TDomainZonesList = specialize TFPGList<TDomainZoneInfo>;
+
+      TLoadZonesListCallback = function (var AList : TDomainZonesList;
+        AData : Pointer) : Boolean of object;
+      TSaveZonesListCallback = function (var AList : TDomainZonesList;
+        AData : Pointer) : Boolean of object;
   private
     FSession : TSession;
     FCloseSession : Boolean;
@@ -79,18 +89,33 @@ type
     FParser : TParser;
     FDomainZones : TDomainZonesList;
 
+    FLoadCallback : TLoadZonesListCallback;
+    FLoadCallbackData : Pointer;
+
+    FSaveCallback : TSaveZonesListCallback;
+    FSaveCallbackData : Pointer;
+
     function GetDomainZonesList : TDomainZonesList; inline;
     procedure SetSession (ASession : TSession); inline;
   public
     constructor Create; overload;
-    constructor Create (ASession : TSession; ADomainZones :
-      TDomainZonesList = nil); overload;
+    constructor Create (ASession : TSession; ADomainZones : TDomainZonesList =
+      nil); overload;
     constructor Create (ADomainZones : TDomainZonesList); overload;
     destructor Destroy; override;
 
-    function CheckDomainZone (AZone : string) : Boolean;
-    function ExtractDomainZone (AURL : string) : TDomainZoneInfo;
-    function GetDomainZoneInfo (AZone : string) : TDomainZoneInfo;
+    function CheckDomainZone (AZone : string) : Boolean; inline;
+    function ExtractDomainZone (AURL : string) : TDomainZoneInfo; inline;
+    function GetDomainZoneInfo (AZone : string) : TDomainZoneInfo; inline;
+
+    function LoadCallback (ACallback : TLoadZonesListCallback; AData :
+      Pointer) : TRootDomainZones; inline;
+    function SaveCallback (ACallback : TSaveZonesListCallback; AData :
+      Pointer) : TRootDomainZones; inline;
+
+    procedure LoadDomainZones;
+    procedure SaveDomainZones;
+    procedure ParseDomainZones;
   published
     property DomainZones : TDomainZonesList read GetDomainZonesList;
     property Session : TSession write SetSession;
@@ -98,7 +123,100 @@ type
 
 implementation
 
+{ TRootDomainZones.TDomainZoneInfo }
+
+procedure TRootDomainZones.TDomainZoneInfo.LoadFromStream(AStream: TStream);
+
+  function ReadStringFromStream : string;
+  var
+    StrLen : Integer;
+  begin
+    with AStream do
+    begin
+      StrLen := ReadDWord;
+      SetLength(Result, StrLen);
+      ReadBuffer(PChar(Result)^, StrLen);
+    end;
+  end;
+
+begin
+  Name := ReadStringFromStream;
+  Entity := ReadStringFromStream;
+  IconPath := ReadStringFromStream;
+
+  Note := ReadStringFromStream;
+  DNSName := ReadStringFromStream;
+  Manager := ReadStringFromStream;
+  TypeInfo := TDomainZoneType(AStream.ReadDWord);
+  Language := ReadStringFromStream;
+end;
+
+procedure TRootDomainZones.TDomainZoneInfo.SaveToStream(AStream: TStream);
+
+  procedure WriteStringToStream (AString : string);
+  begin
+    with AStream do
+    begin
+      WriteDWord(Length(AString));
+      WriteBuffer(PChar(AString)^, Length(AString));
+    end;
+  end;
+
+begin
+  WriteStringToStream(Name);
+  WriteStringToStream(Entity);
+  WriteStringToStream(IconPath);
+
+  WriteStringToStream(Note);
+  WriteStringToStream(DNSName);
+  WriteStringToStream(Manager);
+  AStream.WriteDWord(LongWord(TypeInfo));
+  WriteStringToStream(Language);
+end;
+
 { TRootDomainZones }
+
+function TRootDomainZones.LoadCallback (ACallback : TLoadZonesListCallback;
+  AData : Pointer) : TRootDomainZones;
+begin
+  if ACallback <> nil then
+  begin
+    FLoadCallback := ACallback;
+    FLoadCallbackData := AData;
+  end;
+
+  Result := Self;
+end;
+
+function TRootDomainZones.SaveCallback (ACallback : TSaveZonesListCallback;
+  AData : Pointer) : TRootDomainZones;
+begin
+  if ACallback <> nil then
+  begin
+    FSaveCallback := ACallback;
+    FSaveCallbackData := AData;
+  end;
+
+  Result := Self;
+end;
+
+procedure TRootDomainZones.LoadDomainZones;
+begin
+  if Assigned(FLoadCallback) then
+    FLoadCallback(FDomainZones, FLoadCallbackData)
+  else begin
+
+  end;
+end;
+
+procedure TRootDomainZones.SaveDomainZones;
+begin
+  if Assigned(FSaveCallback) then
+    FSaveCallback(FDomainZones, FSaveCallbackData)
+  else begin
+
+  end;
+end;
 
 function TRootDomainZones.GetDomainZonesList: TDomainZonesList;
 begin
@@ -111,7 +229,7 @@ begin
     FreeAndNil(FSession);
 
   FSession := ASession;
-  FCloseSession := True;
+  FCloseSession := False;
 end;
 
 constructor TRootDomainZones.Create;
@@ -120,6 +238,10 @@ begin
   FCloseSession := True;
   FParser := TParser.Create;
   FDomainZones := TDomainZonesList.Create;
+  FLoadCallback := nil;
+  FLoadCallbackData := nil;
+  FSaveCallback := nil;
+  FSaveCallbackData := nil;
 end;
 
 constructor TRootDomainZones.Create(ASession: TSession; ADomainZones :
@@ -138,8 +260,15 @@ begin
 
   if ADomainZones <> nil then
     FDomainZones := ADomainZones
-  else
+  else begin
     FDomainZones := TDomainZonesList.Create;
+
+  end;
+
+  FLoadCallback := nil;
+  FLoadCallbackData := nil;
+  FSaveCallback := nil;
+  FSaveCallbackData := nil;
 end;
 
 constructor TRootDomainZones.Create(ADomainZones: TDomainZonesList);
@@ -150,8 +279,15 @@ begin
 
   if ADomainZones <> nil then
     FDomainZones := ADomainZones
-  else
+  else begin
     FDomainZones := TDomainZonesList.Create;
+
+  end;
+
+  FLoadCallback := nil;
+  FLoadCallbackData := nil;
+  FSaveCallback := nil;
+  FSaveCallbackData := nil;
 end;
 
 destructor TRootDomainZones.Destroy;
@@ -189,6 +325,11 @@ begin
   begin
 
   end;
+end;
+
+procedure TRootDomainZones.ParseDomainZones;
+begin
+
 end;
 
 end.
