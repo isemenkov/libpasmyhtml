@@ -45,14 +45,24 @@ type
   { TApplication }
 
   TApplication = class(TCustomApplication)
+  private
+    FSession : TSession;
+    FParser : TParser;
   protected
     procedure DoRun; override;
     procedure PrintHeader;
     procedure PrintHelp;
+
+    procedure ParseRootZones;
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
   end;
+
+const
+  USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '+
+    'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 '+
+    'Safari/537.36';
 
 { TApplication }
 
@@ -61,7 +71,7 @@ var
   ErrorMsg: String;
   NonOptions : TStringList;
   ShortOptions : string = 'h';
-  LongOptions : array [1..1] of string = ('help');
+  LongOptions : array [1..2] of string = ('help', 'parse-zones');
 begin
   ErrorMsg:=CheckOptions(ShortOptions, LongOptions);
   if ErrorMsg<>'' then begin
@@ -74,7 +84,7 @@ begin
 
   if HasOption('h', 'help') then
     PrintHelp;
-
+  {
   NonOptions := TStringList.Create;
   GetNonOptions(ShortOptions, LongOptions, NonOptions);
   if NonOptions.Count = 0 then
@@ -82,7 +92,9 @@ begin
     Terminate;
     Exit;
   end;
-
+  }
+  if HasOption('parse-zones') then
+    ParseRootZones;
 
   Terminate;
 end;
@@ -115,14 +127,33 @@ begin
   );
 end;
 
+procedure TApplication.ParseRootZones;
+var
+  RootZones : TRootDomainZones;
+  Zone : TRootDomainZones.TDomainZoneInfo;
+begin
+  RootZones := TRootDomainZones.Create(FSession, FParser);
+  RootZones.ParseDomainZones;
+
+  for Zone in RootZones.DomainZones do
+    ;
+
+  FreeAndNil(RootZones);
+end;
+
 constructor TApplication.Create(TheOwner: TComponent);
 begin
   inherited Create(TheOwner);
   StopOnException:=True;
+  FSession := TSession.Create;
+  FSession.HTTP.UserAgent := USER_AGENT;
+  FParser := TParser.Create;
 end;
 
 destructor TApplication.Destroy;
 begin
+  FreeAndNil(FSession);
+  FreeAndNil(FParser);
   inherited Destroy;
 end;
 

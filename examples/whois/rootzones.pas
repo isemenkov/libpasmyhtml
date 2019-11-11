@@ -99,6 +99,8 @@ type
 
     function GetDomainZonesList : TDomainZonesList; inline;
     procedure ParseIanaOrg;
+    procedure ParseIanaOrgCallback (ANode : TParser.TTagNode; AData : Pointer);
+
     procedure ParsePublicSuffixOrg;
     procedure ParseWikipediaOrg;
   public
@@ -223,16 +225,73 @@ var
 begin
   FSession.Url := IANA_ORG_URL;
   FResponse := TResponse.Create(FSession);
+
+  { ...
+    <body>
+      <div id="body">
+        <div id="main_right">
+        ...
+          <div class="iana-table-frame">
+          ...
+            <table id="tld-table" class="iana-table">
+              ...
+              <tbody>
+                <tr>
+                  ...
+                </tr>
+                <tr>
+                  ...
+                </tr>
+                ...
+  ... }
+
   TreeChunk := FParser.Parse(FResponse.Content,
     TParser.TDocumentParseFrom.DOCUMENT_BODY);
   TreeChunk.FirstChildrenNode(TParser.TFilter.Create.ContainsId('body'))
     .FirstChildrenNode(TParser.TFilter.Create.ContainsId('main_right'))
     .FirstChildrenNode(TParser.TFilter.Create.ContainsId('iana-table-frame'))
-    .FirstChildrenNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TABLE))
-    .FirstChildrenNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TBODY))
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(
+      TParser.TTag.MyHTML_TAG_TABLE))
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(
+      TParser.TTag.MyHTML_TAG_TBODY))
     .EachChildrenNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TR),
-      TParser.TTransform.Create);
+      TParser.TTransform.Create.TagNodeTransform(@ParseIanaOrgCallback));
   FreeAndNil(FResponse);
+end;
+
+procedure TRootDomainZones.ParseIanaOrgCallback(ANode: TParser.TTagNode;
+  AData: Pointer);
+var
+  Node : TParser.TTagNode;
+  Zone : TDomainZoneInfo;
+begin
+  Zone := TDomainZoneInfo.Create;
+
+  { ...
+    <tr>
+      <td>
+        <span class="domain tld">
+          <a href="/domains/root/db/aaa.html">.aaa</a>  [<-- Zone.Name]
+        </span>
+      </td>
+      <td>generic</td>                                  []
+      <td>American Automobile Association, Inc.</td>    [<-- Zone.Manager]
+    </tr>
+  ... }
+
+  Node := ANode.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_TD));
+  Zone.Name := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_SPAN))
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_A))
+    .Value;
+
+  Node := Node.NextChildrenNode;
+
+  Node := Node.NextChildrenNode;
+  Zone.Manager := Node.Value;
+
+  FDomainZones.Add(Zone);
 end;
 
 procedure TRootDomainZones.ParsePublicSuffixOrg;

@@ -160,6 +160,13 @@ type
 
         FTagNodeAttributeCallback : TTagNodeAttributeTransformCallback;
         FTagNodeAttributeData : Pointer;
+
+        { Run transform node callback }
+        procedure RunNodeCallback (ATagNode : TTagNode); inline;
+
+        { Run transform node attribute callback }
+        procedure RunNodeAttributeCallback (ATagAttribute : TTagNodeAttribute);
+          inline;
       public
         constructor Create;
         destructor Destroy; override;
@@ -607,6 +614,19 @@ end;
 
 { TParser.TTransform }
 
+procedure TParser.TTransform.RunNodeCallback(ATagNode: TTagNode);
+begin
+  if Assigned(FTagNodeCallback) then
+    FTagNodeCallback(ATagNode, FTagNodeData);
+end;
+
+procedure TParser.TTransform.RunNodeAttributeCallback(
+  ATagAttribute: TTagNodeAttribute);
+begin
+  if Assigned(FTagNodeAttributeCallback) then
+    FTagNodeAttributeCallback(ATagAttribute, FTagNodeAttributeData);
+end;
+
 constructor TParser.TTransform.Create;
 begin
   FTagNodeCallback := nil;
@@ -748,10 +768,17 @@ end;
 
 function TParser.TTagNode.EachNode(AFilter: TFilter; ATransform: TTransform) :
   TTagNode;
+var
+  Node : TTagNode;
 begin
   if IsOk then
   begin
-
+    Node := FirstNode(AFilter);
+    while Node.IsOk do
+    begin
+      ATransform.RunNodeCallback(Node);
+      Node := NextNode;
+    end;
   end;
 
   Result := Self;
@@ -799,10 +826,17 @@ end;
 
 function TParser.TTagNode.EachChildrenNode(AFilter: TFilter;
   ATransform: TTransform) : TTagNode;
+var
+  Node : TTagNode;
 begin
   if IsOk then
   begin
-
+    Node := FirstChildrenNode(AFilter);
+    while Node.IsOk do
+    begin
+      ATransform.RunNodeCallback(Node);
+      Node := NextChildrenNode;
+    end;
   end;
 
   Result := Self;
@@ -852,10 +886,17 @@ end;
 
 function TParser.TTagNode.EachNodeAttribute(AFilter: TFilter;
   ATransform: TTransform) : TTagNode;
+var
+  Attribute : TTagNodeAttribute;
 begin
   if IsOk then
   begin
-
+    Attribute := FirstNodeAttribute(AFilter);
+    while Attribute.IsOk do
+    begin
+      ATransform.RunNodeAttributeCallback(Attribute);
+      Attribute := NextNodeAttribute;
+    end;
   end;
 
   Result := Self;
