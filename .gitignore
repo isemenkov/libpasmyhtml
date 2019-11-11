@@ -1,6 +1,7 @@
 
 #examples
 /examples/whois/Whois
+/examples/whois/RootDomainZonesCache.bin
 
 #unit-test
 /unit-tests/libpasmyhtml_testproject

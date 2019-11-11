@@ -54,6 +54,8 @@ type
     procedure PrintHelp;
 
     procedure ParseRootZones;
+    procedure SaveRootDomainZonesCache (ADomainZones :
+      TRootDomainZones.TDomainZonesList);
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -63,6 +65,7 @@ const
   USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '+
     'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 '+
     'Safari/537.36';
+  ROOT_ZONES_CACHE_FILE = 'RootDomainZonesCache.bin';
 
 { TApplication }
 
@@ -71,7 +74,7 @@ var
   ErrorMsg: String;
   NonOptions : TStringList;
   ShortOptions : string = 'h';
-  LongOptions : array [1..2] of string = ('help', 'parse-zones');
+  LongOptions : array [1..2] of string = ('help', 'force-parse-zones');
 begin
   ErrorMsg:=CheckOptions(ShortOptions, LongOptions);
   if ErrorMsg<>'' then begin
@@ -84,7 +87,10 @@ begin
 
   if HasOption('h', 'help') then
     PrintHelp;
-  {
+
+  if HasOption('force-parse-zones') then
+    ParseRootZones;
+
   NonOptions := TStringList.Create;
   GetNonOptions(ShortOptions, LongOptions, NonOptions);
   if NonOptions.Count = 0 then
@@ -92,9 +98,6 @@ begin
     Terminate;
     Exit;
   end;
-  }
-  if HasOption('parse-zones') then
-    ParseRootZones;
 
   Terminate;
 end;
@@ -130,15 +133,27 @@ end;
 procedure TApplication.ParseRootZones;
 var
   RootZones : TRootDomainZones;
-  Zone : TRootDomainZones.TDomainZoneInfo;
 begin
   RootZones := TRootDomainZones.Create(FSession, FParser);
   RootZones.ParseDomainZones;
-
-  for Zone in RootZones.DomainZones do
-    ;
-
+  SaveRootDomainZonesCache(RootZones.DomainZones);
   FreeAndNil(RootZones);
+end;
+
+procedure TApplication.SaveRootDomainZonesCache (ADomainZones :
+  TRootDomainZones.TDomainZonesList);
+var
+  Zone : TRootDomainZones.TDomainZoneInfo;
+  FileStream : TFileStream;
+begin
+  FileStream := TFileStream.Create(ROOT_ZONES_CACHE_FILE, fmCreate or
+    fmOpenWrite);
+  FileStream.Seek(0, soFromBeginning);
+
+  for Zone in ADomainZones do
+    Zone.SaveToStream(FileStream);
+
+  FreeAndNil(FileStream);
 end;
 
 constructor TApplication.Create(TheOwner: TComponent);

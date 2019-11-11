@@ -85,6 +85,9 @@ type
         AData : Pointer) : Boolean of object;
       TSaveZonesListCallback = function (var AList : TDomainZonesList;
         AData : Pointer) : Boolean of object;
+
+      TParseDomainZoneCallback = procedure (var AResponse : TResponse)
+        of object;
   private
     FSession : TSession;
     FResponse : TResponse;
@@ -98,11 +101,11 @@ type
     FSaveCallbackData : Pointer;
 
     function GetDomainZonesList : TDomainZonesList; inline;
-    procedure ParseIanaOrg;
+    procedure ParseIanaOrg (ACallback : TParseDomainZoneCallback = nil);
     procedure ParseIanaOrgCallback (ANode : TParser.TTagNode; AData : Pointer);
 
-    procedure ParsePublicSuffixOrg;
-    procedure ParseWikipediaOrg;
+    procedure ParsePublicSuffixOrg (ACallback : TParseDomainZoneCallback = nil);
+    procedure ParseWikipediaOrg (ACallback : TParseDomainZoneCallback = nil);
   public
     constructor Create (ASession : TSession; AParser : TParser);
     destructor Destroy; override;
@@ -118,7 +121,7 @@ type
 
     procedure LoadDomainZones;
     procedure SaveDomainZones;
-    procedure ParseDomainZones;
+    procedure ParseDomainZones (ACallback : TParseDomainZoneCallback = nil);
   published
     property DomainZones : TDomainZonesList read GetDomainZonesList;
   end;
@@ -219,7 +222,7 @@ begin
   Result := FDomainZones;
 end;
 
-procedure TRootDomainZones.ParseIanaOrg;
+procedure TRootDomainZones.ParseIanaOrg (ACallback : TParseDomainZoneCallback);
 var
   TreeChunk : TParser.TTagNode;
 begin
@@ -256,6 +259,10 @@ begin
       TParser.TTag.MyHTML_TAG_TBODY))
     .EachChildrenNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TR),
       TParser.TTransform.Create.TagNodeTransform(@ParseIanaOrgCallback));
+
+  if Assigned(ACallback) then
+    ACallback(FResponse);
+
   FreeAndNil(FResponse);
 end;
 
@@ -274,7 +281,7 @@ begin
           <a href="/domains/root/db/aaa.html">.aaa</a>  [<-- Zone.Name]
         </span>
       </td>
-      <td>generic</td>                                  []
+      <td>generic</td>                                  [<-- Zone.TypeInfo]
       <td>American Automobile Association, Inc.</td>    [<-- Zone.Manager]
     </tr>
   ... }
@@ -288,18 +295,21 @@ begin
 
   Node := Node.NextChildrenNode;
 
+
   Node := Node.NextChildrenNode;
   Zone.Manager := Node.Value;
 
   FDomainZones.Add(Zone);
 end;
 
-procedure TRootDomainZones.ParsePublicSuffixOrg;
+procedure TRootDomainZones.ParsePublicSuffixOrg (ACallback :
+  TParseDomainZoneCallback);
 begin
 
 end;
 
-procedure TRootDomainZones.ParseWikipediaOrg;
+procedure TRootDomainZones.ParseWikipediaOrg (ACallback :
+  TParseDomainZoneCallback);
 begin
 
 end;
@@ -347,11 +357,12 @@ begin
   end;
 end;
 
-procedure TRootDomainZones.ParseDomainZones;
+procedure TRootDomainZones.ParseDomainZones (ACallback :
+  TParseDomainZoneCallback = nil);
 begin
-  ParseIanaOrg;
-  ParsePublicSuffixOrg;
-  ParseWikipediaOrg;
+  ParseIanaOrg (ACallback);
+  ParsePublicSuffixOrg (ACallback);
+  ParseWikipediaOrg (ACallback);
 end;
 
 end.
