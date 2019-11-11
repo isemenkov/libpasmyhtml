@@ -55,6 +55,8 @@ type
         DOCUMENT_BODY  { Start parse from BODY tag element }
       );
 
+      TTag = type myhtml_tags_t;
+
       { Tag node attribute }
       { Class which implements HTML tag attribute and functions to operation
         with it }
@@ -114,7 +116,7 @@ type
         destructor Destroy; override;
 
         { Set tag id for filtering }
-        function Tag (ATag : myhtml_tags_t) : TFilter;
+        function Tag (ATag : TTag) : TFilter;
 
         { Set tag attribute key for filtering }
         function AttributeKey (AKey : string) : TFilter;
@@ -200,7 +202,7 @@ type
           TFilter) : pmyhtml_tree_attr_t; inline;
       private
         { Return tag id }
-        function GetTag :  myhtml_tags_t; inline;
+        function GetTag :  TTag; inline;
 
         { Return tag text value }
         function GetValue : string; inline;
@@ -220,8 +222,8 @@ type
 
         { For each node (if AFilter is present for filtered nodes, else for each
           nodes) apply ATransform callback. If ATransform isn't do nothing }
-        procedure EachNode (AFilter : TFilter = nil; ATransform : TTransform
-          = nil);
+        function EachNode (AFilter : TFilter = nil; ATransform : TTransform
+          = nil) : TTagNode;
 
         { Return all AFilter match nodes list. If AFilter is not present return
           all nodes list }
@@ -237,8 +239,8 @@ type
 
         { For each filtered current node childrens applies ATransfrom callback.
           If ATransform isn't do nothing }
-        procedure EachChildrenNode (AFilter : TFilter = nil; ATransform :
-          TTransform = nil);
+        function EachChildrenNode (AFilter : TFilter = nil; ATransform :
+          TTransform = nil) : TTagNode;
 
         { Return all current node filtered childrens list. If AFilter is not
           present return all children nodes list }
@@ -256,8 +258,8 @@ type
         { For each node node attribute (if AFilter is present for filtered
           attributes, else for each node attributes) apply ATransform callback.
           If ATransform isn't do nothing }
-        procedure EachNodeAttribute (AFilter : TFilter = nil; ATransform :
-          TTransform = nil);
+        function EachNodeAttribute (AFilter : TFilter = nil; ATransform :
+          TTransform = nil) : TTagNode;
 
         { Find all filtered node attributes. If AFilter isn't return all
           attributes }
@@ -265,7 +267,7 @@ type
           TTagNodeAttributeList;
       public
         { Return tag id }
-        property Tag : myhtml_tags_t read GetTag;
+        property Tag : TTag read GetTag;
 
         { Return tag text value }
         property Value : string read GetValue;
@@ -543,7 +545,7 @@ begin
   inherited Destroy;
 end;
 
-function TParser.TFilter.Tag(ATag: myhtml_tags_t): TFilter;
+function TParser.TFilter.Tag(ATag: TTag): TFilter;
 begin
   FTag := ATag;
   Result := Self;
@@ -673,11 +675,11 @@ begin
   Result := Attr;
 end;
 
-function TParser.TTagNode.GetTag: myhtml_tags_t;
+function TParser.TTagNode.GetTag: TTag;
 begin
   if IsOk then
   begin
-    Result := myhtml_tags_t(myhtml_node_tag_id(FNode));
+    Result := TTag(myhtml_node_tag_id(FNode));
   end else
     Result := MyHTML_TAG__UNDEF;
 end;
@@ -744,12 +746,15 @@ begin
     Result := TTagNode.Create(nil);
 end;
 
-procedure TParser.TTagNode.EachNode(AFilter: TFilter; ATransform: TTransform);
+function TParser.TTagNode.EachNode(AFilter: TFilter; ATransform: TTransform) :
+  TTagNode;
 begin
   if IsOk then
   begin
 
   end;
+
+  Result := Self;
 end;
 
 function TParser.TTagNode.FindAllNodes(AFilter: TFilter): TTagNodeList;
@@ -792,13 +797,15 @@ begin
     Result := TTagNode.Create(nil);
 end;
 
-procedure TParser.TTagNode.EachChildrenNode(AFilter: TFilter;
-  ATransform: TTransform);
+function TParser.TTagNode.EachChildrenNode(AFilter: TFilter;
+  ATransform: TTransform) : TTagNode;
 begin
   if IsOk then
   begin
 
   end;
+
+  Result := Self;
 end;
 
 function TParser.TTagNode.FindAllChildrenNodes(AFilter: TFilter): TTagNodeList;
@@ -843,13 +850,15 @@ begin
     Result := TTagNodeAttribute.Create(nil);
 end;
 
-procedure TParser.TTagNode.EachNodeAttribute(AFilter: TFilter;
-  ATransform: TTransform);
+function TParser.TTagNode.EachNodeAttribute(AFilter: TFilter;
+  ATransform: TTransform) : TTagNode;
 begin
   if IsOk then
   begin
 
   end;
+
+  Result := Self;
 end;
 
 function TParser.TTagNode.FindAllNodeAttributes(AFilter: TFilter

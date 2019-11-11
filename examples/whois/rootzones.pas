@@ -43,13 +43,16 @@ type
 
   { TRootDomainZones }
 
-  { Parse domain zones from: }
-  { https://www.iana.org/domains/root/db }
-  { https://publicsuffix.org/list/effective_tld_names.dat }
-  { https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains#Country_code_top-level_domains }
-
   TRootDomainZones = class
   public
+    { Parse top level domain zones from next url }
+    const
+      IANA_ORG_URL = 'https://www.iana.org/domains/root/db';
+      PUBLICSUFFIX_ORG_URL = 'https://publicsuffix.org/list/'+
+        'effective_tld_names.dat';
+      WIKIPEDIA_ORG_URL = 'https://en.wikipedia.org/wiki/'+
+        'List_of_Internet_top-level_domains#Country_code_top-level_domains';
+
     type
       TDomainZoneType = (
         DOMAIN_GENERIC,
@@ -84,7 +87,6 @@ type
         AData : Pointer) : Boolean of object;
   private
     FSession : TSession;
-    FCloseSession : Boolean;
     FResponse : TResponse;
     FParser : TParser;
     FDomainZones : TDomainZonesList;
@@ -96,12 +98,11 @@ type
     FSaveCallbackData : Pointer;
 
     function GetDomainZonesList : TDomainZonesList; inline;
-    procedure SetSession (ASession : TSession); inline;
+    procedure ParseIanaOrg;
+    procedure ParsePublicSuffixOrg;
+    procedure ParseWikipediaOrg;
   public
-    constructor Create; overload;
-    constructor Create (ASession : TSession; ADomainZones : TDomainZonesList =
-      nil); overload;
-    constructor Create (ADomainZones : TDomainZonesList); overload;
+    constructor Create (ASession : TSession; AParser : TParser);
     destructor Destroy; override;
 
     function CheckDomainZone (AZone : string) : Boolean; inline;
@@ -118,7 +119,6 @@ type
     procedure ParseDomainZones;
   published
     property DomainZones : TDomainZonesList read GetDomainZonesList;
-    property Session : TSession write SetSession;
   end;
 
 implementation
@@ -203,19 +203,13 @@ end;
 procedure TRootDomainZones.LoadDomainZones;
 begin
   if Assigned(FLoadCallback) then
-    FLoadCallback(FDomainZones, FLoadCallbackData)
-  else begin
-
-  end;
+    FLoadCallback(FDomainZones, FLoadCallbackData);
 end;
 
 procedure TRootDomainZones.SaveDomainZones;
 begin
   if Assigned(FSaveCallback) then
-    FSaveCallback(FDomainZones, FSaveCallbackData)
-  else begin
-
-  end;
+    FSaveCallback(FDomainZones, FSaveCallbackData);
 end;
 
 function TRootDomainZones.GetDomainZonesList: TDomainZonesList;
@@ -223,66 +217,39 @@ begin
   Result := FDomainZones;
 end;
 
-procedure TRootDomainZones.SetSession(ASession: TSession);
+procedure TRootDomainZones.ParseIanaOrg;
+var
+  TreeChunk : TParser.TTagNode;
 begin
-  if (FSession <> nil) and FCloseSession then
-    FreeAndNil(FSession);
+  FSession.Url := IANA_ORG_URL;
+  FResponse := TResponse.Create(FSession);
+  TreeChunk := FParser.Parse(FResponse.Content,
+    TParser.TDocumentParseFrom.DOCUMENT_BODY);
+  TreeChunk.FirstChildrenNode(TParser.TFilter.Create.ContainsId('body'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsId('main_right'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsId('iana-table-frame'))
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TABLE))
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TBODY))
+    .EachChildrenNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TR),
+      TParser.TTransform.Create);
+  FreeAndNil(FResponse);
+end;
 
+procedure TRootDomainZones.ParsePublicSuffixOrg;
+begin
+
+end;
+
+procedure TRootDomainZones.ParseWikipediaOrg;
+begin
+
+end;
+
+constructor TRootDomainZones.Create(ASession: TSession; AParser : TParser);
+begin
   FSession := ASession;
-  FCloseSession := False;
-end;
-
-constructor TRootDomainZones.Create;
-begin
-  FSession := TSession.Create;
-  FCloseSession := True;
-  FParser := TParser.Create;
+  FParser := AParser;
   FDomainZones := TDomainZonesList.Create;
-  FLoadCallback := nil;
-  FLoadCallbackData := nil;
-  FSaveCallback := nil;
-  FSaveCallbackData := nil;
-end;
-
-constructor TRootDomainZones.Create(ASession: TSession; ADomainZones :
-  TDomainZonesList);
-begin
-  if ASession <> nil then
-  begin
-    FSession := ASession;
-    FCloseSession := False;
-  end else begin
-    FSession := TSession.Create;
-    FCloseSession := True;
-  end;
-
-  FParser := TParser.Create;
-
-  if ADomainZones <> nil then
-    FDomainZones := ADomainZones
-  else begin
-    FDomainZones := TDomainZonesList.Create;
-
-  end;
-
-  FLoadCallback := nil;
-  FLoadCallbackData := nil;
-  FSaveCallback := nil;
-  FSaveCallbackData := nil;
-end;
-
-constructor TRootDomainZones.Create(ADomainZones: TDomainZonesList);
-begin
-  FSession := TSession.Create;
-  FCloseSession := True;
-  FParser := TParser.Create;
-
-  if ADomainZones <> nil then
-    FDomainZones := ADomainZones
-  else begin
-    FDomainZones := TDomainZonesList.Create;
-
-  end;
 
   FLoadCallback := nil;
   FLoadCallbackData := nil;
@@ -292,12 +259,6 @@ end;
 
 destructor TRootDomainZones.Destroy;
 begin
-  FreeAndNil(FResponse);
-
-  if FCloseSession then
-    FreeAndNil(FSession);
-
-  FreeAndNil(FParser);
   FreeAndNil(FDomainZones);
   inherited Destroy;
 end;
@@ -329,7 +290,9 @@ end;
 
 procedure TRootDomainZones.ParseDomainZones;
 begin
-
+  ParseIanaOrg;
+  ParsePublicSuffixOrg;
+  ParseWikipediaOrg;
 end;
 
 end.
