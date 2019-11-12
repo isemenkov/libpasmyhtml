@@ -753,6 +753,7 @@ begin
   begin
     FNodeFilter := AFilter;
     Result := TTagNode.Create(FilterNode(FNode, FNodeFilter));
+    Result.FNodeFilter := AFilter;
   end else
     Result := TTagNode.Create(nil);
 end;
@@ -762,6 +763,7 @@ begin
   if IsOk then
   begin
     Result := TTagNode.Create(FilterNode(myhtml_node_next(FNode), FNodeFilter));
+    Result.FNodeFilter := FNodeFilter;
   end else
     Result := TTagNode.Create(nil);
 end;
@@ -777,7 +779,7 @@ begin
     while Node.IsOk do
     begin
       ATransform.RunNodeCallback(Node);
-      Node := NextNode;
+      Node := Node.NextNode;
     end;
   end;
 
@@ -796,7 +798,7 @@ begin
     while Node.IsOk do
     begin
       Result.Add(Node);
-      Node := NextNode;
+      Node := Node.NextNode;
     end;
 
   end else
@@ -808,18 +810,20 @@ begin
   if IsOk then
   begin
     FChildrenNodeFilter := AFilter;
-    FChildrenNode := myhtml_node_child(FNode);
-    Result := TTagNode.Create(FilterNode(FChildrenNode, FChildrenNodeFilter));
+    Result := TTagNode.Create(FilterNode(myhtml_node_child(FNode),
+      FChildrenNodeFilter));
+    Result.FChildrenNodeFilter := AFilter;
   end else
     Result := TTagNode.Create(nil);
 end;
 
 function TParser.TTagNode.NextChildrenNode: TTagNode;
 begin
-  if FChildrenNode <> nil then
+  if IsOk then
   begin
-    FChildrenNode := myhtml_node_next(FChildrenNode);
-    Result := TTagNode.Create(FilterNode(FChildrenNode, FChildrenNodeFilter));
+    Result := TTagNode.Create(FilterNode(myhtml_node_next(FNode),
+      FChildrenNodeFilter));
+    Result.FChildrenNodeFilter := FChildrenNodeFilter;
   end else
     Result := TTagNode.Create(nil);
 end;
@@ -835,7 +839,7 @@ begin
     while Node.IsOk do
     begin
       ATransform.RunNodeCallback(Node);
-      Node := NextChildrenNode;
+      Node := Node.NextChildrenNode;
     end;
   end;
 
@@ -854,7 +858,7 @@ begin
     while Node.IsOk do
     begin
       Result.Add(Node);
-      Node := NextChildrenNode;
+      Node := Node.NextChildrenNode;
     end;
 
   end else
