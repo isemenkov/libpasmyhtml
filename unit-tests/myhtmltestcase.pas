@@ -87,10 +87,36 @@ type
 
   end;
 
+  { TMyHTMLParserIanaTestCase }
+
+  TMyHTMLParserIanaTestCase = class(TTestCase)
+  private
+    FParser : TParser;
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+
+  end;
+
 {$I htmldocuments/myhtmlsimpleparse_document.inc}
 {$I htmldocuments/myhtmlteamtenparse_document.inc}
+{$I htmldocuments/myhtmlianaparse_document.inc}
 
 implementation
+
+{ TMyHTMLParserIanaTestCase }
+
+procedure TMyHTMLParserIanaTestCase.SetUp;
+begin
+  FParser := TParser.Create(MyHTML_OPTIONS_PARSE_MODE_SEPARATELY,
+    MyENCODING_UTF_8, 1, 4096, MyHTML_TREE_PARSE_FLAGS_CLEAN);
+end;
+
+procedure TMyHTMLParserIanaTestCase.TearDown;
+begin
+  FreeAndNil(FParser);
+end;
 
 { TMyHTMLParserTeamtenTestCase }
 
@@ -678,5 +704,6 @@ end;
 initialization
   RegisterTest(TMyHTMLSimpleParseTestCase);
   RegisterTest(TMyHTMLParserSimpleParseTestCase);
+  RegisterTest(TMyHTMLParserIanaTestCase);
 end.
 
