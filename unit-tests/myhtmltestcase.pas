@@ -5,7 +5,7 @@ unit myhtmltestcase;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, libpasmyhtml, pasmyhtml;
+  Classes, SysUtils, fpcunit, testregistry, libpasmyhtml, pasmyhtml, fgl;
 
 type
 
@@ -91,12 +91,24 @@ type
 
   TMyHTMLParserIanaTestCase = class(TTestCase)
   private
+    type
+      TZoneInfo = class
+        Name : string;
+        Info : string;
+        Manager : string;
+      end;
+
+      TZoneInfoList = specialize TFPGList<TZoneInfo>;
+  private
     FParser : TParser;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
-  published
 
+    procedure TestDocumentParseEachNodesCallback (ANode : TParser.TTagNode;
+      AData : Pointer);
+  published
+    procedure TestDocumentParseEachNodes;
   end;
 
 {$I htmldocuments/myhtmlsimpleparse_document.inc}
@@ -116,6 +128,46 @@ end;
 procedure TMyHTMLParserIanaTestCase.TearDown;
 begin
   FreeAndNil(FParser);
+end;
+
+procedure TMyHTMLParserIanaTestCase.TestDocumentParseEachNodes;
+var
+  ZoneList : TZoneInfoList;
+begin
+  ZoneList := TZoneInfoList.Create;
+
+  FParser.Parse(iana_org_document, DOCUMENT_BODY)
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsId('body'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsId('main_right'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsId('iana-table-frame'))
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TABLE))
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TBODY))
+    .EachChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TR),
+      TParser.TTransform.Create.TagNodeTransform(
+        @TestDocumentParseEachNodesCallback, Pointer(ZoneList)));
+
+  AssertTrue('Test each node children list', ZoneList.Count = 5);
+end;
+
+procedure TMyHTMLParserIanaTestCase.TestDocumentParseEachNodesCallback(
+  ANode: TParser.TTagNode; AData: Pointer);
+var
+  Zone : TZoneInfo;
+  Node : TParser.TTagNode;
+begin
+  AssertTrue('Test node tag type', ANode.Tag = TParser.TTag.MyHTML_TAG_TR);
+
+  Zone := TZoneInfo.Create;
+  Node := ANode.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    MyHTML_TAG_TD));
+  Zone.Name := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    MyHTML_TAG_SPAN))
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_A))
+    .Value;
+
+  TZoneInfoList(AData).Add(Zone);
+
+  AssertTrue('Test node tag type', ANode.Tag = TParser.TTag.MyHTML_TAG_TR);
 end;
 
 { TMyHTMLParserTeamtenTestCase }

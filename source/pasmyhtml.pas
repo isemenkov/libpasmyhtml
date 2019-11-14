@@ -340,8 +340,6 @@ type
     function Error : string;
   end;
 
-  { operator in (ANode: TTagNode; AList: TTagNodeList) Result: Boolean; }
-
 implementation
 
 { TParser.TFilter }
@@ -753,7 +751,6 @@ begin
   begin
     FNodeFilter := AFilter;
     Result := TTagNode.Create(FilterNode(FNode, FNodeFilter));
-    Result.FNodeFilter := AFilter;
   end else
     Result := TTagNode.Create(nil);
 end;
@@ -763,7 +760,6 @@ begin
   if IsOk then
   begin
     Result := TTagNode.Create(FilterNode(myhtml_node_next(FNode), FNodeFilter));
-    Result.FNodeFilter := FNodeFilter;
   end else
     Result := TTagNode.Create(nil);
 end;
@@ -779,7 +775,7 @@ begin
     while Node.IsOk do
     begin
       ATransform.RunNodeCallback(Node);
-      Node := Node.NextNode;
+      Node := NextNode;
     end;
   end;
 
@@ -798,7 +794,7 @@ begin
     while Node.IsOk do
     begin
       Result.Add(Node);
-      Node := Node.NextNode;
+      Node := NextNode;
     end;
 
   end else
@@ -810,8 +806,8 @@ begin
   if IsOk then
   begin
     FChildrenNodeFilter := AFilter;
-    Result := TTagNode.Create(FilterNode(myhtml_node_child(FNode),
-      FChildrenNodeFilter));
+    FChildrenNode := myhtml_node_child(FNode);
+    Result := TTagNode.Create(FilterNode(FChildrenNode, FChildrenNodeFilter));
     Result.FChildrenNodeFilter := AFilter;
   end else
     Result := TTagNode.Create(nil);
@@ -819,10 +815,10 @@ end;
 
 function TParser.TTagNode.NextChildrenNode: TTagNode;
 begin
-  if IsOk then
+  if FChildrenNode <> nil then
   begin
-    Result := TTagNode.Create(FilterNode(myhtml_node_next(FNode),
-      FChildrenNodeFilter));
+    FChildrenNode := myhtml_node_next(FChildrenNode);
+    Result := TTagNode.Create(FilterNode(FChildrenNode, FChildrenNodeFilter));
     Result.FChildrenNodeFilter := FChildrenNodeFilter;
   end else
     Result := TTagNode.Create(nil);
@@ -839,7 +835,7 @@ begin
     while Node.IsOk do
     begin
       ATransform.RunNodeCallback(Node);
-      Node := Node.NextChildrenNode;
+      Node := NextChildrenNode;
     end;
   end;
 
@@ -858,7 +854,7 @@ begin
     while Node.IsOk do
     begin
       Result.Add(Node);
-      Node := Node.NextChildrenNode;
+      Node := NextChildrenNode;
     end;
 
   end else

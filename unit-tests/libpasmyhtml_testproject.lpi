@@ -60,7 +60,6 @@
       <Unit6>
         <Filename Value="htmldocuments/myhtmlianaparse_document.inc"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="Unit1"/>
       </Unit6>
     </Units>
   </ProjectOptions>
