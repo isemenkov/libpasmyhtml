@@ -147,6 +147,29 @@ begin
         @TestDocumentParseEachNodesCallback, Pointer(ZoneList)));
 
   AssertTrue('Test each node children list', ZoneList.Count = 5);
+
+  AssertTrue('Test list element 0 name', ZoneList[0].Name = '.aaa');
+  AssertTrue('Test list element 0 info', ZoneList[0].Info = 'generic');
+  AssertTrue('Test list element 0 manager', ZoneList[0].Manager =
+    'American Automobile Association, Inc.');
+
+  AssertTrue('Test list element 1 name', ZoneList[1].Name = '.aarp');
+  AssertTrue('Test list element 1 info', ZoneList[1].Info = 'generic');
+  AssertTrue('Test list element 1 manager', ZoneList[1].Manager = 'AARP');
+
+  AssertTrue('Test list element 2 name', ZoneList[2].Name = '.abarth');
+  AssertTrue('Test list element 2 info', ZoneList[2].Info = 'generic');
+  AssertTrue('Test list element 2 manager', ZoneList[2].Manager =
+    'Fiat Chrysler Automobiles N.V.');
+
+  AssertTrue('Test list element 3 name', ZoneList[3].Name = '.abb');
+  AssertTrue('Test list element 3 info', ZoneList[3].Info = 'generic');
+  AssertTrue('Test list element 3 manager', ZoneList[3].Manager = 'ABB Ltd');
+
+  AssertTrue('Test list element 4 name', ZoneList[4].Name = '.abbott');
+  AssertTrue('Test list element 4 info', ZoneList[4].Info = 'generic');
+  AssertTrue('Test list element 4 manager', ZoneList[4].Manager =
+    'Abbott Laboratories, Inc.');
 end;
 
 procedure TMyHTMLParserIanaTestCase.TestDocumentParseEachNodesCallback(
@@ -158,9 +181,9 @@ begin
   AssertTrue('Test node tag type', ANode.Tag = TParser.TTag.MyHTML_TAG_TR);
 
   Zone := TZoneInfo.Create;
+
   Node := ANode.FirstChildrenNode(TParser.TFilter.Create.Tag(
     MyHTML_TAG_TD));
-
   AssertTrue('Test node children tag type', Node.Tag =
     TParser.TTag.MyHTML_TAG_TD);
 
@@ -172,10 +195,14 @@ begin
   Node := Node.NextNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TD));
   AssertTrue('Test node children tag type', Node.Tag =
     TParser.TTag.MyHTML_TAG_TD);
+
   Zone.Info := Node.Value;
 
-  Zone.Manager := Node.NextNode(TParser.TFilter.Create.Tag(
-    MyHTML_TAG_TD)).Value;
+  Node := Node.NextNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TD));
+  AssertTrue('Test node children tag type', Node.Tag =
+    TParser.TTag.MyHTML_TAG_TD);
+
+  Zone.Manager := Node.Value;
 
   TZoneInfoList(AData).Add(Zone);
 
