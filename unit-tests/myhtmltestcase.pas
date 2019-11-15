@@ -160,10 +160,22 @@ begin
   Zone := TZoneInfo.Create;
   Node := ANode.FirstChildrenNode(TParser.TFilter.Create.Tag(
     MyHTML_TAG_TD));
+
+  AssertTrue('Test node children tag type', Node.Tag =
+    TParser.TTag.MyHTML_TAG_TD);
+
   Zone.Name := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
     MyHTML_TAG_SPAN))
     .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_A))
     .Value;
+
+  Node := Node.NextNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TD));
+  AssertTrue('Test node children tag type', Node.Tag =
+    TParser.TTag.MyHTML_TAG_TD);
+  Zone.Info := Node.Value;
+
+  Zone.Manager := Node.NextNode(TParser.TFilter.Create.Tag(
+    MyHTML_TAG_TD)).Value;
 
   TZoneInfoList(AData).Add(Zone);
 

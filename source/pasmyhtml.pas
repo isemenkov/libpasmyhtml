@@ -187,16 +187,7 @@ type
       TTagNode = class
       private
         FNode : pmyhtml_tree_node_t;
-        FNodeFilter : TFilter;
-        FNodeTransform : TTransform;
-
-        FChildrenNode : pmyhtml_tree_node_t;
-        FChildrenNodeFilter : TFilter;
-        FChildrenNodeTransform : TTransform;
-
         FNodeAttribute : pmyhtml_tree_attr_t;
-        FNodeAttributeFilter : TFilter;
-        FNodeAttributeTransform : TTransform;
 
         { Apply AFilter to ANode element if it is. Return pmyhtml_tree_node_t if
           element find or nil }
@@ -225,7 +216,7 @@ type
 
         { If FirstNode AFilter is set apply it to try to find next element else
           return next node or nil if isn't }
-        function NextNode : TTagNode;
+        function NextNode (AFilter : TFilter = nil) : TTagNode;
 
         { For each node (if AFilter is present for filtered nodes, else for each
           nodes) apply ATransform callback. If ATransform isn't do nothing }
@@ -239,10 +230,6 @@ type
         { Return first filtered current node children. If AFilter isn't return
           first children node. If node not found return broken node }
         function FirstChildrenNode (AFilter : TFilter = nil) : TTagNode;
-
-        { Return next filtered children node. If node node fount return brken
-          node }
-        function NextChildrenNode : TTagNode;
 
         { For each filtered current node childrens applies ATransfrom callback.
           If ATransform isn't do nothing }
@@ -260,7 +247,8 @@ type
 
         { Return next node attribute appling FirstNodeAttribute AFilter if
           exists. If node attribute not exists return broken attribute }
-        function NextNodeAttribute : TTagNodeAttribute;
+        function NextNodeAttribute (AFilter : TFilter = nil) :
+          TTagNodeAttribute;
 
         { For each node node attribute (if AFilter is present for filtered
           attributes, else for each node attributes) apply ATransform callback.
@@ -722,17 +710,7 @@ end;
 constructor TParser.TTagNode.Create(ANode: pmyhtml_tree_node_t);
 begin
   FNode := ANode;
-  FChildrenNode := nil;
   FNodeAttribute := nil;
-
-  FNodeFilter := nil;
-  FNodeTransform := nil;
-
-  FChildrenNodeFilter := nil;
-  FChildrenNodeTransform := nil;
-
-  FNodeAttributeFilter := nil;
-  FNodeAttributeTransform := nil;
 end;
 
 destructor TParser.TTagNode.Destroy;
@@ -749,17 +727,16 @@ function TParser.TTagNode.FirstNode(AFilter: TFilter): TTagNode;
 begin
   if IsOk then
   begin
-    FNodeFilter := AFilter;
-    Result := TTagNode.Create(FilterNode(FNode, FNodeFilter));
+    Result := TTagNode.Create(FilterNode(FNode, AFilter));
   end else
     Result := TTagNode.Create(nil);
 end;
 
-function TParser.TTagNode.NextNode: TTagNode;
+function TParser.TTagNode.NextNode (AFilter : TFilter): TTagNode;
 begin
   if IsOk then
   begin
-    Result := TTagNode.Create(FilterNode(myhtml_node_next(FNode), FNodeFilter));
+    Result := TTagNode.Create(FilterNode(myhtml_node_next(FNode), AFilter));
   end else
     Result := TTagNode.Create(nil);
 end;
@@ -775,7 +752,7 @@ begin
     while Node.IsOk do
     begin
       ATransform.RunNodeCallback(Node);
-      Node := NextNode;
+      Node := Node.NextNode(AFilter);
     end;
   end;
 
@@ -794,7 +771,7 @@ begin
     while Node.IsOk do
     begin
       Result.Add(Node);
-      Node := NextNode;
+      Node := Node.NextNode(AFilter);
     end;
 
   end else
@@ -805,21 +782,7 @@ function TParser.TTagNode.FirstChildrenNode(AFilter: TFilter): TTagNode;
 begin
   if IsOk then
   begin
-    FChildrenNodeFilter := AFilter;
-    FChildrenNode := myhtml_node_child(FNode);
-    Result := TTagNode.Create(FilterNode(FChildrenNode, FChildrenNodeFilter));
-    Result.FChildrenNodeFilter := AFilter;
-  end else
-    Result := TTagNode.Create(nil);
-end;
-
-function TParser.TTagNode.NextChildrenNode: TTagNode;
-begin
-  if FChildrenNode <> nil then
-  begin
-    FChildrenNode := myhtml_node_next(FChildrenNode);
-    Result := TTagNode.Create(FilterNode(FChildrenNode, FChildrenNodeFilter));
-    Result.FChildrenNodeFilter := FChildrenNodeFilter;
+    Result := TTagNode.Create(FilterNode(myhtml_node_child(FNode), AFilter));
   end else
     Result := TTagNode.Create(nil);
 end;
@@ -835,10 +798,9 @@ begin
     while Node.IsOk do
     begin
       ATransform.RunNodeCallback(Node);
-      Node := NextChildrenNode;
+      Node := Node.NextNode(AFilter);
     end;
   end;
-
   Result := Self;
 end;
 
@@ -854,9 +816,8 @@ begin
     while Node.IsOk do
     begin
       Result.Add(Node);
-      Node := NextChildrenNode;
+      Node := Node.NextNode(AFilter);
     end;
-
   end else
     Result := TTagNodeList.Create;
 end;
@@ -866,20 +827,20 @@ function TParser.TTagNode.FirstNodeAttribute(AFilter: TFilter
 begin
  if IsOk then
  begin
-   FNodeAttributeFilter := AFilter;
    FNodeAttribute := myhtml_node_attribute_first(FNode);
    Result := TTagNodeAttribute.Create(FilterAttribute(FNodeAttribute,
-     FNodeAttributeFilter));
+     AFilter));
  end else
    Result := TTagNodeAttribute.Create(nil);
 end;
 
-function TParser.TTagNode.NextNodeAttribute: TTagNodeAttribute;
+function TParser.TTagNode.NextNodeAttribute (AFilter : TFilter):
+  TTagNodeAttribute;
 begin
   if FNodeAttribute <> nil then
   begin
     Result := TTagNodeAttribute.Create(FilterAttribute(
-      myhtml_attribute_next(FNodeAttribute), FNodeAttributeFilter));
+      myhtml_attribute_next(FNodeAttribute), AFilter));
   end else
     Result := TTagNodeAttribute.Create(nil);
 end;
@@ -895,10 +856,9 @@ begin
     while Attribute.IsOk do
     begin
       ATransform.RunNodeAttributeCallback(Attribute);
-      Attribute := NextNodeAttribute;
+      Attribute := NextNodeAttribute(AFilter);
     end;
   end;
-
   Result := Self;
 end;
 
@@ -915,9 +875,8 @@ begin
     while Attribute.IsOk do
     begin
       Result.Add(Attribute);
-      Attribute := NextNodeAttribute;
+      Attribute := NextNodeAttribute(AFilter);
     end;
-
   end else
     Result := TTagNodeAttributeList.Create;
 end;
