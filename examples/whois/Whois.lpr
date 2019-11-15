@@ -148,7 +148,7 @@ var
 begin
   FileStream := TFileStream.Create(ROOT_ZONES_CACHE_FILE, fmCreate or
     fmOpenWrite);
-  //FileStream.Seek(0, soFromBeginning);
+  FileStream.Seek(0, soFromBeginning);
 
   for Zone in ADomainZones do
     Zone.SaveToStream(FileStream);

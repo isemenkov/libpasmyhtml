@@ -293,10 +293,10 @@ begin
     .FirstChildrenNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_A))
     .Value;
 
-  Node := Node.NextChildrenNode;
+  Node := Node.NextNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TD));
 
 
-  Node := Node.NextChildrenNode;
+  Node := Node.NextNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TD));
   Zone.Manager := Node.Value;
 
   FDomainZones.Add(Zone);
