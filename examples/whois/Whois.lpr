@@ -57,9 +57,9 @@ type
 
     procedure ParseRootZonesCallback (var AResponse : TResponse);
     function SaveRootDomainZonesCache (ADomainZones :
-      TRootDomainZones.TDomainZonesList; AData : Pointer) : Boolean;
+      TRootDomainZones.TDomainZonesList; AData : Pointer = nil) : Boolean;
     function LoadRootDomainZonesCache (var ADomainZones :
-      TRootDomainZones.TDomainZonesList; AData : Pointer) : Boolean;
+      TRootDomainZones.TDomainZonesList; AData : Pointer = nil) : Boolean;
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -123,8 +123,10 @@ begin
 '(*                                                                            *)'+ sLineBreak +
 '(*                                                                            *)'+ sLineBreak +
 '(*                                                                            *)'+ sLineBreak +
-'(* Usage:                                                                     *)'+ sLineBreak +
+'(* Usage: whois <options>                                                     *)'+ sLineBreak +
 '(*   --force-parse-zones                Force to parse root domain zones      *)'+ sLineBreak +
+'(*   --parse-stats                                                            *)'+ sLineBreak +
+'(*   --domain-zones-list                                                      *)'+ sLineBreak +
 '(******************************************************************************)'
   );
 end;
@@ -173,14 +175,14 @@ begin
   if FileExists(ROOT_ZONES_CACHE_FILE) then
   begin
     FileStream := TFileStream.Create(ROOT_ZONES_CACHE_FILE, fmOpenRead);
-    Zone := TRootDomainZones.TDomainZoneInfo.Create;
 
     while FileStream.Position < FileStream.Size do
     begin
+      Zone := TRootDomainZones.TDomainZoneInfo.Create;
       Zone.LoadFromStream(FileStream);
       ADomainZones.Add(Zone);
     end;
-    FreeAndNil(Zone);
+
     FreeAndNil(FileStream);
 
     Result := True;
@@ -192,17 +194,22 @@ procedure TApplication.PrintRootZonesList;
 var
   RootZones : TRootDomainZones;
   Zone : TRootDomainZones.TDomainZoneInfo;
+  Index : Integer;
 begin
   RootZones := TRootDomainZones.Create(FSession, FParser);
   RootZones.LoadCallback(@LoadRootDomainZonesCache, nil);
 
-  writeln('Zones count : ':20, RootZones.DomainZones.Count);
+  writeln('Root domain zones count : ', RootZones.DomainZones.Count);
+  writeln('');
+
+  Index := 1;
   for Zone in RootZones.DomainZones do
   begin
-    writeln('Name : ': 20, Zone.Name);
-    writeln('Type : ': 20, Zone.TypeInfo);
-    writeln('Manager : ': 20, Zone.Manager);
+    writeln(IntToStr(Index) + '. Name : ':20, Zone.Name);
+    writeln('Type : ':20, Zone.TypeInfo);
+    writeln('Manager : ':20, Zone.Manager);
     writeln('');
+    Inc(Index);
   end;
 end;
 

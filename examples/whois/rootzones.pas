@@ -102,11 +102,14 @@ type
     FSaveCallbackData : Pointer;
 
     function GetDomainZonesList : TDomainZonesList; inline;
-    procedure ParseIanaOrg (ACallback : TParseDomainZoneCallback = nil);
-    procedure ParseIanaOrgCallback (ANode : TParser.TTagNode; AData : Pointer);
 
+    procedure ParseIanaOrg (ACallback : TParseDomainZoneCallback = nil);
+    procedure ParseIanaOrgCallback (ANode : TParser.TTagNode; AData : Pointer =
+      nil);
     procedure ParsePublicSuffixOrg (ACallback : TParseDomainZoneCallback = nil);
     procedure ParseWikipediaOrg (ACallback : TParseDomainZoneCallback = nil);
+
+    function ClearText (AString : string) : string; inline;
   public
     constructor Create (ASession : TSession; AParser : TParser);
     destructor Destroy; override;
@@ -290,13 +293,13 @@ begin
 
   Node := ANode.FirstChildrenNode(TParser.TFilter.Create.Tag(
     TParser.TTag.MyHTML_TAG_TD));
-  Zone.Name := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
+  Zone.Name := ClearText(Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
     TParser.TTag.MyHTML_TAG_SPAN))
     .FirstChildrenNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_A))
-    .Value;
+    .Value);
 
   Node := Node.NextNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TD));
-  case Node.Value of
+  case ClearText(Node.Value) of
     'generic' : Zone.TypeInfo := DOMAIN_GENERIC;
     'generic-restricted' : Zone.TypeInfo := DOMAIN_GENERIC_RESTRICTED;
     'country-code' : Zone.TypeInfo := DOMAIN_COUNTRY_CODE;
@@ -306,7 +309,7 @@ begin
   end;
 
   Node := Node.NextNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TD));
-  Zone.Manager := Node.Value;
+  Zone.Manager := ClearText(Node.Value);
 
   FDomainZones.Add(Zone);
 end;
@@ -321,6 +324,11 @@ procedure TRootDomainZones.ParseWikipediaOrg (ACallback :
   TParseDomainZoneCallback);
 begin
 
+end;
+
+function TRootDomainZones.ClearText(AString: string): string;
+begin
+  Result := AString;
 end;
 
 constructor TRootDomainZones.Create(ASession: TSession; AParser : TParser);
