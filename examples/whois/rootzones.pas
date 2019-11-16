@@ -101,6 +101,8 @@ type
     FSaveCallback : TSaveZonesListCallback;
     FSaveCallbackData : Pointer;
 
+    function ClearString (AString : string) : string; inline;
+
     function GetDomainZonesList : TDomainZonesList; inline;
 
     procedure ParseIanaOrg (ACallback : TParseDomainZoneCallback = nil);
@@ -108,8 +110,6 @@ type
       nil);
     procedure ParsePublicSuffixOrg (ACallback : TParseDomainZoneCallback = nil);
     procedure ParseWikipediaOrg (ACallback : TParseDomainZoneCallback = nil);
-
-    function ClearText (AString : string) : string; inline;
   public
     constructor Create (ASession : TSession; AParser : TParser);
     destructor Destroy; override;
@@ -219,6 +219,23 @@ begin
     FSaveCallback(FDomainZones, FSaveCallbackData);
 end;
 
+function TRootDomainZones.ClearString(AString: string): string;
+var
+  Index : SizeInt;
+begin
+  Result := AString;
+  for Index := Length(Result) downto 1 do
+  begin
+    { Delete controls symbols exclude space }
+    if (Ord(Result[Index]) <> Ord(' ')) and (Ord(Result[Index]) <= 32) then
+      Delete(Result, Index, 1);
+
+    { Delete multiple spaces }
+    if (Index >= 2) and (Result[Index] = ' ') and (Result[Index - 1] = ' ') then
+      Delete(Result, Index, 1);
+  end;
+end;
+
 function TRootDomainZones.GetDomainZonesList: TDomainZonesList;
 begin
   if FDomainZones.Count = 0 then
@@ -291,15 +308,25 @@ begin
     </tr>
   ... }
 
+  { ...
+    <td>
+      <span class="domain tld">
+        <a href="/domains/root/db/aaa.html">.aaa</a>
+      </span>
+    </td>
+  ... }
   Node := ANode.FirstChildrenNode(TParser.TFilter.Create.Tag(
     TParser.TTag.MyHTML_TAG_TD));
-  Zone.Name := ClearText(Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
+  Zone.Name := ClearString(Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
     TParser.TTag.MyHTML_TAG_SPAN))
     .FirstChildrenNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_A))
     .Value);
 
+  { ...
+    <td>generic</td>
+  ... }
   Node := Node.NextNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TD));
-  case ClearText(Node.Value) of
+  case ClearString(Node.Value) of
     'generic' : Zone.TypeInfo := DOMAIN_GENERIC;
     'generic-restricted' : Zone.TypeInfo := DOMAIN_GENERIC_RESTRICTED;
     'country-code' : Zone.TypeInfo := DOMAIN_COUNTRY_CODE;
@@ -308,27 +335,71 @@ begin
     Zone.TypeInfo := DOMAIN_UNKNOWN;
   end;
 
+  { ...
+    <td>American Automobile Association, Inc.</td>
+  ... }
   Node := Node.NextNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TD));
-  Zone.Manager := ClearText(Node.Value);
+  Zone.Manager := ClearString(Node.Value);
 
-  FDomainZones.Add(Zone);
+  if FDomainZones.IndexOf(Zone) = -1 then
+    FDomainZones.Add(Zone);
 end;
 
 procedure TRootDomainZones.ParsePublicSuffixOrg (ACallback :
   TParseDomainZoneCallback);
-begin
 
+  function ReadLine (var AString : string) : string;
+  var
+    Index : SizeInt;
+  begin
+    AString := TrimLeft(AString);
+    Index := Pos(sLineBreak, AString);
+
+    if Index <> 0 then
+    begin
+      Result := ClearString(Copy(AString, 0, Index));
+      AString := Copy(AString, Index, Length(AString) - Index +
+        Length(sLineBreak));
+    end else
+    begin
+      Result := ClearString(AString);
+      AString := '';
+    end;
+  end;
+
+var
+  ListString, LineString : string;
+  Zone : TDomainZoneInfo;
+begin
+  FSession.Url := PUBLICSUFFIX_ORG_URL;
+  FResponse := TResponse.Create(FSession);
+
+  ListString := FResponse.Content;
+  while ListString <> '' do
+  begin
+    LineString := ReadLine(ListString);
+    if (Length(LineString) >= 2) and (LineString[1] <> '/') and
+      (LineString[2] <> '/') then
+    begin
+      Zone := TDomainZoneInfo.Create;
+
+      Zone.Name := '.' + LineString;
+
+      if FDomainZones.IndexOf(Zone) = -1 then
+        FDomainZones.Add(Zone);
+    end;
+  end;
+
+  if Assigned(ACallback) then
+    ACallback(FResponse);
+
+  FreeAndNil(FResponse);
 end;
 
 procedure TRootDomainZones.ParseWikipediaOrg (ACallback :
   TParseDomainZoneCallback);
 begin
 
-end;
-
-function TRootDomainZones.ClearText(AString: string): string;
-begin
-  Result := AString;
 end;
 
 constructor TRootDomainZones.Create(ASession: TSession; AParser : TParser);

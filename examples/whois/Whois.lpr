@@ -108,29 +108,6 @@ begin
   Terminate;
 end;
 
-procedure TApplication.PrintHelp;
-begin
-  writeln(
-'(******************************************************************************)'+ sLineBreak +
-'(*                                libPasMyHTML                                *)'+ sLineBreak +
-'(*                object pascal wrapper around MyHTML library                 *)'+ sLineBreak +
-'(*                    https://github.com/lexborisov/myhtml                    *)'+ sLineBreak +
-'(*                                                                            *)'+ sLineBreak +
-'(* Copyright (c) 2019                                       Ivan Semenkov     *)'+ sLineBreak +
-'(* https://github.com/isemenkov/libpasmyhtml                ivan@semenkov.pro *)'+ sLineBreak +
-'(*                                                          Ukraine           *)'+ sLineBreak +
-'(******************************************************************************)'+ sLineBreak +
-'(*                                                                            *)'+ sLineBreak +
-'(*                                                                            *)'+ sLineBreak +
-'(*                                                                            *)'+ sLineBreak +
-'(* Usage: whois <options>                                                     *)'+ sLineBreak +
-'(*   --force-parse-zones                Force to parse root domain zones      *)'+ sLineBreak +
-'(*   --parse-stats                                                            *)'+ sLineBreak +
-'(*   --domain-zones-list                                                      *)'+ sLineBreak +
-'(******************************************************************************)'
-  );
-end;
-
 procedure TApplication.ParseRootZones;
 var
   RootZones : TRootDomainZones;
@@ -211,6 +188,29 @@ begin
     writeln('');
     Inc(Index);
   end;
+end;
+
+procedure TApplication.PrintHelp;
+begin
+  writeln(
+'(******************************************************************************)'+ sLineBreak +
+'(*                                libPasMyHTML                                *)'+ sLineBreak +
+'(*                object pascal wrapper around MyHTML library                 *)'+ sLineBreak +
+'(*                    https://github.com/lexborisov/myhtml                    *)'+ sLineBreak +
+'(*                                                                            *)'+ sLineBreak +
+'(* Copyright (c) 2019                                       Ivan Semenkov     *)'+ sLineBreak +
+'(* https://github.com/isemenkov/libpasmyhtml                ivan@semenkov.pro *)'+ sLineBreak +
+'(*                                                          Ukraine           *)'+ sLineBreak +
+'(******************************************************************************)'+ sLineBreak +
+'(*                                                                            *)'+ sLineBreak +
+'(*                                                                            *)'+ sLineBreak +
+'(*                                                                            *)'+ sLineBreak +
+'(* Usage: whois <options>                                                     *)'+ sLineBreak +
+'(*   --force-parse-zones                Force to parse root domain zones      *)'+ sLineBreak +
+'(*   --parse-stats                                                            *)'+ sLineBreak +
+'(*   --domain-zones-list                                                      *)'+ sLineBreak +
+'(******************************************************************************)'
+  );
 end;
 
 constructor TApplication.Create(TheOwner: TComponent);
