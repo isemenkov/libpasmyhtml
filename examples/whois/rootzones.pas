@@ -55,6 +55,7 @@ type
 
     type
       TDomainZoneType = (
+        DOMAIN_UNKNOWN,
         DOMAIN_GENERIC,
         DOMAIN_GENERIC_RESTRICTED,
         DOMAIN_COUNTRY_CODE,
@@ -189,7 +190,6 @@ begin
     FLoadCallback := ACallback;
     FLoadCallbackData := AData;
   end;
-
   Result := Self;
 end;
 
@@ -201,7 +201,6 @@ begin
     FSaveCallback := ACallback;
     FSaveCallbackData := AData;
   end;
-
   Result := Self;
 end;
 
@@ -219,6 +218,9 @@ end;
 
 function TRootDomainZones.GetDomainZonesList: TDomainZonesList;
 begin
+  if FDomainZones.Count = 0 then
+    LoadDomainZones;
+
   Result := FDomainZones;
 end;
 
@@ -294,7 +296,14 @@ begin
     .Value;
 
   Node := Node.NextNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TD));
-
+  case Node.Value of
+    'generic' : Zone.TypeInfo := DOMAIN_GENERIC;
+    'generic-restricted' : Zone.TypeInfo := DOMAIN_GENERIC_RESTRICTED;
+    'country-code' : Zone.TypeInfo := DOMAIN_COUNTRY_CODE;
+    'sponsored' : Zone.TypeInfo := DOMAIN_SPONSORED;
+  else
+    Zone.TypeInfo := DOMAIN_UNKNOWN;
+  end;
 
   Node := Node.NextNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TD));
   Zone.Manager := Node.Value;
@@ -358,7 +367,7 @@ begin
 end;
 
 procedure TRootDomainZones.ParseDomainZones (ACallback :
-  TParseDomainZoneCallback = nil);
+  TParseDomainZoneCallback);
 begin
   ParseIanaOrg (ACallback);
   ParsePublicSuffixOrg (ACallback);

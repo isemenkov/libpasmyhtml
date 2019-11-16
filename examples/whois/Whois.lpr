@@ -50,12 +50,16 @@ type
     FParser : TParser;
   protected
     procedure DoRun; override;
-    procedure PrintHeader;
     procedure PrintHelp;
 
     procedure ParseRootZones;
-    procedure SaveRootDomainZonesCache (ADomainZones :
-      TRootDomainZones.TDomainZonesList);
+    procedure PrintRootZonesList;
+
+    procedure ParseRootZonesCallback (var AResponse : TResponse);
+    function SaveRootDomainZonesCache (ADomainZones :
+      TRootDomainZones.TDomainZonesList; AData : Pointer) : Boolean;
+    function LoadRootDomainZonesCache (var ADomainZones :
+      TRootDomainZones.TDomainZonesList; AData : Pointer) : Boolean;
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -74,7 +78,8 @@ var
   ErrorMsg: String;
   NonOptions : TStringList;
   ShortOptions : string = 'h';
-  LongOptions : array [1..2] of string = ('help', 'force-parse-zones');
+  LongOptions : array [1..4] of string = ('help', 'force-parse-zones',
+    'parse-stats', 'domain-zones-list');
 begin
   ErrorMsg:=CheckOptions(ShortOptions, LongOptions);
   if ErrorMsg<>'' then begin
@@ -83,13 +88,14 @@ begin
     Exit;
   end;
 
-  PrintHeader;
-
   if HasOption('h', 'help') then
     PrintHelp;
 
   if HasOption('force-parse-zones') then
     ParseRootZones;
+
+  if HasOption('domain-zones-list') then
+    PrintRootZonesList;
 
   NonOptions := TStringList.Create;
   GetNonOptions(ShortOptions, LongOptions, NonOptions);
@@ -102,7 +108,7 @@ begin
   Terminate;
 end;
 
-procedure TApplication.PrintHeader;
+procedure TApplication.PrintHelp;
 begin
   writeln(
 '(******************************************************************************)'+ sLineBreak +
@@ -111,21 +117,14 @@ begin
 '(*                    https://github.com/lexborisov/myhtml                    *)'+ sLineBreak +
 '(*                                                                            *)'+ sLineBreak +
 '(* Copyright (c) 2019                                       Ivan Semenkov     *)'+ sLineBreak +
-'(* https://github.com/isemenkov/libpascurl                  ivan@semenkov.pro *)'+ sLineBreak +
+'(* https://github.com/isemenkov/libpasmyhtml                ivan@semenkov.pro *)'+ sLineBreak +
 '(*                                                          Ukraine           *)'+ sLineBreak +
-'(******************************************************************************)'
-  );
-end;
-
-procedure TApplication.PrintHelp;
-begin
-  writeln(
 '(******************************************************************************)'+ sLineBreak +
 '(*                                                                            *)'+ sLineBreak +
 '(*                                                                            *)'+ sLineBreak +
 '(*                                                                            *)'+ sLineBreak +
 '(* Usage:                                                                     *)'+ sLineBreak +
-'(*                                                                            *)'+ sLineBreak +
+'(*   --force-parse-zones                Force to parse root domain zones      *)'+ sLineBreak +
 '(******************************************************************************)'
   );
 end;
@@ -135,13 +134,21 @@ var
   RootZones : TRootDomainZones;
 begin
   RootZones := TRootDomainZones.Create(FSession, FParser);
-  RootZones.ParseDomainZones;
-  SaveRootDomainZonesCache(RootZones.DomainZones);
+  RootZones.ParseDomainZones(@ParseRootZonesCallback);
+  SaveRootDomainZonesCache(RootZones.DomainZones, nil);
   FreeAndNil(RootZones);
 end;
 
-procedure TApplication.SaveRootDomainZonesCache (ADomainZones :
-  TRootDomainZones.TDomainZonesList);
+procedure TApplication.ParseRootZonesCallback(var AResponse: TResponse);
+begin
+  if HasOption('parse-stats') then
+  begin
+    writeln('Total parse time : ':20, AResponse.TotalTime.ToString);
+  end;
+end;
+
+function TApplication.SaveRootDomainZonesCache (ADomainZones:
+  TRootDomainZones.TDomainZonesList; AData : Pointer) : Boolean;
 var
   Zone : TRootDomainZones.TDomainZoneInfo;
   FileStream : TFileStream;
@@ -154,6 +161,49 @@ begin
     Zone.SaveToStream(FileStream);
 
   FreeAndNil(FileStream);
+  Result := True;
+end;
+
+function TApplication.LoadRootDomainZonesCache (var ADomainZones:
+  TRootDomainZones.TDomainZonesList; AData : Pointer) : Boolean;
+var
+  Zone : TRootDomainZones.TDomainZoneInfo;
+  FileStream : TFileStream;
+begin
+  if FileExists(ROOT_ZONES_CACHE_FILE) then
+  begin
+    FileStream := TFileStream.Create(ROOT_ZONES_CACHE_FILE, fmOpenRead);
+    Zone := TRootDomainZones.TDomainZoneInfo.Create;
+
+    while FileStream.Position < FileStream.Size do
+    begin
+      Zone.LoadFromStream(FileStream);
+      ADomainZones.Add(Zone);
+    end;
+    FreeAndNil(Zone);
+    FreeAndNil(FileStream);
+
+    Result := True;
+  end else
+    Result := False;
+end;
+
+procedure TApplication.PrintRootZonesList;
+var
+  RootZones : TRootDomainZones;
+  Zone : TRootDomainZones.TDomainZoneInfo;
+begin
+  RootZones := TRootDomainZones.Create(FSession, FParser);
+  RootZones.LoadCallback(@LoadRootDomainZonesCache, nil);
+
+  writeln('Zones count : ':20, RootZones.DomainZones.Count);
+  for Zone in RootZones.DomainZones do
+  begin
+    writeln('Name : ': 20, Zone.Name);
+    writeln('Type : ': 20, Zone.TypeInfo);
+    writeln('Manager : ': 20, Zone.Manager);
+    writeln('');
+  end;
 end;
 
 constructor TApplication.Create(TheOwner: TComponent);
