@@ -80,7 +80,7 @@ type
         procedure SaveToStream (AStream : TStream);
       end;
 
-      TDomainZonesList = specialize TFPGList<TDomainZoneInfo>;
+      TDomainZonesList = specialize TFPGMap<string, TDomainZoneInfo>;
 
       TLoadZonesListCallback = function (var AList : TDomainZonesList;
         AData : Pointer) : Boolean of object;
@@ -292,26 +292,14 @@ procedure TRootDomainZones.ParseIanaOrgCallback(ANode: TParser.TTagNode;
   AData: Pointer);
 var
   Node : TParser.TTagNode;
-  Zone : TDomainZoneInfo;
+  Zone, ListValue : TDomainZoneInfo;
 begin
   Zone := TDomainZoneInfo.Create;
 
   { ...
-    <tr>
-      <td>
-        <span class="domain tld">
-          <a href="/domains/root/db/aaa.html">.aaa</a>  [<-- Zone.Name]
-        </span>
-      </td>
-      <td>generic</td>                                  [<-- Zone.TypeInfo]
-      <td>American Automobile Association, Inc.</td>    [<-- Zone.Manager]
-    </tr>
-  ... }
-
-  { ...
     <td>
       <span class="domain tld">
-        <a href="/domains/root/db/aaa.html">.aaa</a>
+        <a href="/domains/root/db/aaa.html">.aaa</a>    [<-- Zone.Name]
       </span>
     </td>
   ... }
@@ -323,7 +311,7 @@ begin
     .Value);
 
   { ...
-    <td>generic</td>
+    <td>generic</td>                                    [<-- Zone.TypeInfo]
   ... }
   Node := Node.NextNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TD));
   case ClearString(Node.Value) of
@@ -336,13 +324,35 @@ begin
   end;
 
   { ...
-    <td>American Automobile Association, Inc.</td>
+    <td>American Automobile Association, Inc.</td>      [<-- Zone.Manager]
   ... }
   Node := Node.NextNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TD));
   Zone.Manager := ClearString(Node.Value);
 
-  if FDomainZones.IndexOf(Zone) = -1 then
-    FDomainZones.Add(Zone);
+  if FDomainZones.IndexOf(Zone.Name) = -1 then
+  begin
+    FDomainZones.Add(Zone.Name, Zone)
+  end else begin
+    ListValue := FDomainZones.Data[FDomainZones.IndexOf(Zone.Name)];
+
+    if (Zone.TypeInfo = DOMAIN_UNKNOWN) and (ListValue.TypeInfo <>
+      DOMAIN_UNKNOWN) then
+      Zone.TypeInfo := ListValue.TypeInfo;
+    if ListValue.DNSName <> '' then
+      Zone.DNSName := ListValue.DNSName;
+    if ListValue.Entity <> '' then
+      Zone.Entity := ListValue.Entity;
+    if ListValue.IconPath <> '' then
+      Zone.IconPath := ListValue.IconPath;
+    if (Zone.Manager = '') and (ListValue.Manager <> '') then
+      Zone.Manager := ListValue.Manager;
+    if ListValue.Note <> '' then
+      Zone.Note := ListValue.Note;
+    if ListValue.Language <> '' then
+      Zone.Language := ListValue.Language;
+
+    FDomainZones.Add(Zone.Name, Zone);
+  end;
 end;
 
 procedure TRootDomainZones.ParsePublicSuffixOrg (ACallback :
@@ -369,7 +379,7 @@ procedure TRootDomainZones.ParsePublicSuffixOrg (ACallback :
 
 var
   ListString, LineString : string;
-  Zone : TDomainZoneInfo;
+  Zone, ListValue : TDomainZoneInfo;
 begin
   FSession.Url := PUBLICSUFFIX_ORG_URL;
   FResponse := TResponse.Create(FSession);
@@ -383,10 +393,39 @@ begin
     begin
       Zone := TDomainZoneInfo.Create;
 
-      Zone.Name := '.' + LineString;
+      if LineString[1] = '!' then
+        Delete(LineString, 1, 1);
 
-      if FDomainZones.IndexOf(Zone) = -1 then
-        FDomainZones.Add(Zone);
+      if LineString[1] = '*' then
+        Delete(LineString, 1, 2);
+
+      Zone.Name := '.' + LineString;
+      Zone.TypeInfo := DOMAIN_UNKNOWN;
+
+      if FDomainZones.IndexOf(Zone.Name) = -1 then
+      begin
+        FDomainZones.Add(Zone.Name, Zone);
+      end else
+      begin
+        ListValue := FDomainZones.Data[FDomainZones.IndexOf(Zone.Name)];
+
+        if ListValue.TypeInfo <> DOMAIN_UNKNOWN then
+          Zone.TypeInfo := ListValue.TypeInfo;
+        if ListValue.DNSName <> '' then
+          Zone.DNSName := ListValue.DNSName;
+        if ListValue.Entity <> '' then
+          Zone.Entity := ListValue.Entity;
+        if ListValue.IconPath <> '' then
+          Zone.IconPath := ListValue.IconPath;
+        if ListValue.Manager <> '' then
+          Zone.Manager := ListValue.Manager;
+        if ListValue.Note <> '' then
+          Zone.Note := ListValue.Note;
+        if ListValue.Language <> '' then
+          Zone.Language := ListValue.Language;
+
+        FDomainZones.Add(Zone.Name, Zone);
+      end;
     end;
   end;
 
@@ -398,7 +437,162 @@ end;
 
 procedure TRootDomainZones.ParseWikipediaOrg (ACallback :
   TParseDomainZoneCallback);
+var
+  TreeChunk : TParser.TTagNode;
 begin
+  FSession.Url := WIKIPEDIA_ORG_URL;
+  FResponse := TResponse.Create(FSession);
+
+  { ...
+    <body>
+    ...
+      <div id="content" ...>
+      ...
+        <div id="bodyContent ...>
+        ...
+          <div id="mw-content-text" ...>
+          ...
+            <div class="mw-parser-output">
+              <table class="wikitable sortable jquery-tablesorter">
+                ...
+                <tbody>
+                  <tr>
+                    <td>
+                      <a href="/wiki/.com" title=".com">.com</a> [<-- Zone.Name]
+                    </td>
+                    <td>commercial</td>                          [<-- Zone.Type]
+                    <td>
+                      <a href="/wiki/Verisign" title="Verisign">Verisign</a>
+                      [<-- Zone.Manager]
+                    </td>
+                    <td>
+                      This is an open TLD; any person or entity is permitted to
+                      register. Though originally intended for use by for-profit
+                      business entities, for a number of reasons it became the
+                      "main" TLD for domain names and is currently used by all
+                      types of entities including nonprofits, schools, and
+                      private individuals. Domain name registrations may be
+                      successfully challenged if the holder cannot prove an
+                      outside relation justifying reservation of the name,
+                        <sup class="noprint Inline-Template Template-Fact">
+                          [
+                            <i><a href="/wiki/Wikipedia:Citation_needed" title=
+                              "Wikipedia:Citation needed"><span title="This
+                              claim needs references to reliable sources.
+                              (September 2016)">citation needed</span></a></i>
+                          ]
+                        </sup>
+                      to prevent "
+                        <a href="/wiki/Cybersquatting" title="Cybersquatting">
+                          squatting</a>". It was originally administered by the
+                        <a href="/wiki/United_States_Department_of_Defense"
+                        title="United States Department of Defense">United
+                        States Department of Defense</a>.
+                        [<-- Zone.Notes]
+                    <td>
+                    <td class="table-yes"> ... </td>
+                    <td class="table-yes"> ... </td>
+                    <td class="table-yes"> ... </td>
+                    <td class="table-yes"> ... </td>
+                  </tr>
+                  ...
+                </tbody>
+              </table>
+              ...
+              <table class="wikitable">
+                <tbody>
+                  <tr style="..."> ... </tr>
+                  <tr>
+                    <td>
+                      <a href="/wiki/.arpa" title=".arpa">.arpa</a>
+                      [<-- Zone.Name]
+                    </td>
+                    <td>"Address and Routing Parameter Area"</td>
+                    [<-- Zone.Entity]
+                    <td>
+                      Originally assigned to the
+                      <a class="mw-redirect" href="/wiki/Advanced_Research_
+                        Project_Agency" title="Advanced Research Project Agency"
+                      >Advanced Research Project Agency</a>
+                      in the early days on the Internet, .arpa is now
+                      exclusively used as on
+                      <a class="mw-redirect" href="/wiki/Infrastructure_top-
+                        level_domain" title="Infrastructure top-level domain">
+                        Internet infrastructure TLD</a>
+                      .
+                    [<-- Zone.Notes]
+                    </td>
+                    <td class="table-no"> ... </td>
+                    <td class="table-yes"> ... </td>
+                  </tr>
+                </tbody>
+              </table>
+              ...
+              <table> ... </table>
+              ...
+              <table class="wikitable sortable jquery-tablesorter">
+                ...
+                <tbody>
+                  <tr>
+                    <td>
+                      <a href="/wiki/.ac" title=".ac">.ac</a>    [<-- Zone.Name]
+                    </td>
+                    <td>
+                      <span class="flagicon">
+                        <img class="thumbborder" alt="" src="//upload.wikimedia.
+                          org/wikipedia/commons/thumb/6/65/Flag_of_Ascension_
+                          Island.svg/23px-Flag_of_Ascension_Island.svg.png"
+                          decoding="async" srcset="//upload.wikimedia.org/
+                          wikipedia/commons/thumb/6/65/Flag_of_Ascension_
+                          Island.svg/35px-Flag_of_Ascension_Island.svg.png 1.5x,
+                          //upload.wikimedia.org/wikipedia/commons/thumb/6/65/
+                          Flag_of_Ascension_Island.svg/46px-Flag_of_Ascension_
+                          Island.svg.png 2x" data-file-width="1000"
+                          data-file-height="500" width="23" height="12">?
+                                                             [<-- Zone.IconPath]
+                      </span>
+                      <a href="/wiki/Ascension_Island" title="Ascension Island">
+                        Ascension Island</a>                   [<-- Zone.Entity]
+                    </td>
+                    <td></td>
+                    <td>
+                      Commonly used for academic websites, such as universities.
+                      However, .ac is not to be confused with the official
+                      academic domains used by several countries such as the
+                      <a href="/wiki/United_Kingdom" title="United Kingdom">
+                        United Kingdom</a>
+                      (
+                      <a class="mw-redirect" href="/wiki/.ac.uk" title=".ac.uk"
+                      .ac.uk</a>
+                      ),
+                      <a href="/wiki/India" title="India">India</a>
+                      (
+                      <a class="mw-redirect" href="/wiki/.ac.in" title=".ac.in">
+                      .ac.in</a>
+                      ) or
+                      <a href="/wiki/Indonesia" title="Indonesia">Indonesia</a>
+                      (
+                      <a class="mw-redirect" href="/wiki/.ac.id" title=".ac.id">
+                      .ac.id</a>
+                      ). Also used in the accounting, consulting, and
+                      air-conditioning industries.              [<-- Zone.Notes]
+                    </td>
+                    <td class="table-yes"> ... </td>
+                    <td></td>
+                    <td class="table-yes> ... </td>
+                    <td class="table-no> ... </td>
+                  </tr>
+                  <tr>
+                    ...
+                  </tr>
+                </tbody>
+                ...
+              </table>
+              ...
+  ... }
+
+  TreeChunk : FParser.Parse(FResponse.Content,
+    TParser.TDocumentParseFrom.DOCUMENT_BODY);
 
 end;
 
@@ -426,30 +620,46 @@ begin
 end;
 
 function TRootDomainZones.ExtractDomainZone(AURL: string): TDomainZoneInfo;
+var
+  Zone : TDomainZoneInfo;
+  Index : SizeInt;
 begin
-  Result := TDomainZoneInfo.Create;
-
   if FDomainZones.Count > 0 then
   begin
+    Index := Pos('://', AURL);
+    if Index <> 0 then
+    begin
+      AURL := Copy(AURL, Index + 3, Length(AURL) - Index + 3);
+    end;
 
-  end;
+
+  end else
+    Result := TDomainZoneInfo.Create;
 end;
 
 function TRootDomainZones.GetDomainZoneInfo(AZone: string): TDomainZoneInfo;
+var
+  Zone : TDomainZoneInfo;
+  Index : Integer;
 begin
-  Result := TDomainZoneInfo.Create;
-
   if FDomainZones.Count > 0 then
   begin
+    for Index := 0 to FDomainZones.Count - 1 do
+      begin
+        if AZone[1] <> '.' then
+          AZone := '.' + AZone;
 
-  end;
+
+      end;
+  end else
+    Result := TDomainZoneInfo.Create;
 end;
 
 procedure TRootDomainZones.ParseDomainZones (ACallback :
   TParseDomainZoneCallback);
 begin
-  ParseIanaOrg (ACallback);
   ParsePublicSuffixOrg (ACallback);
+  ParseIanaOrg (ACallback);
   ParseWikipediaOrg (ACallback);
 end;
 

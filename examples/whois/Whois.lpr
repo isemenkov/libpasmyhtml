@@ -131,13 +131,17 @@ function TApplication.SaveRootDomainZonesCache (ADomainZones:
 var
   Zone : TRootDomainZones.TDomainZoneInfo;
   FileStream : TFileStream;
+  Index : Integer;
 begin
   FileStream := TFileStream.Create(ROOT_ZONES_CACHE_FILE, fmCreate or
     fmOpenWrite);
   FileStream.Seek(0, soFromBeginning);
 
-  for Zone in ADomainZones do
+  for Index := 0 to ADomainZones.Count - 1 do
+  begin
+    Zone := ADomainZones.Data[Index];
     Zone.SaveToStream(FileStream);
+  end;
 
   FreeAndNil(FileStream);
   Result := True;
@@ -157,7 +161,7 @@ begin
     begin
       Zone := TRootDomainZones.TDomainZoneInfo.Create;
       Zone.LoadFromStream(FileStream);
-      ADomainZones.Add(Zone);
+      ADomainZones.Add(Zone.Name, Zone);
     end;
 
     FreeAndNil(FileStream);
@@ -179,14 +183,18 @@ begin
   writeln('Root domain zones count : ', RootZones.DomainZones.Count);
   writeln('');
 
-  Index := 1;
-  for Zone in RootZones.DomainZones do
+  for Index := 0 to RootZones.DomainZones.Count - 1 do
   begin
-    writeln(IntToStr(Index) + '. Name : ':20, Zone.Name);
-    writeln('Type : ':20, Zone.TypeInfo);
-    writeln('Manager : ':20, Zone.Manager);
+    Zone := RootZones.DomainZones.Data[Index];
+    writeln(IntToStr(Index + 1) + '. Name : ':20, Zone.Name);
+
+    if Zone.TypeInfo <> DOMAIN_UNKNOWN then
+      writeln('Type : ':20, Zone.TypeInfo);
+
+    if Zone.Manager <> '' then
+      writeln('Manager : ':20, Zone.Manager);
+
     writeln('');
-    Inc(Index);
   end;
 end;
 
