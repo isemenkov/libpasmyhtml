@@ -391,7 +391,7 @@ var
 begin
   Description := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
     .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_META)
-      .AttributeKey('name').AttributeValue('description'))
+      .AttributeKeyValue('name', 'description'))
     .FirstNodeAttribute(TParser.TFilter.Create.AttributeKey('content'))
     .Value;
 
