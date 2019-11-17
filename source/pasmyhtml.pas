@@ -118,7 +118,7 @@ type
 
           { TTagNodeCallback }
 
-          TTagNodeCallback = class (IFilter)
+          TTagNodeEqualCallback = class (IFilter)
           private
             FCallback : TTagNodeFilterCallback;
             FData : Pointer;
@@ -163,11 +163,65 @@ type
             destructor Destroy; override;
           end;
 
+          { TTagNodeAttrbuteEqualCallback }
+
+          TTagNodeAttrbuteEqualCallback = class (IFilter)
+          private
+            FTagNodeAttributeCallback : TTagNodeAttributeFilterCallback;
+            FTagNodeAttributeData : Pointer;
+          protected
+            function IsEqual ({%H-}ANode : pmyhtml_tree_node_t) : Boolean;
+              override; overload;
+            function IsEqual (ANodeAttribute : pmyhtml_tree_attr_t) : Boolean;
+              override; overload;
+          public
+            constructor Create (ACallback : TTagNodeAttributeFilterCallback;
+              AData : Pointer);
+            destructor Destroy; override;
+          end;
+
+          { TContainsAttributeOnlyValue }
+
+          TContainsAttributeOnlyValue = class (IFilter)
+          private
+            FKey : string;
+            FValue : string;
+          protected
+            function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; override;
+              overload;
+            function IsEqual ({%H-}ANodeAttribute : pmyhtml_tree_attr_t) :
+              Boolean; override; overload;
+          public
+            constructor Create (AKey : string; AValue : string);
+            destructor Destroy; override;
+          end;
+
+          { TContainsAttributeAllValues }
+
+          TContainsAttributeAllValues = class (IFilter)
+          private
+            FKey : string;
+            FTagNodeAttributeValueList : TStringList;
+          protected
+            function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean;
+              override; overload;
+            function IsEqual ({%H-}ANodeAttribute : pmyhtml_tree_attr_t) :
+              Boolean; override; overload;
+          public
+            constructor Create (AKey : string; AValueList : string); overload;
+            constructor Create (AKey : string; AValueList : TStringList);
+              overload;
+            destructor Destroy; override;
+          end;
+
+
+
+
       private
         type
           TFiltersList = specialize TFPGObjectList<IFilter>;
       private
-        FiltersList : TFiltersList;
+        FFiltersList : TFiltersList;
 
         FTag : myhtml_tags_t;
 
@@ -271,7 +325,7 @@ type
         { Apply AFilter to ANode element if it is. Return pmyhtml_tree_node_t if
           element find or nil }
         function FilterNode (ANode : pmyhtml_tree_node_t; AFilter : TFilter) :
-          pmyhtml_tree_node_t; inline;
+          pmyhtml_tree_node_t;
 
         { Apply AFilter to AAttribute if it is. Return filtered
           pmyhtml_tree_attr_t element if find or nil }
@@ -409,6 +463,132 @@ type
 
 implementation
 
+{ TParser.TFilter.TContainsAttributeAllValues }
+
+function TParser.TFilter.TContainsAttributeAllValues.IsEqual(ANode:
+  pmyhtml_tree_node_t): Boolean;
+var
+  NodeAttr : pmyhtml_tree_attr_t;
+  ValueList : TStringList;
+  Value : string;
+begin
+  if FTagNodeAttributeValueList.Count > 0 then
+  begin
+    NodeAttr := myhtml_node_attribute_first(ANode);
+
+    while (NodeAttr <> nil) and ((not (myhtml_attribute_key(NodeAttr, nil) =
+      FKey))) do
+      NodeAttr := myhtml_attribute_next(NodeAttr);
+
+    ValueList := TTagNodeAttribute.StringTokenize(myhtml_attribute_value(
+      NodeAttr, nil));
+    if ValueList.Count >= FTagNodeAttributeValueList.Count then
+    begin
+      Result := True;
+      for Value in FTagNodeAttributeValueList do
+      begin
+        if ValueList.IndexOf(Value) = -1 then
+        begin
+          Result := False;
+          Break;
+        end;
+      end;
+    end else
+      Result := False;
+  end else
+    Result := True;
+end;
+
+function TParser.TFilter.TContainsAttributeAllValues.IsEqual(
+  ANodeAttribute: pmyhtml_tree_attr_t): Boolean;
+begin
+  Result := True; { not filtering by attribute }
+end;
+
+constructor TParser.TFilter.TContainsAttributeAllValues.Create(AKey : string;
+  AValueList: string);
+begin
+  FKey := AKey;
+  FTagNodeAttributeValueList := TTagNodeAttribute.StringTokenize(AValueList);
+end;
+
+constructor TParser.TFilter.TContainsAttributeAllValues.Create(AKey : string;
+  AValueList: TStringList);
+begin
+  FKey := AKey;
+  FTagNodeAttributeValueList := AValueList;
+end;
+
+destructor TParser.TFilter.TContainsAttributeAllValues.Destroy;
+begin
+  inherited Destroy;
+end;
+
+{ TParser.TFilter.TContainsAttributeOnlyValue }
+
+function TParser.TFilter.TContainsAttributeOnlyValue.IsEqual(ANode:
+  pmyhtml_tree_node_t): Boolean;
+var
+  NodeAttr : pmyhtml_tree_attr_t;
+begin
+  if FValue <> '' then
+  begin
+    NodeAttr := myhtml_node_attribute_first(ANode);
+
+    while (NodeAttr <> nil) and ((not (myhtml_attribute_key(NodeAttr, nil) =
+      FKey)) and (not (myhtml_attribute_value(NodeAttr, nil) = FValue))) do
+      NodeAttr := myhtml_attribute_next(NodeAttr);
+
+    Result := NodeAttr <> nil;
+  end else
+    Result := True;
+end;
+
+function TParser.TFilter.TContainsAttributeOnlyValue.IsEqual(
+  ANodeAttribute: pmyhtml_tree_attr_t): Boolean;
+begin
+  Result := True; { not filtering by attribute }
+end;
+
+constructor TParser.TFilter.TContainsAttributeOnlyValue.Create(AKey : string;
+  AValue: string);
+begin
+  FKey := AKey;
+  FValue := AValue;
+end;
+
+destructor TParser.TFilter.TContainsAttributeOnlyValue.Destroy;
+begin
+  inherited Destroy;
+end;
+
+{ TParser.TFilter.TTagNodeAttrbuteEqualCallback }
+
+function TParser.TFilter.TTagNodeAttrbuteEqualCallback.IsEqual(
+  ANode: pmyhtml_tree_node_t): Boolean;
+begin
+  Result := True; { not filtering by node }
+end;
+
+function TParser.TFilter.TTagNodeAttrbuteEqualCallback.IsEqual(
+  ANodeAttribute: pmyhtml_tree_attr_t): Boolean;
+begin
+  Result := FTagNodeAttributeCallback(TTagNodeAttribute.Create(ANodeAttribute),
+    FTagNodeAttributeData);
+end;
+
+constructor TParser.TFilter.TTagNodeAttrbuteEqualCallback.Create(
+  ACallback: TTagNodeAttributeFilterCallback; AData: Pointer);
+begin
+  FTagNodeAttributeCallback := ACallback;
+  FTagNodeAttributeData := AData;
+end;
+
+destructor TParser.TFilter.TTagNodeAttrbuteEqualCallback.Destroy;
+begin
+  inherited Destroy;
+end;
+
 { TParser.TFilter.TTagNodeAttributeValueEqual }
 
 function TParser.TFilter.TTagNodeAttributeValueEqual.IsEqual(
@@ -420,8 +600,8 @@ end;
 function TParser.TFilter.TTagNodeAttributeValueEqual.IsEqual(
   ANodeAttribute: pmyhtml_tree_attr_t): Boolean;
 begin
-  Result := (myhtml_attribute_value(ANodeAttribute, nil) =
-    FTagNodeAttributeValue);
+  Result := (ANodeAttribute <> nil) and (myhtml_attribute_value(ANodeAttribute,
+    nil) = FTagNodeAttributeValue);
 end;
 
 constructor TParser.TFilter.TTagNodeAttributeValueEqual.Create(AValue: string);
@@ -445,7 +625,8 @@ end;
 function TParser.TFilter.TTagNodeAttributeKeyEqual.IsEqual(
   ANodeAttribute: pmyhtml_tree_attr_t): Boolean;
 begin
-  Result := (myhtml_attribute_key(ANodeAttribute, nil) = FTagNodeAttributeKey);
+  Result := (ANodeAttribute <> nil) and (myhtml_attribute_key(ANodeAttribute,
+    nil) = FTagNodeAttributeKey);
 end;
 
 constructor TParser.TFilter.TTagNodeAttributeKeyEqual.Create(AKey : string);
@@ -460,8 +641,8 @@ end;
 
 { TParser.TFilter.TTagNodeCallback }
 
-function TParser.TFilter.TTagNodeCallback.IsEqual(ANode: pmyhtml_tree_node_t
-  ): Boolean;
+function TParser.TFilter.TTagNodeEqualCallback.IsEqual(ANode:
+  pmyhtml_tree_node_t): Boolean;
 begin
   if Assigned(FCallback) then
     Result := FCallback(TTagNode.Create(ANode), FData)
@@ -469,20 +650,20 @@ begin
     Result := False;
 end;
 
-function TParser.TFilter.TTagNodeCallback.IsEqual(
+function TParser.TFilter.TTagNodeEqualCallback.IsEqual(
   ANodeAttribute: pmyhtml_tree_attr_t): Boolean;
 begin
   Result := True; { not filtering by attribute }
 end;
 
-constructor TParser.TFilter.TTagNodeCallback.Create(
+constructor TParser.TFilter.TTagNodeEqualCallback.Create(
   ACallback: TTagNodeFilterCallback; AData: Pointer);
 begin
   FCallback := ACallback;
   FData := AData;
 end;
 
-destructor TParser.TFilter.TTagNodeCallback.Destroy;
+destructor TParser.TFilter.TTagNodeEqualCallback.Destroy;
 begin
   inherited Destroy;
 end;
@@ -492,7 +673,8 @@ end;
 function TParser.TFilter.TTagIdEqual.IsEqual(ANode: pmyhtml_tree_node_t
   ): Boolean;
 begin
-  Result := (myhtml_node_tag_id(ANode) = myhtml_tag_id_t(FTag));
+  Result := (ANode <> nil) and (myhtml_node_tag_id(ANode) =
+    myhtml_tag_id_t(FTag));
 end;
 
 function TParser.TFilter.TTagIdEqual.IsEqual(ANodeAttribute: pmyhtml_tree_attr_t
@@ -513,6 +695,19 @@ end;
 
 { TParser.TFilter }
 
+function TParser.TFilter.IsEqual (ANode : pmyhtml_tree_node_t;
+  ANodeAttribute : pmyhtml_tree_attr_t; ACheckAllAttributes : Boolean) :
+  Boolean;
+var
+  Filter : IFilter;
+begin
+  Result := True;
+  for Filter in FFiltersList do
+    Result := Result and Filter.IsEqual(ANode) and
+      Filter.IsEqual(ANodeAttribute);
+end;
+
+{
 function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t;
   ANodeAttribute: pmyhtml_tree_attr_t; ACheckAllAttributes : Boolean): Boolean;
 
@@ -534,6 +729,9 @@ function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t;
         Result := True;
     end;
 
+  var
+    Filter : IFilter;
+    FilterResult : Boolean;
   begin
     if ANode = nil then { node isn't present }
     begin
@@ -690,7 +888,9 @@ function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t;
 begin
   Result := NodeEqual and NodeAttributeEqual;
 end;
+}
 
+{
 function TParser.TFilter.IsSet: Boolean;
 begin
   Result := (FTag <> MyHTML_TAG__UNDEF) or (FTagNodeAttributeKey <> '') or
@@ -698,9 +898,17 @@ begin
     (FTagNodeAttributeValue <> '') or Assigned(FTagNodeCallback) or
     Assigned(FTagNodeAttributeCallback);
 end;
+}
+
+function TParser.TFilter.IsSet : Boolean;
+begin
+  Result := FFiltersList.Count > 0;
+end;
 
 constructor TParser.TFilter.Create;
 begin
+  FFiltersList := TFiltersList.Create;
+
   FTag := MyHTML_TAG__UNDEF;
   FTagNodeCallback := nil;
   FTagNodeData := nil;
@@ -716,30 +924,40 @@ destructor TParser.TFilter.Destroy;
 begin
   FreeAndNil(FTagNodeAttributeClass);
   FreeAndNil(FTagNodeAttributeId);
+
+  FreeAndNil(FFiltersList);
   inherited Destroy;
 end;
 
 function TParser.TFilter.Tag(ATag: TTag): TFilter;
 begin
   FTag := ATag;
+
+  FFiltersList.Add(TTagIdEqual.Create(ATag));
   Result := Self;
 end;
 
 function TParser.TFilter.AttributeKey(AKey: string): TFilter;
 begin
   FTagNodeAttributeKey := AKey;
+
+  FFiltersList.Add(TTagNodeAttributeKeyEqual.Create(AKey));
   Result := Self;
 end;
 
 function TParser.TFilter.AttributeValue(AValue: string): TFilter;
 begin
   FTagNodeAttributeValue := AValue;
+
+  FFiltersList.Add(TTagNodeAttributeValueEqual.Create(AValue));
   Result := Self;
 end;
 
 function TParser.TFilter.ContainsClass(AClass: string): TFilter;
 begin
   FTagNodeAttributeClass.AddStrings(TTagNodeAttribute.StringTokenize(AClass));
+
+  FFiltersList.Add(TContainsAttributeAllValues.Create('class', AClass));
   Result := Self;
 end;
 
@@ -747,12 +965,16 @@ function TParser.TFilter.ContainsClassOnly(AClass: string): TFilter;
 begin
   FTagNodeAttributeClass.Clear;
   FTagNodeAttributeClass.AddStrings(TTagNodeAttribute.StringTokenize(AClass));
+
+  FFiltersList.Add(TContainsAttributeOnlyValue.Create('class', AClass));
   Result := Self;
 end;
 
 function TParser.TFilter.ContainsId(AId: string): TFilter;
 begin
   FTagNodeAttributeId.AddStrings(TTagNodeAttribute.StringTokenize(AId));
+
+  FFiltersList.Add(TContainsAttributeAllValues.Create('id', AId));
   Result := Self;
 end;
 
@@ -760,6 +982,8 @@ function TParser.TFilter.ContainsIdOnly(AId: string): TFilter;
 begin
   FTagNodeAttributeId.Clear;
   FTagNodeAttributeId.AddStrings(TTagNodeAttribute.StringTokenize(AId));
+
+  FFiltersList.Add(TContainsAttributeOnlyValue.Create('id', AId));
   Result := Self;
 end;
 
@@ -768,6 +992,9 @@ function TParser.TFilter.TagNodeCallback(
 begin
   FTagNodeCallback := ACallback;
   FTagNodeData := AData;
+
+  FFiltersList.Add(TTagNodeEqualCallback.Create(ACallback, AData));
+
   Result := Self;
 end;
 
@@ -776,6 +1003,8 @@ function TParser.TFilter.TagNodeAttributeCallback(
 begin
   FTagNodeAttributeCallback := ACallback;
   FTagNodeAttributeData := AData;
+
+  FFiltersList.Add(TTagNodeAttrbuteEqualCallback.Create(ACallback, AData));
   Result := Self;
 end;
 

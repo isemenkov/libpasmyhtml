@@ -416,12 +416,26 @@ end;
 procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseLinkStylesheet;
 var
   Stylesheet : string;
+  Node : TParser.TTagNode;
+  NodeAttribute : TParser.TTagNodeAttribute;
 begin
-  Stylesheet := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
-    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_LINK)
-      .AttributeKey('rel').AttributeValue('stylesheet'))
-    .FirstNodeAttribute(TParser.TFilter.Create.AttributeKey('href'))
-    .Value;
+  Node := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD);
+
+  AssertTrue('Test node HEAD', Node.IsOk and (Node.Tag =
+    TParser.TTag.MyHTML_TAG_HEAD));
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_LINK)
+    .AttributeKey('rel').AttributeValue('stylesheet'));
+
+  AssertTrue('Test node LINK', Node.IsOk and (Node.Tag =
+    TParser.TTag.MyHTML_TAG_LINK));
+
+  NodeAttribute := Node.FirstNodeAttribute(TParser.TFilter.Create.AttributeKey(
+    'href'));
+
+  AssertTrue('Test node attribute', NodeAttribute.IsOk);
+
+  Stylesheet := NodeAttribute.Value;
 
   AssertTrue('Test link href', Stylesheet = 'style.css');
 end;
@@ -445,8 +459,8 @@ var
   Value : string;
 begin
   Value := FParser.Parse(SimpleParseDocument, DOCUMENT_BODY)
-    .FirstChildrenNode(TParser.TFilter.Create.ContainsClass('wrapper'))
-    .FirstChildrenNode(TParser.TFilter.Create.ContainsClass('header'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsClassOnly('wrapper'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsClassOnly('header'))
     .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_STRONG))
     .Value;
 
