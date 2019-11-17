@@ -86,10 +86,89 @@ type
       TTagNodeAttributeTransformCallback = procedure (ANodeAttribute :
         TTagNodeAttribute; AData : Pointer) of object;
 
+      IFilter = class
+      protected
+        function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; virtual;
+          abstract; overload;
+
+        function IsEqual (ANodeAttribute : pmyhtml_tree_attr_t) : Boolean;
+          virtual; abstract; overload;
+      end;
+
       { TFilter }
       { Class realize filter concept which can be used to find elements }
       TFilter = class
+      public
+        type
+
+          { TTagIdEqual }
+
+          TTagIdEqual = class (IFilter)
+          private
+            FTag : TTag;
+          protected
+            function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; override;
+              overload;
+            function IsEqual ({%H-}ANodeAttribute : pmyhtml_tree_attr_t) :
+              Boolean; override; overload;
+          public
+            constructor Create (ATag : TTag);
+            destructor Destroy; override;
+          end;
+
+          { TTagNodeCallback }
+
+          TTagNodeCallback = class (IFilter)
+          private
+            FCallback : TTagNodeFilterCallback;
+            FData : Pointer;
+          protected
+            function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; override;
+              overload;
+            function IsEqual ({%H-}ANodeAttribute : pmyhtml_tree_attr_t) :
+              Boolean; override; overload;
+          public
+            constructor Create (ACallback : TTagNodeFilterCallback; AData :
+              Pointer);
+            destructor Destroy; override;
+          end;
+
+          { TTagNodeAttributeKeyEqual }
+
+          TTagNodeAttributeKeyEqual = class (IFilter)
+          private
+            FTagNodeAttributeKey : string;
+          protected
+            function IsEqual ({%H-}ANode : pmyhtml_tree_node_t) : Boolean;
+              override; overload;
+            function IsEqual (ANodeAttribute : pmyhtml_tree_attr_t) : Boolean;
+              override; overload;
+          public
+            constructor Create (AKey : string);
+            destructor Destroy; override;
+          end;
+
+          { TTagNodeAttributeValueEqual }
+
+          TTagNodeAttributeValueEqual = class (IFilter)
+          private
+            FTagNodeAttributeValue : string;
+          protected
+            function IsEqual ({%H-}ANode : pmyhtml_tree_node_t) : Boolean;
+              override; overload;
+            function IsEqual (ANodeAttribute : pmyhtml_tree_attr_t) : Boolean;
+              override; overload;
+          public
+            constructor Create (AValue : string);
+            destructor Destroy; override;
+          end;
+
       private
+        type
+          TFiltersList = specialize TFPGObjectList<IFilter>;
+      private
+        FiltersList : TFiltersList;
+
         FTag : myhtml_tags_t;
 
         FTagNodeCallback : TTagNodeFilterCallback;
@@ -329,6 +408,108 @@ type
   end;
 
 implementation
+
+{ TParser.TFilter.TTagNodeAttributeValueEqual }
+
+function TParser.TFilter.TTagNodeAttributeValueEqual.IsEqual(
+  ANode: pmyhtml_tree_node_t): Boolean;
+begin
+  Result := True; { not filtering by node }
+end;
+
+function TParser.TFilter.TTagNodeAttributeValueEqual.IsEqual(
+  ANodeAttribute: pmyhtml_tree_attr_t): Boolean;
+begin
+  Result := (myhtml_attribute_value(ANodeAttribute, nil) =
+    FTagNodeAttributeValue);
+end;
+
+constructor TParser.TFilter.TTagNodeAttributeValueEqual.Create(AValue: string);
+begin
+  FTagNodeAttributeValue := AValue;
+end;
+
+destructor TParser.TFilter.TTagNodeAttributeValueEqual.Destroy;
+begin
+  inherited Destroy;
+end;
+
+{ TParser.TFilter.TTagNodeAttributeKeyEqual }
+
+function TParser.TFilter.TTagNodeAttributeKeyEqual.IsEqual(
+  ANode: pmyhtml_tree_node_t): Boolean;
+begin
+  Result := True; { not filtering by node }
+end;
+
+function TParser.TFilter.TTagNodeAttributeKeyEqual.IsEqual(
+  ANodeAttribute: pmyhtml_tree_attr_t): Boolean;
+begin
+  Result := (myhtml_attribute_key(ANodeAttribute, nil) = FTagNodeAttributeKey);
+end;
+
+constructor TParser.TFilter.TTagNodeAttributeKeyEqual.Create(AKey : string);
+begin
+  FTagNodeAttributeKey := AKey;
+end;
+
+destructor TParser.TFilter.TTagNodeAttributeKeyEqual.Destroy;
+begin
+  inherited Destroy;
+end;
+
+{ TParser.TFilter.TTagNodeCallback }
+
+function TParser.TFilter.TTagNodeCallback.IsEqual(ANode: pmyhtml_tree_node_t
+  ): Boolean;
+begin
+  if Assigned(FCallback) then
+    Result := FCallback(TTagNode.Create(ANode), FData)
+  else
+    Result := False;
+end;
+
+function TParser.TFilter.TTagNodeCallback.IsEqual(
+  ANodeAttribute: pmyhtml_tree_attr_t): Boolean;
+begin
+  Result := True; { not filtering by attribute }
+end;
+
+constructor TParser.TFilter.TTagNodeCallback.Create(
+  ACallback: TTagNodeFilterCallback; AData: Pointer);
+begin
+  FCallback := ACallback;
+  FData := AData;
+end;
+
+destructor TParser.TFilter.TTagNodeCallback.Destroy;
+begin
+  inherited Destroy;
+end;
+
+{ TParser.TFilter.TTagIdEqual }
+
+function TParser.TFilter.TTagIdEqual.IsEqual(ANode: pmyhtml_tree_node_t
+  ): Boolean;
+begin
+  Result := (myhtml_node_tag_id(ANode) = myhtml_tag_id_t(FTag));
+end;
+
+function TParser.TFilter.TTagIdEqual.IsEqual(ANodeAttribute: pmyhtml_tree_attr_t
+  ): Boolean;
+begin
+  Result := True; { not filtering by attribute }
+end;
+
+constructor TParser.TFilter.TTagIdEqual.Create(ATag: TTag);
+begin
+  FTag := ATag;
+end;
+
+destructor TParser.TFilter.TTagIdEqual.Destroy;
+begin
+  inherited Destroy;
+end;
 
 { TParser.TFilter }
 
