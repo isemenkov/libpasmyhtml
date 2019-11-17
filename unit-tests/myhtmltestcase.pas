@@ -105,7 +105,7 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
 
-    procedure TestDocumentParseEachNodesCallback (ANode : TParser.TTagNode;
+    procedure TestDocumentParseEachNodesTrCallback (ANode : TParser.TTagNode;
       AData : Pointer);
   published
     procedure TestDocumentParseEachNodes;
@@ -144,7 +144,7 @@ begin
     .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TBODY))
     .EachChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TR),
       TParser.TTransform.Create.TagNodeTransform(
-        @TestDocumentParseEachNodesCallback, Pointer(ZoneList)));
+        @TestDocumentParseEachNodesTrCallback, Pointer(ZoneList)));
 
   AssertTrue('Test each node children list', ZoneList.Count = 5);
 
@@ -172,7 +172,7 @@ begin
     'Abbott Laboratories, Inc.');
 end;
 
-procedure TMyHTMLParserIanaTestCase.TestDocumentParseEachNodesCallback(
+procedure TMyHTMLParserIanaTestCase.TestDocumentParseEachNodesTrCallback(
   ANode: TParser.TTagNode; AData: Pointer);
 var
   Zone : TZoneInfo;
