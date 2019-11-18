@@ -405,7 +405,7 @@ begin
   Description := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
     .FirstChildrenNode(TParser.TFilter.Create.TagNodeCallback(@TagMetaCallback,
       @Self)
-      .AttributeKey('name').AttributeValue('description'))
+      .AttributeKeyValue('name', 'description'))
     .FirstNodeAttribute(TParser.TFilter.Create.TagNodeAttributeCallback(
       @TagAttributeContentKeyCallback, @Self))
     .Value;

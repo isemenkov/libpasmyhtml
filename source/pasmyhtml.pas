@@ -240,13 +240,11 @@ type
         FTagNodeAttributeCallback : TTagNodeAttributeFilterCallback;
         FTagNodeAttributeData : Pointer;
 
-        { Check if ANode is equal to defined filter }
-        {function IsEqual (ANode : pmyhtml_tree_node_t = nil; ANodeAttribute :
-          pmyhtml_tree_attr_t = nil; ACheckAllAttributes : Boolean = False) :
-          Boolean; inline;}
+        { Check if ANode is equal to defined filters list }
         function IsEqual (ANode : pmyhtml_tree_node_t = nil) : Boolean;
           overload; {$IFNDEF DEBUG}inline;{$ENDIF}
 
+        { Cheif if ANodeAttribute is equal to defined filters list }
         function IsEqual (ANodeAttribute : pmyhtml_tree_attr_t = nil) :
           Boolean; overload; {$IFNDEF DEBUG}inline;{$ENDIF}
 
@@ -309,11 +307,12 @@ type
         FTagNodeAttributeData : Pointer;
 
         { Run transform node callback }
-        procedure RunNodeCallback (ATagNode : TTagNode); inline;
+        procedure RunNodeCallback (ATagNode : TTagNode); {$IFNDEF DEBUG}inline;
+          {$ENDIF}
 
         { Run transform node attribute callback }
         procedure RunNodeAttributeCallback (ATagAttribute : TTagNodeAttribute);
-          inline;
+          {$IFNDEF DEBUG}inline;{$ENDIF}
       public
         constructor Create;
         destructor Destroy; override;
@@ -339,12 +338,12 @@ type
         { Apply AFilter to ANode element if it is. Return pmyhtml_tree_node_t if
           element find or nil }
         function FilterNode (ANode : pmyhtml_tree_node_t; AFilter : TFilter) :
-          pmyhtml_tree_node_t;
+          pmyhtml_tree_node_t; {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Apply AFilter to AAttribute if it is. Return filtered
           pmyhtml_tree_attr_t element if find or nil }
         function FilterAttribute (AAttribute : pmyhtml_tree_attr_t; AFilter :
-          TFilter) : pmyhtml_tree_attr_t; inline;
+          TFilter) : pmyhtml_tree_attr_t; {$IFNDEF DEBUG}inline;{$ENDIF}
       private
         { Return tag id }
         function GetTag :  TTag; {$IFNDEF DEBUG}inline;{$ENDIF}
@@ -438,7 +437,7 @@ type
         destructor Destroy; override;
 
         { Check if attribute is correct }
-        function IsOk : boolean; inline;
+        function IsOk : boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
       public
         { Return attribute key }
         property Key : string read GetKey;
@@ -481,23 +480,22 @@ implementation
 
 function TParser.TFilter.TContainsAttributeAllValues.IsEqual(ANode:
   pmyhtml_tree_node_t): Boolean;
-var
-  NodeAttr : pmyhtml_tree_attr_t;
-  ValueList : TStringList;
-  Value : string;
-begin
-  if FTagNodeAttributeValueList.Count > 0 then
+
+  function FindAttribute : pmyhtml_tree_attr_t; {$IFNDEF DEBUG}inline;{$ENDIF}
   begin
+    Result := nil;
     if ANode <> nil then
-      NodeAttr := myhtml_node_attribute_first(ANode)
-    else
-      NodeAttr := nil;
+      Result := myhtml_attribute_by_key(ANode, PChar(FKey), Length(FKey));
+  end;
 
-    while (NodeAttr <> nil) and (myhtml_attribute_key(NodeAttr, nil) <> FKey) do
-      NodeAttr := myhtml_attribute_next(NodeAttr);
-
+  function CheckAttributeAllValues (AAttribute : pmyhtml_tree_attr_t) : Boolean;
+    {$IFNDEF DEBUG}inline;{$ENDIF}
+  var
+    ValueList : TStringList;
+    Value : string;
+  begin
     ValueList := TTagNodeAttribute.StringTokenize(myhtml_attribute_value(
-      NodeAttr, nil));
+      AAttribute, nil));
     if ValueList.Count >= FTagNodeAttributeValueList.Count then
     begin
       Result := True;
@@ -511,6 +509,15 @@ begin
       end;
     end else
       Result := False;
+  end;
+
+var
+  NodeAttr : pmyhtml_tree_attr_t;
+begin
+  if FTagNodeAttributeValueList.Count > 0 then
+  begin
+    NodeAttr := FindAttribute;
+    Result := (NodeAttr <> nil) and CheckAttributeAllValues(NodeAttr);
   end else
     Result := True;
 end;
@@ -544,21 +551,22 @@ end;
 
 function TParser.TFilter.TContainsAttributeOnlyValue.IsEqual(ANode:
   pmyhtml_tree_node_t): Boolean;
+
+  function FindAttribute : pmyhtml_tree_attr_t; {$IFNDEF DEBUG}inline;{$ENDIF}
+  begin
+    Result := nil;
+    if ANode <> nil then
+      Result := myhtml_attribute_by_key(ANode, PChar(FKey), Length(FKey));
+  end;
+
 var
   NodeAttr : pmyhtml_tree_attr_t;
 begin
-  if FValue <> '' then
+  if (FKey <> '') and (FValue <> '') then
   begin
-    if ANode <> nil then
-      NodeAttr := myhtml_node_attribute_first(ANode)
-    else
-      NodeAttr := nil;
-
-    while (NodeAttr <> nil) and ((myhtml_attribute_key(NodeAttr, nil) <> FKey)
-      and (myhtml_attribute_value(NodeAttr, nil) <> FValue)) do
-      NodeAttr := myhtml_attribute_next(NodeAttr);
-
-    Result := NodeAttr <> nil;
+    NodeAttr := FindAttribute;
+    Result := (NodeAttr <> nil) and (myhtml_attribute_value(NodeAttr, nil) =
+      FValue);
   end else
     Result := True;
 end;
@@ -648,19 +656,12 @@ end;
 
 function TParser.TFilter.TTagNodeAttributeKeyEqual.IsEqual(
   ANode: pmyhtml_tree_node_t): Boolean;
-var
-  NodeAttr : pmyhtml_tree_attr_t;
 begin
   if ANode <> nil then
-    NodeAttr := myhtml_node_attribute_first(ANode)
+    Result := myhtml_attribute_by_key(ANode, PChar(FTagNodeAttributeKey),
+      Length(FTagNodeAttributeKey)) <> nil
   else
-    NodeAttr := nil;
-
-  while (NodeAttr <> nil) and (myhtml_attribute_key(NodeAttr, nil) <>
-    FTagNodeAttributeKey) do
-    NodeAttr := myhtml_attribute_next(NodeAttr);
-
-  Result := NodeAttr <> nil;
+    Result := False;
 end;
 
 function TParser.TFilter.TTagNodeAttributeKeyEqual.IsEqual(
@@ -735,199 +736,6 @@ begin
 end;
 
 { TParser.TFilter }
-
-{
-function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t;
-  ANodeAttribute: pmyhtml_tree_attr_t; ACheckAllAttributes : Boolean): Boolean;
-
-  { Return TRUE if ANode is equal to TFilter.Tag }
-  function NodeEqual : Boolean;
-
-    function TagEqual : Boolean; inline;
-    begin
-      Result := (FTag = MyHTML_TAG__UNDEF) { node id is filtered }
-        or (FTag = myhtml_tags_t(myhtml_node_tag_id(ANode)));
-    end;
-
-    function TagCallbackEqual : Boolean; inline;
-    begin
-      { node filter callback is present }
-      if Assigned(FTagNodeCallback) then
-        Result := FTagNodeCallback(TTagNode.Create(ANode), FTagNodeData)
-      else
-        Result := True;
-    end;
-
-  var
-    Filter : IFilter;
-    FilterResult : Boolean;
-  begin
-    if ANode = nil then { node isn't present }
-    begin
-      if (FTag = MyHTML_TAG__UNDEF) then { node not filtering }
-        Result := True
-      else
-        Result := False;
-    end
-    else begin
-      Result := TagEqual and TagCallbackEqual;
-    end;
-  end;
-
-  { Check if ANodeAttribute is equal to TFilter.Attribute }
-  function NodeAttributeEqual : Boolean;
-
-    function AttributeKeyEqual (AAttribute : pmyhtml_tree_attr_t) : Boolean;
-      inline;
-    begin
-      { node attribute is filtering by key }
-      if FTagNodeAttributeKey <> '' then
-      begin
-        Result := FTagNodeAttributeKey = myhtml_attribute_key(AAttribute, nil);
-      end else
-        Result := True;
-    end;
-
-    function AttributeValueEqual (AAttribute : pmyhtml_tree_attr_t) : Boolean;
-      inline;
-    begin
-      { node attribute is filtering by value }
-      if FTagNodeAttributeValue <> '' then
-      begin
-        Result := FTagNodeAttributeValue =
-          myhtml_attribute_value(AAttribute, nil);
-      end else
-        Result := True;
-    end;
-
-    function AttributeClassEqual (AAttribute : pmyhtml_tree_attr_t) : Boolean;
-      inline;
-    var
-      ClassList : TStringList;
-      ClassElement : string;
-    begin
-      if (FTagNodeAttributeClass.Count > 0) and
-        (myhtml_attribute_key(AAttribute, nil) = 'class') then
-      begin
-        ClassList := TTagNodeAttribute.StringTokenize(myhtml_attribute_value(
-          AAttribute, nil));
-        if (ClassList.Count < FTagNodeAttributeClass.Count) then
-          Result := False
-        else begin
-          Result := True;
-          for ClassElement in FTagNodeAttributeClass do
-          begin
-            if ClassList.IndexOf(ClassElement) = -1 then
-            begin
-              Result := False;
-              Break;
-            end;
-          end;
-        end;
-      end else
-        Result := True;
-    end;
-
-    function AttributeIdEqual (AAttribute : pmyhtml_tree_attr_t) : Boolean;
-      inline;
-    var
-      IdList : TStringList;
-      IdElement : string;
-    begin
-      if (FTagNodeAttributeId.Count > 0) and
-        (myhtml_attribute_key(AAttribute, nil) = 'id') then
-      begin
-        IdList := TTagNodeAttribute.StringTokenize(myhtml_attribute_value(
-          AAttribute, nil));
-        if (IdList.Count < FTagNodeAttributeId.Count) then
-          Result := False
-        else begin
-          Result := True;
-          for IdElement in FTagNodeAttributeId do
-          begin
-            if IdList.IndexOf(IdElement) = -1 then
-            begin
-              Result := False;
-              Break;
-            end;
-          end;
-        end;
-      end else
-        Result := True;
-    end;
-
-    function AttributeCallbackEqual (AAttribute : pmyhtml_tree_attr_t) :
-      Boolean; inline;
-    begin
-      { node attribute filtering callback is present }
-      if Assigned(FTagNodeAttributeCallback) then
-        Result := FTagNodeAttributeCallback(TTagNodeAttribute.Create(
-          AAttribute), FTagNodeAttributeData)
-      else
-        Result := True;
-    end;
-
-    { Check concrete node attribute }
-    function CheckNodeAttribute (AAttribute : pmyhtml_tree_attr_t) : Boolean;
-      inline;
-    begin
-      Result := ((FTagNodeAttributeKey = '') or AttributeKeyEqual(AAttribute))
-        and ((FTagNodeAttributeValue = '') or AttributeValueEqual(AAttribute))
-        and ((not Assigned(FTagNodeAttributeCallback)) or
-          AttributeCallbackEqual(AAttribute))
-        and ((FTagNodeAttributeClass.Count = 0) or
-          AttributeClassEqual(AAttribute))
-        and ((FTagNodeAttributeId.Count = 0) or AttributeIdEqual(AAttribute));
-    end;
-
-    { Check all node attributes start from ANodeAttribute }
-    function CheckNodeAttributes : Boolean; inline;
-    var
-      NodeAttr : pmyhtml_tree_attr_t;
-    begin
-      NodeAttr := ANodeAttribute;
-
-      if ACheckAllAttributes then
-      begin
-        while (NodeAttr <> nil) and not CheckNodeAttribute(NodeAttr) do
-        begin
-          NodeAttr := myhtml_attribute_next(NodeAttr);
-        end;
-
-        Result := NodeAttr <> nil;
-      end else
-        Result := CheckNodeAttribute(NodeAttr);
-    end;
-
-  begin
-    if (ANodeAttribute = nil) then { node is not filtering by tag }
-    begin
-      if (FTagNodeAttributeKey = '') and (FTagNodeAttributeClass.Count = 0)
-        and (FTagNodeAttributeValue = '') and (FTagNodeAttributeId.Count = 0)
-      then
-        Result := True
-      else
-        Result := False;
-    end
-    else begin
-      Result := CheckNodeAttributes;
-    end;
-  end;
-
-begin
-  Result := NodeEqual and NodeAttributeEqual;
-end;
-}
-
-{
-function TParser.TFilter.IsSet: Boolean;
-begin
-  Result := (FTag <> MyHTML_TAG__UNDEF) or (FTagNodeAttributeKey <> '') or
-    (FTagNodeAttributeClass.Count > 0) or (FTagNodeAttributeId.Count > 0) or
-    (FTagNodeAttributeValue <> '') or Assigned(FTagNodeCallback) or
-    Assigned(FTagNodeAttributeCallback);
-end;
-}
 
 function TParser.TFilter.IsEqual(ANode: pmyhtml_tree_node_t): Boolean;
 var
@@ -1109,27 +917,6 @@ end;
 
 { TParser.TTagNode }
 
-{
-function TParser.TTagNode.FilterNode(ANode: pmyhtml_tree_node_t;
-  AFilter: TFilter): pmyhtml_tree_node_t;
-var
-  Node : pmyhtml_tree_node_t;
-begin
-  Node := ANode;
-
-  if (AFilter <> nil) and AFilter.IsSet then
-  begin
-    while (Node <> nil) and (not AFilter.IsEqual(Node,
-      myhtml_node_attribute_first(Node), True)) do
-    begin
-      Node := myhtml_node_next(Node);
-    end;
-  end;
-
-  Result := Node;
-end;
-}
-
 function TParser.TTagNode.FilterNode(ANode : pmyhtml_tree_node_t;
   AFilter : TFilter) : pmyhtml_tree_node_t;
 var
@@ -1144,26 +931,6 @@ begin
   end else
     Result := ANode;
 end;
-
-{
-function TParser.TTagNode.FilterAttribute(AAttribute: pmyhtml_tree_attr_t;
-  AFilter: TFilter): pmyhtml_tree_attr_t;
-var
-  Attr : pmyhtml_tree_attr_t;
-begin
-  Attr := AAttribute;
-
-  if AFilter.IsSet then
-  begin
-    while (Attr <> nil) and (not AFilter.IsEqual(nil, Attr, False)) do
-    begin
-      Attr := myhtml_attribute_next(Attr);
-    end;
-  end;
-
-  Result := Attr;
-end;
-}
 
 function TParser.TTagNode.FilterAttribute(AAttribute : pmyhtml_tree_attr_t;
   AFilter : TFilter) : pmyhtml_tree_attr_t;
