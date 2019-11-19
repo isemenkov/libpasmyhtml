@@ -133,16 +133,34 @@ end;
 procedure TMyHTMLParserIanaTestCase.TestDocumentParseEachNodes;
 var
   ZoneList : TZoneInfoList;
+  Node : TParser.TTagNode;
 begin
   ZoneList := TZoneInfoList.Create;
 
-  FParser.Parse(iana_org_document, DOCUMENT_BODY)
-    .FirstChildrenNode(TParser.TFilter.Create.ContainsId('body'))
-    .FirstChildrenNode(TParser.TFilter.Create.ContainsId('main_right'))
-    .FirstChildrenNode(TParser.TFilter.Create.ContainsId('iana-table-frame'))
-    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TABLE))
-    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TBODY))
-    .EachChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TR),
+  Node := FParser.Parse(iana_org_document, DOCUMENT_BODY)
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsId('body'));
+
+  AssertTrue('Test node contains id "body"', Node.IsOk);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.ContainsId(
+    'main_right'));
+
+  AssertTrue('Test node contains id "main_right"', Node.IsOk);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.ContainsClass(
+    'iana-table-frame'));
+
+  AssertTrue('Test node contains id "iana-table-frame"', Node.IsOk);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TABLE));
+
+  AssertTrue('Test node tag TABLE', Node.IsOk);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TBODY));
+
+  AssertTrue('Test node tag TBODY', Node.IsOk);
+
+  Node := Node.EachChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TR),
       TParser.TTransform.Create.TagNodeTransform(
         @TestDocumentParseEachNodesTrCallback, Pointer(ZoneList)));
 
