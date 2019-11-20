@@ -83,8 +83,11 @@ type
   protected
     procedure SetUp; override;
     procedure TearDown; override;
-  published
 
+    procedure TestDocumentParseEachLinkCallback(ANode : TParser.TTagNode;
+      AData : Pointer);
+  published
+    procedure TestDocumentParseEachLink;
   end;
 
   { TMyHTMLParserIanaTestCase }
@@ -238,6 +241,37 @@ end;
 procedure TMyHTMLParserTeamtenTestCase.TearDown;
 begin
   FreeAndNil(FParser);
+end;
+
+procedure TMyHTMLParserTeamtenTestCase.TestDocumentParseEachLinkCallback(
+  ANode: TParser.TTagNode; AData: Pointer);
+begin
+  AssertTrue('Test node link callback', ANode.IsOk);
+
+  TStringList(AData).Add(ANode.FirstNodeAttribute(
+    TParser.TFilter.Create.AttributeKey('href')).Value);
+end;
+
+procedure TMyHTMLParserTeamtenTestCase.TestDocumentParseEachLink;
+var
+  Node : TParser.TTagNode;
+  List : TStringList;
+begin
+  List := TStringList.Create;
+  Node := FParser.Parse(teamten_com, DOCUMENT_HEAD);
+
+  AssertTrue('Head node test', Node.IsOk);
+
+  Node := Node.EachChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_LINK)
+    .AttributeKeyValue('rel', 'stylesheet'),
+    TParser.TTransform.Create.TagNodeTransform(
+      @TestDocumentParseEachLinkCallback, Pointer(List)));
+
+  AssertTrue('Test find elements', List.Count = 4);
+  AssertTrue('Test element 1', List[0] = '/lawrence/reset.css');
+  AssertTrue('Test element 1', List[1] = '/lawrence/new.css');
+  AssertTrue('Test element 1', List[2] = '/lawrence/css/font-awesome.min.css');
+  AssertTrue('Test element 1', List[3] = 'unsolicited.css');
 end;
 
 { TMyHTMLParserSimpleTestCase }
@@ -827,6 +861,7 @@ end;
 initialization
   RegisterTest(TMyHTMLSimpleParseTestCase);
   RegisterTest(TMyHTMLParserSimpleParseTestCase);
+  RegisterTest(TMyHTMLParserTeamtenTestCase);
   RegisterTest(TMyHTMLParserIanaTestCase);
 end.
 
