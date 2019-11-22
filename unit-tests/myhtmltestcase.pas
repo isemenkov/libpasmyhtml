@@ -9,9 +9,9 @@ uses
 
 type
 
-  { TMyHTMLSimpleParseTestCase }
+  { TMyHTMLLibraryTestCase }
 
-  TMyHTMLSimpleParseTestCase = class(TTestCase)
+  TMyHTMLLibraryTestCase = class(TTestCase)
   private
     FHTML : pmyhtml_t;
     FTree : pmyhtml_tree_t;
@@ -28,12 +28,12 @@ type
 
     function StringTokenize (AString : string) : TStringList;
   published
-    procedure TestDocumentParse;
-    procedure TestDocumentParseTitle;
-    procedure TestDocumentParseMetaCharset;
-    procedure TestDocumentParseMetaKeywords;
-    procedure TestDocumentParseMetaDescription;
-    procedure TestDocumentParseLinkStylesheet;
+    procedure TestParseDocument;
+    procedure TestTitleTag;
+    procedure TestMetaTagCharsetAttributeValue;
+    procedure TestMetaTagKeywordsAttributeValue;
+    procedure TestMetaTagDescriptionAttributeValue;
+    procedure TestLinkTagRelAttribute;
   end;
 
   { TMyHTMLParserSimpleParseTestCase }
@@ -534,9 +534,10 @@ begin
   AssertTrue('Test body tag class filter content', Value = 'Content:');
 end;
 
-{ TMyHTMLSimpleParseTestCase }
+{ TMyHTMLLibraryTestCase }
+{ Test case for some basic library opportunities }
 
-procedure TMyHTMLSimpleParseTestCase.SetUp;
+procedure TMyHTMLLibraryTestCase.SetUp;
 begin
   FParserOptions := MyHTML_OPTIONS_PARSE_MODE_SEPARATELY;
   FEncoding := MyENCODING_UTF_8;
@@ -552,7 +553,7 @@ begin
   myhtml_tree_parse_flags_set(FTree, FFlags);
 end;
 
-procedure TMyHTMLSimpleParseTestCase.TearDown;
+procedure TMyHTMLLibraryTestCase.TearDown;
 begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
@@ -560,7 +561,9 @@ begin
   myhtml_destroy(FHTML);
 end;
 
-function TMyHTMLSimpleParseTestCase.StringTokenize(AString: string
+{ Tokenize string by space symbol }
+
+function TMyHTMLLibraryTestCase.StringTokenize(AString: string
   ): TStringList;
 var
   Index : SizeInt;
@@ -583,17 +586,23 @@ begin
   end;
 end;
 
-procedure TMyHTMLSimpleParseTestCase.TestDocumentParse;
+{ Test parser setup }
+
+procedure TMyHTMLLibraryTestCase.TestParseDocument;
 begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
 
   FError := myhtml_parse(FTree, FEncoding, PChar(SimpleParseDocument),
     Length(SimpleParseDocument));
-  AssertTrue('Test parse html document', FError = mystatus_t(MyHTML_STATUS_OK));
+
+  AssertTrue('Document parse not correct',
+    FError = mystatus_t(MyHTML_STATUS_OK));
 end;
 
-procedure TMyHTMLSimpleParseTestCase.TestDocumentParseTitle;
+{ Test title tag value }
+
+procedure TMyHTMLLibraryTestCase.TestTitleTag;
 var
   Node : pmyhtml_tree_node_t;
   Title : pmycore_string_t;
@@ -603,7 +612,9 @@ begin
 
   FError := myhtml_parse(FTree, FEncoding, PChar(SimpleParseDocument),
     Length(SimpleParseDocument));
-  AssertTrue('Test parse html document', FError = mystatus_t(MyHTML_STATUS_OK));
+
+  AssertTrue('Document parse not correct',
+    FError = mystatus_t(MyHTML_STATUS_OK));
 
   Node := myhtml_tree_get_node_head(FTree);
   if Node = nil then
@@ -617,6 +628,7 @@ begin
   begin
     if Node = nil then
       Fail('Title node not found');
+
     Node := myhtml_node_next(Node);
   end;
 
@@ -633,7 +645,9 @@ begin
     Fail('Test document title');
 end;
 
-procedure TMyHTMLSimpleParseTestCase.TestDocumentParseMetaCharset;
+{ Test meta tag charser attribute value }
+
+procedure TMyHTMLLibraryTestCase.TestMetaTagCharsetAttributeValue;
 var
   Node : pmyhtml_tree_node_t;
   Attribute : pmyhtml_tree_attr_t;
@@ -644,7 +658,9 @@ begin
 
   FError := myhtml_parse(FTree, FEncoding, PChar(SimpleParseDocument),
     Length(SimpleParseDocument));
-  AssertTrue('Test parse html document', FError = mystatus_t(MyHTML_STATUS_OK));
+
+  AssertTrue('Document parse not correct',
+    FError = mystatus_t(MyHTML_STATUS_OK));
 
   Node := myhtml_tree_get_node_head(FTree);
   if Node = nil then
@@ -678,7 +694,9 @@ begin
     myhtml_attribute_value(Attribute, nil) = 'utf-8');
 end;
 
-procedure TMyHTMLSimpleParseTestCase.TestDocumentParseMetaKeywords;
+{ Test meta tag keywords attribute value }
+
+procedure TMyHTMLLibraryTestCase.TestMetaTagKeywordsAttributeValue;
 var
   Node : pmyhtml_tree_node_t;
   Attribute : pmyhtml_tree_attr_t;
@@ -690,7 +708,9 @@ begin
 
   FError := myhtml_parse(FTree, FEncoding, PChar(SimpleParseDocument),
     Length(SimpleParseDocument));
-  AssertTrue('Test parse html document', FError = mystatus_t(MyHTML_STATUS_OK));
+
+  AssertTrue('Document parse not correct',
+    FError = mystatus_t(MyHTML_STATUS_OK));
 
   Node := myhtml_tree_get_node_head(FTree);
   if Node = nil then
@@ -738,7 +758,9 @@ begin
   AssertTrue('Test keyword 2', Keywords[1] = 'keywords');
 end;
 
-procedure TMyHTMLSimpleParseTestCase.TestDocumentParseMetaDescription;
+{ Test meta tag description attribute value }
+
+procedure TMyHTMLLibraryTestCase.TestMetaTagDescriptionAttributeValue;
 var
   Node : pmyhtml_tree_node_t;
   Attribute : pmyhtml_tree_attr_t;
@@ -750,7 +772,9 @@ begin
 
   FError := myhtml_parse(FTree, FEncoding, PChar(SimpleParseDocument),
     Length(SimpleParseDocument));
-  AssertTrue('Test parse html document', FError = mystatus_t(MyHTML_STATUS_OK));
+
+  AssertTrue('Document parse not correct',
+    FError = mystatus_t(MyHTML_STATUS_OK));
 
   Node := myhtml_tree_get_node_head(FTree);
   if Node = nil then
@@ -796,7 +820,9 @@ begin
   AssertTrue('Test meta description', Description = 'description');
 end;
 
-procedure TMyHTMLSimpleParseTestCase.TestDocumentParseLinkStylesheet;
+{ Test link tag rel attribute }
+
+procedure TMyHTMLLibraryTestCase.TestLinkTagRelAttribute;
 var
   Node, Link : pmyhtml_tree_node_t;
   Attribute : pmyhtml_tree_attr_t;
@@ -808,7 +834,9 @@ begin
 
   FError := myhtml_parse(FTree, FEncoding, PChar(SimpleParseDocument),
     Length(SimpleParseDocument));
-  AssertTrue('Test parse html document', FError = mystatus_t(MyHTML_STATUS_OK));
+
+  AssertTrue('Document parse not correct',
+    FError = mystatus_t(MyHTML_STATUS_OK));
 
   Node := myhtml_tree_get_node_head(FTree);
   if Node = nil then
@@ -859,7 +887,7 @@ begin
 end;
 
 initialization
-  RegisterTest(TMyHTMLSimpleParseTestCase);
+  RegisterTest(TMyHTMLLibraryTestCase);
   RegisterTest(TMyHTMLParserSimpleParseTestCase);
   RegisterTest(TMyHTMLParserTeamtenTestCase);
   RegisterTest(TMyHTMLParserIanaTestCase);
