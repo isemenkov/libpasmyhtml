@@ -1,5 +1,5 @@
 const
-  SimpleParseDocument =
+  SimpleHTMLDocument =
     '<!DOCTYPE html>'                                             + sLineBreak +
     '<html>'                                                      + sLineBreak +
     '<head>'                                                      + sLineBreak +

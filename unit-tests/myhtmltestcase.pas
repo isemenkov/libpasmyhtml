@@ -114,7 +114,7 @@ type
     procedure TestDocumentParseEachNodes;
   end;
 
-{$I htmldocuments/myhtmlsimpleparse_document.inc}
+{$I htmldocuments/SimpleHTMLDocument.inc}
 {$I htmldocuments/myhtmlteamtenparse_document.inc}
 {$I htmldocuments/myhtmlianaparse_document.inc}
 
@@ -347,7 +347,7 @@ end;
 
 procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParse;
 begin
-  FParser.Parse(SimpleParseDocument, DOCUMENT_HTML);
+  FParser.Parse(SimpleHTMLDocument, DOCUMENT_HTML);
   AssertFalse('Test parse html document', FParser.HasErrors);
 end;
 
@@ -355,7 +355,7 @@ procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseTitle;
 var
   title : TParser.TTagNode;
 begin
-  title := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+  title := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
     .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TITLE));
 
   if not title.IsOk then
@@ -368,7 +368,7 @@ procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseTitleCallback;
 var
   title : string;
 begin
-  title := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+  title := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
     .FirstChildrenNode(TParser.TFilter.Create.TagNodeCallback(
       @TagTitleCallback, @Self))
     .Value;
@@ -380,7 +380,7 @@ procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaCharset;
 var
   charset : string;
 begin
-  charset := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+  charset := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
     .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_META)
       .AttributeKey('charset'))
     .FirstNodeAttribute(TParser.TFilter.Create.AttributeKey('charset'))
@@ -393,7 +393,7 @@ procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaCharsetCallback;
 var
   charset : string;
 begin
-  charset := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+  charset := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
     .FirstChildrenNode(TParser.TFilter.Create.TagNodeCallback(@TagMetaCallback,
       @Self)
       .TagNodeAttributeCallback(@TagAttributeCharsetKeyCallback, @Self))
@@ -409,7 +409,7 @@ procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaKeywords;
 var
   Keywords : TStringList;
 begin
-  Keywords := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+  Keywords := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
     .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_META)
       .AttributeKey('name').AttributeValue('keywords'))
     .FirstNodeAttribute(TParser.TFilter.Create.AttributeKey('content'))
@@ -424,7 +424,7 @@ procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaKeywordsCallback
 var
   Keywords : TStringList;
 begin
-  Keywords := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+  Keywords := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
     .FirstChildrenNode(TParser.TFilter.Create.TagNodeCallback(@TagMetaCallback,
       @Self)
       .TagNodeAttributeCallback(@TagAttributeNameKeywordsCallback, @Self))
@@ -441,7 +441,7 @@ procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaDescription;
 var
   Description : string;
 begin
-  Description := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+  Description := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
     .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_META)
       .AttributeKeyValue('name', 'description'))
     .FirstNodeAttribute(TParser.TFilter.Create.AttributeKey('content'))
@@ -454,7 +454,7 @@ procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaDescriptionCallb
 var
   Description : string;
 begin
-  Description := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+  Description := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
     .FirstChildrenNode(TParser.TFilter.Create.TagNodeCallback(@TagMetaCallback,
       @Self)
       .AttributeKeyValue('name', 'description'))
@@ -471,7 +471,7 @@ var
   Node : TParser.TTagNode;
   NodeAttribute : TParser.TTagNodeAttribute;
 begin
-  Node := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD);
+  Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD);
 
   AssertTrue('Test node HEAD', Node.IsOk and (Node.Tag =
     TParser.TTag.MyHTML_TAG_HEAD));
@@ -496,7 +496,7 @@ procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseLinkStylesheetCallba
 var
   Stylesheet : string;
 begin
-  Stylesheet := FParser.Parse(SimpleParseDocument, DOCUMENT_HEAD)
+  Stylesheet := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
     .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_LINK)
       .TagNodeCallback(@TagLinkCallback, @Self)
       .TagNodeAttributeCallback(@TagAttributeRelStylesheet, @Self))
@@ -510,7 +510,7 @@ procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseHeader;
 var
   Value : string;
 begin
-  Value := FParser.Parse(SimpleParseDocument, DOCUMENT_BODY)
+  Value := FParser.Parse(SimpleHTMLDocument, DOCUMENT_BODY)
     .FirstChildrenNode(TParser.TFilter.Create.ContainsClassOnly('wrapper'))
     .FirstChildrenNode(TParser.TFilter.Create.ContainsClassOnly('header'))
     .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_STRONG))
@@ -523,7 +523,7 @@ procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseContent;
 var
   Value : string;
 begin
-  Value := FParser.Parse(SimpleParseDocument, DOCUMENT_BODY)
+  Value := FParser.Parse(SimpleHTMLDocument, DOCUMENT_BODY)
     .FirstChildrenNode(TParser.TFilter.Create.ContainsClass('wrapper'))
     .FirstChildrenNode(TParser.TFilter.Create.ContainsClass('middle'))
     .FirstChildrenNode(TParser.TFilter.Create.ContainsClass('container'))
@@ -586,15 +586,15 @@ begin
   end;
 end;
 
-{ Test parser setup }
+{ Test parse document }
 
 procedure TMyHTMLLibraryTestCase.TestParseDocument;
 begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
 
-  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleParseDocument),
-    Length(SimpleParseDocument));
+  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
+    Length(SimpleHTMLDocument));
 
   AssertTrue('Document parse not correct',
     FError = mystatus_t(MyHTML_STATUS_OK));
@@ -610,8 +610,8 @@ begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
 
-  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleParseDocument),
-    Length(SimpleParseDocument));
+  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
+    Length(SimpleHTMLDocument));
 
   AssertTrue('Document parse not correct',
     FError = mystatus_t(MyHTML_STATUS_OK));
@@ -648,6 +648,9 @@ end;
 { Test meta tag charser attribute value }
 
 procedure TMyHTMLLibraryTestCase.TestMetaTagCharsetAttributeValue;
+
+
+
 var
   Node : pmyhtml_tree_node_t;
   Attribute : pmyhtml_tree_attr_t;
@@ -656,8 +659,8 @@ begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
 
-  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleParseDocument),
-    Length(SimpleParseDocument));
+  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
+    Length(SimpleHTMLDocument));
 
   AssertTrue('Document parse not correct',
     FError = mystatus_t(MyHTML_STATUS_OK));
@@ -706,8 +709,8 @@ begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
 
-  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleParseDocument),
-    Length(SimpleParseDocument));
+  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
+    Length(SimpleHTMLDocument));
 
   AssertTrue('Document parse not correct',
     FError = mystatus_t(MyHTML_STATUS_OK));
@@ -770,8 +773,8 @@ begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
 
-  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleParseDocument),
-    Length(SimpleParseDocument));
+  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
+    Length(SimpleHTMLDocument));
 
   AssertTrue('Document parse not correct',
     FError = mystatus_t(MyHTML_STATUS_OK));
@@ -832,8 +835,8 @@ begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
 
-  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleParseDocument),
-    Length(SimpleParseDocument));
+  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
+    Length(SimpleHTMLDocument));
 
   AssertTrue('Document parse not correct',
     FError = mystatus_t(MyHTML_STATUS_OK));

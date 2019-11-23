@@ -50,15 +50,15 @@
         <IsPartOfProject Value="True"/>
       </Unit3>
       <Unit4>
-        <Filename Value="htmldocuments/myhtmlsimpleparse_document.inc"/>
+        <Filename Value="htmldocuments/myhtmlteamtenparse_document.inc"/>
         <IsPartOfProject Value="True"/>
       </Unit4>
       <Unit5>
-        <Filename Value="htmldocuments/myhtmlteamtenparse_document.inc"/>
+        <Filename Value="htmldocuments/myhtmlianaparse_document.inc"/>
         <IsPartOfProject Value="True"/>
       </Unit5>
       <Unit6>
-        <Filename Value="htmldocuments/myhtmlianaparse_document.inc"/>
+        <Filename Value="htmldocuments/SimpleHTMLDocument.inc"/>
         <IsPartOfProject Value="True"/>
       </Unit6>
     </Units>
