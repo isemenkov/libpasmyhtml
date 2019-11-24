@@ -1,6 +1,10 @@
 unit myhtmltestcase;
 
 {$mode objfpc}{$H+}
+{$IFOPT D+}
+  {$DEFINE DEBUG}
+{$ENDIF}
+
 
 interface
 
@@ -27,11 +31,6 @@ type
     procedure TearDown; override;
 
     function StringTokenize (AString : string) : TStringList;
-      {$IFNDEF DEBUG}inline;{$ENDIF}
-
-    function FindNextNodeById (ANode : pmyhtml_tree_node_t; AId : myhtml_tags_t)
-      : pmyhtml_tree_node_t; {$IFNDEF DEBUG}inline;{$ENDIF}
-    function NodeTextValue (ANode : pmyhtml_tree_node_t) : string;
       {$IFNDEF DEBUG}inline;{$ENDIF}
   published
     procedure TestParseDocument;
@@ -592,39 +591,6 @@ begin
   end;
 end;
 
-{ Find next node from ANode by AId }
-
-function TMyHTMLLibraryTestCase.FindNextNodeById(ANode: pmyhtml_tree_node_t;
-  AId: myhtml_tags_t): pmyhtml_tree_node_t;
-begin
-  while (ANode <> nil) and (myhtml_node_tag_id(ANode) <>
-    myhtml_tag_id_t(AId)) do
-  begin
-    ANode := myhtml_node_next(ANode);
-  end;
-  Result := ANode;
-end;
-
-{ Get node text value }
-
-function TMyHTMLLibraryTestCase.NodeTextValue(ANode: pmyhtml_tree_node_t
-  ): string;
-var
-  TextNode : pmyhtml_tree_node_t;
-begin
-  if ANode <> nil then
-  begin
-    TextNode := myhtml_node_child(ANode);
-    if (TextNode <> nil) and (myhtml_tags_t(myhtml_node_tag_id(TextNode)) =
-      MyHTML_TAG__TEXT) then
-    begin
-      Result := myhtml_node_text(TextNode, nil);
-    end else
-      Result := '';
-  end else
-    Result := '';
-end;
-
 { Test parse document }
 
 procedure TMyHTMLLibraryTestCase.TestParseDocument;
@@ -634,14 +600,45 @@ begin
 
   FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
     Length(SimpleHTMLDocument));
-
-  AssertTrue('Document parse not correct',
+  AssertTrue('Error document parse',
     FError = mystatus_t(MyHTML_STATUS_OK));
 end;
 
 { Test title tag value }
 
 procedure TMyHTMLLibraryTestCase.TestTitleTag;
+
+  { Find node start from ANode by tag node id }
+  function FindNextNodeById (ANode : pmyhtml_tree_node_t; AId : myhtml_tags_t)
+    : pmyhtml_tree_node_t; {$IFNDEF DEBUG}inline;{$ENDIF}
+  begin
+    while (ANode <> nil) and (myhtml_node_tag_id(ANode) <>
+      myhtml_tag_id_t(AId)) do
+    begin
+      ANode := myhtml_node_next(ANode);
+    end;
+    Result := ANode;
+  end;
+
+  { Get node text value }
+  function NodeTextValue (ANode : pmyhtml_tree_node_t) : string;
+    {$IFNDEF DEBUG}inline;{$ENDIF}
+  var
+  TextNode : pmyhtml_tree_node_t;
+  begin
+    if ANode <> nil then
+    begin
+      TextNode := myhtml_node_child(ANode);
+      if (TextNode <> nil) and (myhtml_tags_t(myhtml_node_tag_id(TextNode)) =
+        MyHTML_TAG__TEXT) then
+      begin
+        Result := myhtml_node_text(TextNode, nil);
+      end else
+        Result := '';
+    end else
+      Result := '';
+  end;
+
 var
   Node : pmyhtml_tree_node_t;
   Title : string;
@@ -651,84 +648,127 @@ begin
 
   FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
     Length(SimpleHTMLDocument));
-
-  AssertTrue('Document parse not correct',
+  AssertTrue('Error document parse',
     FError = mystatus_t(MyHTML_STATUS_OK));
 
   Node := myhtml_tree_get_node_head(FTree);
   if Node = nil then
-    Fail('Empty document head node');
+    Fail('Error tree head node is nil');
 
   Node := myhtml_node_child(Node);
   if Node = nil then
-    Fail('Empty head children node');
+    Fail('Error children node is nil');
 
   Node := FindNextNodeById(Node, MyHTML_TAG_TITLE);
-
   if Node = nil then
-    Fail('TITLE tag is not found');
+    Fail('Error TITLE tag is not found');
 
   Title := NodeTextValue(Node);
-
-  AssertTrue('Title text is not found', Title = 'Document Title');
+  AssertTrue('Error title text is not correct', Title = 'Document Title');
 end;
 
 { Test meta tag charser attribute value }
 
 procedure TMyHTMLLibraryTestCase.TestMetaTagCharsetAttributeValue;
+
+  { Find node start from ANode by tag node id }
+  function FindNextNodeById (ANode : pmyhtml_tree_node_t; AId : myhtml_tags_t)
+    : pmyhtml_tree_node_t; {$IFNDEF DEBUG}inline;{$ENDIF}
+  begin
+    while (ANode <> nil) and (myhtml_node_tag_id(ANode) <>
+      myhtml_tag_id_t(AId)) do
+    begin
+      ANode := myhtml_node_next(ANode);
+    end;
+    Result := ANode;
+  end;
+
+  { Find attribute start from AAttribute by node attribute key }
+  function FindNextAttributeByKey (ANode : pmyhtml_tree_node_t; AKey :
+    string) : pmyhtml_tree_attr_t; {$IFNDEF DEBUG}inline;{$ENDIF}
+  begin
+    Result := myhtml_attribute_by_key(ANode, PChar(AKey), Length(AKey));
+  end;
+
+  { Find node start from ANode and have attribute with exists key. Return
+    attribute or nil }
+  function FindNodeByIdAndAttributeByKey (ANode : pmyhtml_tree_node_t; AId :
+    myhtml_tags_t; AKey : string) : pmyhtml_tree_attr_t;
+    {$IFNDEF DEBUG}inline;{$ENDIF}
+  begin
+    Result := nil;
+    while (ANode <> nil) and (Result = nil) do
+    begin
+      ANode := FindNextNodeById(ANode, AId);
+      Result := FindNextAttributeByKey(ANode, AKey);
+    end;
+  end;
+
 var
   Node : pmyhtml_tree_node_t;
   Attribute : pmyhtml_tree_attr_t;
-  Find : Boolean;
+  Charset : string;
 begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
 
   FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
     Length(SimpleHTMLDocument));
-
-  AssertTrue('Document parse not correct',
+  AssertTrue('Error document parse',
     FError = mystatus_t(MyHTML_STATUS_OK));
 
   Node := myhtml_tree_get_node_head(FTree);
   if Node = nil then
-    Fail('Empty document head node');
+    Fail('Error tree head node is nil');
 
   Node := myhtml_node_child(Node);
   if Node = nil then
-    Fail('Empty head children node');
+    Fail('Error children node is nil');
 
-  Find := False;
-  while (Node <> nil) and (Find = False) do
-  begin
-    if myhtml_node_tag_id(Node) = myhtml_tag_id_t(MyHTML_TAG_META) then
-    begin
-      Attribute := myhtml_node_attribute_first(Node);
-
-      while (Attribute <> nil) and (Find = False) do
-      begin
-        if myhtml_attribute_key(Attribute, nil) = 'charset' then
-          Find := True;
-      end;
-
-    end;
-    Node := myhtml_node_next(Node);
-  end;
+  Attribute := FindNodeByIdAndAttributeByKey(Node, MyHTML_TAG_META, 'charset');
 
   if Attribute = nil then
-    Fail('Meta node attribute is empty');
+    Fail('Error META tag attribute is nil');
 
-  AssertTrue('Test document meta charset attribute',
-    myhtml_attribute_value(Attribute, nil) = 'utf-8');
+  Charset := myhtml_attribute_value(Attribute, nil);
+  AssertTrue('Error charser attribute is not correct', Charset = 'utf-8');
 end;
 
 { Test meta tag keywords attribute value }
 
 procedure TMyHTMLLibraryTestCase.TestMetaTagKeywordsAttributeValue;
+
+  { Find attribute start from AAttribute by node attribute key }
+  function FindNextAttributeByKeyValue (ANode : pmyhtml_tree_node_t; AKey :
+    string; AValue : string) : pmyhtml_tree_attr_t;
+    {$IFNDEF DEBUG}inline;{$ENDIF}
+  begin
+    Result := myhtml_attribute_by_key(ANode, PChar(AKey), Length(AKey));
+    if (Result <> nil) and (myhtml_attribute_value(Result, nil) <> AValue) then
+      Result := nil;
+  end;
+
+  { Find node start from ANode and have attribute with exists key and value.
+    Return node and attribute or nil }
+  function FindNodeByIdAndAttributeByKeyValue (ANode : pmyhtml_tree_node_t;
+    AId : myhtml_tags_t; AKey : string; AValue : string) : pmyhtml_tree_node_t;
+    {$IFNDEF DEBUG}inline;{$ENDIF}
+  var
+    Attribute: pmyhtml_tree_attr_t;
+  begin
+    Attribute := nil;
+    while (ANode <> nil) and (Attribute = nil) do
+    begin
+      ANode := myhtml_node_next(ANode);
+      if myhtml_node_tag_id(ANode) = myhtml_tag_id_t(AId) then
+        Attribute := FindNextAttributeByKeyValue(ANode, AKey, AValue);
+    end;
+    Result := ANode;
+  end;
+
 var
   Node : pmyhtml_tree_node_t;
   Attribute : pmyhtml_tree_attr_t;
-  Find : Boolean;
   Keywords : TStringList;
 begin
   myhtml_tree_clean(FTree);
@@ -736,63 +776,67 @@ begin
 
   FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
     Length(SimpleHTMLDocument));
-
-  AssertTrue('Document parse not correct',
+  AssertTrue('Error document parse',
     FError = mystatus_t(MyHTML_STATUS_OK));
 
   Node := myhtml_tree_get_node_head(FTree);
   if Node = nil then
-    Fail('Empty document head node');
+    Fail('Error tree head node is nil');
 
   Node := myhtml_node_child(Node);
   if Node = nil then
-    Fail('Empty head children node');
+    Fail('Error children node is nil');
 
-  Find := False;
-  while (Node <> nil) and (Find = False) do
-  begin
-    if myhtml_node_tag_id(Node) = myhtml_tag_id_t(MyHTML_TAG_META) then
-    begin
-      Attribute := myhtml_node_attribute_first(Node);
+  Node := FindNodeByIdAndAttributeByKeyValue(Node, MyHTML_TAG_META, 'name',
+    'keywords');
+  if Node = nil then
+    Fail('Error META tag is nil');
 
-      while (Attribute <> nil) and (Find = False) do
-      begin
-        if (myhtml_attribute_key(Attribute, nil) = 'name') and
-          (myhtml_attribute_value(Attribute, nil) = 'keywords') then
-          Find := True
-        else
-          Attribute := myhtml_attribute_next(Attribute);
-      end;
-
-    end;
-    Node := myhtml_node_next(Node);
-  end;
-
+  Attribute := myhtml_attribute_by_key(Node, 'content', Length('content'));
   if Attribute = nil then
-    Fail('Meta node attribute is empty');
+    Fail('Error META tag attribute is nil');
 
-  while Attribute <> nil do
-  begin
-    if myhtml_attribute_key(Attribute, nil) = 'content' then
-    begin
-      Keywords := StringTokenize(myhtml_attribute_value(Attribute, nil));
-    end;
-
-    Attribute := myhtml_attribute_next(Attribute);
-  end;
-
-  AssertTrue('Test kewords count', Keywords.Count = 2);
-  AssertTrue('Test keyword 1', Keywords[0] = 'some_keywords');
-  AssertTrue('Test keyword 2', Keywords[1] = 'keywords');
+  Keywords := StringTokenize(myhtml_attribute_value(Attribute, nil));
+  AssertTrue('Error keywords list count not correct', Keywords.Count = 2);
+  AssertTrue('Error keywords 0 is not correct', Keywords[0] = 'some_keywords');
+  AssertTrue('Error keywords 1 is not correct', Keywords[1] = 'keywords');
 end;
 
 { Test meta tag description attribute value }
 
 procedure TMyHTMLLibraryTestCase.TestMetaTagDescriptionAttributeValue;
+
+  { Find attribute start from AAttribute by node attribute key }
+  function FindNextAttributeByKeyValue (ANode : pmyhtml_tree_node_t; AKey :
+    string; AValue : string) : pmyhtml_tree_attr_t;
+    {$IFNDEF DEBUG}inline;{$ENDIF}
+  begin
+    Result := myhtml_attribute_by_key(ANode, PChar(AKey), Length(AKey));
+    if (Result <> nil) and (myhtml_attribute_value(Result, nil) <> AValue) then
+      Result := nil;
+  end;
+
+  { Find node start from ANode and have attribute with exists key and value.
+    Return node and attribute or nil }
+  function FindNodeByIdAndAttributeByKeyValue (ANode : pmyhtml_tree_node_t;
+    AId : myhtml_tags_t; AKey : string; AValue : string) : pmyhtml_tree_node_t;
+    {$IFNDEF DEBUG}inline;{$ENDIF}
+  var
+    Attribute : pmyhtml_tree_attr_t;
+  begin
+    Attribute := nil;
+    while (ANode <> nil) and (Attribute = nil) do
+    begin
+      ANode := myhtml_node_next(ANode);
+      if myhtml_node_tag_id(ANode) = myhtml_tag_id_t(AId) then
+        Attribute := FindNextAttributeByKeyValue(ANode, AKey, AValue);
+    end;
+    Result := ANode;
+  end;
+
 var
   Node : pmyhtml_tree_node_t;
   Attribute : pmyhtml_tree_attr_t;
-  Find : Boolean;
   Description : string;
 begin
   myhtml_tree_clean(FTree);
@@ -800,61 +844,66 @@ begin
 
   FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
     Length(SimpleHTMLDocument));
-
-  AssertTrue('Document parse not correct',
+  AssertTrue('Error document parse',
     FError = mystatus_t(MyHTML_STATUS_OK));
 
   Node := myhtml_tree_get_node_head(FTree);
   if Node = nil then
-    Fail('Empty document head node');
+    Fail('Error tree head node is nil');
 
   Node := myhtml_node_child(Node);
   if Node = nil then
-    Fail('Empty head children node');
+    Fail('Error children node is nil');
 
-  Find := False;
-  while (Node <> nil) and (Find = False) do
-  begin
-    if myhtml_node_tag_id(Node) = myhtml_tag_id_t(MyHTML_TAG_META) then
-    begin
-      Attribute := myhtml_node_attribute_first(Node);
+  Node := FindNodeByIdAndAttributeByKeyValue(Node, MyHTML_TAG_META, 'name',
+    'description');
+  if Node = nil then
+    Fail('Error META tag is nil');
 
-      while (Attribute <> nil) and (Find = False) do
-      begin
-        if (myhtml_attribute_key(Attribute, nil) = 'name') and
-          (myhtml_attribute_value(Attribute, nil) = 'description') then
-          Find := True
-        else
-          Attribute := myhtml_attribute_next(Attribute);
-      end;
-
-    end;
-    Node := myhtml_node_next(Node);
-  end;
-
+  Attribute := myhtml_attribute_by_key(Node, 'content', Length('content'));
   if Attribute = nil then
-    Fail('Meta node attribute is empty');
+    Fail('Error META tag attribute is nil');
 
-  while Attribute <> nil do
-  begin
-    if myhtml_attribute_key(Attribute, nil) = 'content' then
-    begin
-      Description := myhtml_attribute_value(Attribute, nil);
-    end;
-
-    Attribute := myhtml_attribute_next(Attribute);
-  end;
-
-  AssertTrue('Test meta description', Description = 'description');
+  Description := myhtml_attribute_value(Attribute, nil);
+  AssertTrue('Error description attribute is not correct', Description =
+    'description');
 end;
 
 { Test link tag rel attribute }
 
 procedure TMyHTMLLibraryTestCase.TestLinkTagRelAttribute;
+
+  { Find attribute start from AAttribute by node attribute key }
+  function FindNextAttributeByKeyValue (ANode : pmyhtml_tree_node_t; AKey :
+    string; AValue : string) : pmyhtml_tree_attr_t;
+    {$IFNDEF DEBUG}inline;{$ENDIF}
+  begin
+    Result := myhtml_attribute_by_key(ANode, PChar(AKey), Length(AKey));
+    if (Result <> nil) and (myhtml_attribute_value(Result, nil) <> AValue) then
+      Result := nil;
+  end;
+
+  { Find node start from ANode and have attribute with exists key and value.
+    Return node and attribute or nil }
+  function FindNodeByIdAndAttributeByKeyValue (ANode : pmyhtml_tree_node_t;
+    AId : myhtml_tags_t; AKey : string; AValue : string) : pmyhtml_tree_node_t;
+    {$IFNDEF DEBUG}inline;{$ENDIF}
+  var
+    Attribute : pmyhtml_tree_attr_t;
+  begin
+    Attribute := nil;
+    while (ANode <> nil) and (Attribute = nil) do
+    begin
+      ANode := myhtml_node_next(ANode);
+      if myhtml_node_tag_id(ANode) = myhtml_tag_id_t(AId) then
+        Attribute := FindNextAttributeByKeyValue(ANode, AKey, AValue);
+    end;
+    Result := ANode;
+  end;
+
 var
-  Node, Link : pmyhtml_tree_node_t;
+  Node : pmyhtml_tree_node_t;
   Attribute : pmyhtml_tree_attr_t;
-  Find : Boolean;
   Stylesheet : string;
 begin
   myhtml_tree_clean(FTree);
@@ -862,56 +911,28 @@ begin
 
   FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
     Length(SimpleHTMLDocument));
-
-  AssertTrue('Document parse not correct',
+  AssertTrue('Error document parse',
     FError = mystatus_t(MyHTML_STATUS_OK));
 
   Node := myhtml_tree_get_node_head(FTree);
   if Node = nil then
-    Fail('Empty document head node');
+    Fail('Error tree head node is nil');
 
   Node := myhtml_node_child(Node);
   if Node = nil then
-    Fail('Empty head children node');
+    Fail('Error children node is nil');
 
-  Find := False;
-  while (Node <> nil) and (Find = False) do
-  begin
-    if myhtml_node_tag_id(Node) = myhtml_tag_id_t(MyHTML_TAG_LINK) then
-    begin
-      Attribute := myhtml_node_attribute_first(Node);
+  Node := FindNodeByIdAndAttributeByKeyValue(Node, MyHTML_TAG_LINK, 'rel',
+    'stylesheet');
+  if Node = nil then
+    Fail('Error LINK tag is nil');
 
-      while (Attribute <> nil) and (Find = False) do
-      begin
-        if (myhtml_attribute_key(Attribute, nil) = 'rel') and
-          (myhtml_attribute_value(Attribute, nil) = 'stylesheet') then
-          begin
-            Find := True;
-            Link := Node;
-          end
-        else
-          Attribute := myhtml_attribute_next(Attribute);
-      end;
-
-    end;
-    Node := myhtml_node_next(Node);
-  end;
-
+  Attribute := myhtml_attribute_by_key(Node, 'href', Length('href'));
   if Attribute = nil then
-    Fail('Link node attribute is empty');
+    Fail('Error LINK tag attribute is nil');
 
-  Attribute := myhtml_node_attribute_first(Link);
-  while Attribute <> nil do
-  begin
-    if myhtml_attribute_key(Attribute, nil) = 'href' then
-    begin
-      Stylesheet := myhtml_attribute_value(Attribute, nil);
-    end;
-
-    Attribute := myhtml_attribute_next(Attribute);
-  end;
-
-  AssertTrue('Test link stylesheet', Stylesheet = 'style.css');
+  Stylesheet := myhtml_attribute_value(Attribute, nil);
+  AssertTrue('Error link href is not correct', Stylesheet = 'style.css');
 end;
 
 initialization

@@ -89,6 +89,7 @@ type
       TTagNodeAttributeTransformCallback = procedure (ANodeAttribute :
         TTagNodeAttribute; AData : Pointer) of object;
 
+      { Custom filter interface }
       IFilter = class
       protected
         function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; virtual;
