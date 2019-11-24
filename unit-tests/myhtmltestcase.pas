@@ -13,9 +13,9 @@ uses
 
 type
 
-  { TMyHTMLLibraryTestCase }
+  { TMyHTMLLibrarySimpleHTMLTestCase }
 
-  TMyHTMLLibraryTestCase = class(TTestCase)
+  TMyHTMLLibrarySimpleHTMLTestCase = class(TTestCase)
   private
     FHTML : pmyhtml_t;
     FTree : pmyhtml_tree_t;
@@ -41,43 +41,33 @@ type
     procedure TestLinkTagRelAttribute;
   end;
 
-  { TMyHTMLParserSimpleParseTestCase }
+  { TParserSimpleHTMLTestCase }
 
-  TMyHTMLParserSimpleParseTestCase = class(TTestCase)
+  TParserSimpleHTMLTestCase = class(TTestCase)
   private
     FParser : TParser;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
 
-    function TagTitleCallback (ANode : TParser.TTagNode; AData : Pointer)
-      : Boolean;
-    function TagMetaCallback (ANode : TParser.TTagNode; AData : Pointer)
-      : Boolean;
-    function TagAttributeCharsetKeyCallback (AAttribute :
-      TParser.TTagNodeAttribute; AData : Pointer) : Boolean;
-    function TagAttributeContentKeyCallback (AAttribute :
-      TParser.TTagNodeAttribute; AData : Pointer) : Boolean;
-    function TagAttributeNameKeywordsCallback (AAttribute :
-      TParser.TTagNodeAttribute; AData : Pointer) : Boolean;
-    function TagLinkCallback (ANode : TParser.TTagNode; AData : Pointer)
-      : Boolean;
-    function TagAttributeRelStylesheet (AAttribute :
+    function TagIdEqualCallback (ANode : TParser.TTagNode; AData : Pointer) :
+      Boolean;
+    function TagAttributeKeyEqualCallback (ANodeAttribute :
       TParser.TTagNodeAttribute; AData : Pointer) : Boolean;
   published
-    procedure TestDocumentParse;
-    procedure TestDocumentParseTitle;
-    procedure TestDocumentParseTitleCallback;
-    procedure TestDocumentParseMetaCharset;
-    procedure TestDocumentParseMetaCharsetCallback;
-    procedure TestDocumentParseMetaKeywords;
-    procedure TestDocumentParseMetaKeywordsCallback;
-    procedure TestDocumentParseMetaDescription;
-    procedure TestDocumentParseMetaDescriptionCallback;
-    procedure TestDocumentParseLinkStylesheet;
-    procedure TestDocumentParseLinkStylesheetCallback;
-    procedure TestDocumentParseHeader;
-    procedure TestDocumentParseContent;
+    procedure TestParseDocument;
+    procedure TestTitleTag;
+    procedure TestTitleTagCallback;
+    procedure TestMetaTagCharsetAttributeValue;
+    procedure TestMetaTagCharsetAttributeValueCallback;
+    procedure TestMetaTagKeywordsAttributeValue;
+    procedure TestMetaTagKeywordsAttributeValueCallback;
+    procedure TestMetaTagDescriptionAttributeValue;
+    procedure TestMetaTagDescriptionAttributeValueCallback;
+    procedure TestLinkTagStylesheetAttributeValue;
+    procedure TestLinkTagStylesheetAttributeValueCallback;
+    procedure TestWrapperHeaderClassDivValue;
+    procedure TestWrapperMiddleContainerContentClassDivValue;
   end;
 
   { TMyHTMLParserTeamtenTestCase }
@@ -279,270 +269,385 @@ begin
   AssertTrue('Test element 1', List[3] = 'unsolicited.css');
 end;
 
-{ TMyHTMLParserSimpleTestCase }
+{ TParserSimpleHTMLTestCase }
 
-procedure TMyHTMLParserSimpleParseTestCase.SetUp;
+procedure TParserSimpleHTMLTestCase.SetUp;
 begin
   FParser := TParser.Create(MyHTML_OPTIONS_PARSE_MODE_SEPARATELY,
     MyENCODING_UTF_8, 1, 4096, MyHTML_TREE_PARSE_FLAGS_CLEAN);
 end;
 
-procedure TMyHTMLParserSimpleParseTestCase.TearDown;
+procedure TParserSimpleHTMLTestCase.TearDown;
 begin
   FreeAndNil(FParser);
 end;
 
-function TMyHTMLParserSimpleParseTestCase.TagTitleCallback(ANode:
-  TParser.TTagNode; AData: Pointer): Boolean;
+function TParserSimpleHTMLTestCase.TagIdEqualCallback(ANode: TParser.TTagNode;
+  AData: Pointer): Boolean;
 begin
-  Result := ANode.Tag = MyHTML_TAG_TITLE;
+  AssertTrue('Error node in tag id equal callback function is nil',
+    ANode <> nil);
+  AssertTrue('Error data in tag id equal callback function is nil',
+    AData <> nil);
 
-  AssertTrue('Title tag callback data not nil', AData <> nil);
+  Result := (ANode <> nil) and (TParser.TTag(AData^) = ANode.Tag);
 end;
 
-function TMyHTMLParserSimpleParseTestCase.TagMetaCallback(
-  ANode: TParser.TTagNode; AData: Pointer): Boolean;
+function TParserSimpleHTMLTestCase.TagAttributeKeyEqualCallback(
+  ANodeAttribute: TParser.TTagNodeAttribute; AData: Pointer): Boolean;
 begin
-  Result := ANode.Tag = MyHTML_TAG_META;
+  AssertTrue('Error attribute in tag attribute key equal callback is nil',
+    ANodeAttribute <> nil);
+  AssertTrue('Error data in tag attribute key equal callback is nil',
+    AData <> nil);
 
-  AssertTrue('Meta tag callback data not nil', AData <> nil);
+  Result := (ANodeAttribute <> nil) and (PChar(AData) = ANodeAttribute.Key);
 end;
 
-function TMyHTMLParserSimpleParseTestCase.TagAttributeCharsetKeyCallback(
-  AAttribute: TParser.TTagNodeAttribute; AData: Pointer): Boolean;
-begin
-  Result := AAttribute.Key = 'charset';
-
-  AssertTrue('Tag attribute charset callback data not nil', AData <> nil);
-end;
-
-function TMyHTMLParserSimpleParseTestCase.TagAttributeContentKeyCallback(
-  AAttribute: TParser.TTagNodeAttribute; AData: Pointer): Boolean;
-begin
-  Result := AAttribute.Key = 'content';
-
-  AssertTrue('Tag attribute content key callback data not nil', AData <> nil);
-end;
-
-function TMyHTMLParserSimpleParseTestCase.TagAttributeNameKeywordsCallback(
-  AAttribute: TParser.TTagNodeAttribute; AData: Pointer): Boolean;
-begin
-  Result := (AAttribute.Key = 'name') and (AAttribute.Value = 'keywords');
-
-  AssertTrue('Tag attribute name keywords callback data not nil', AData <> nil);
-end;
-
-function TMyHTMLParserSimpleParseTestCase.TagLinkCallback(
-  ANode: TParser.TTagNode; AData: Pointer): Boolean;
-begin
-  AssertTrue('Tag link callback', ANode.Tag = MyHTML_TAG_LINK);
-  Result := True;
-
-  AssertTrue('Tag link callback data not nil', AData <> nil);
-end;
-
-function TMyHTMLParserSimpleParseTestCase.TagAttributeRelStylesheet(
-  AAttribute: TParser.TTagNodeAttribute; AData: Pointer): Boolean;
-begin
-  Result := (AAttribute.Key = 'rel') and (AAttribute.Value = 'stylesheet');
-
-  AssertTrue('Tag attribute rel stylesheet callback data not nil', AData <>
-    nil);
-end;
-
-procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParse;
+{ Test document parse }
+procedure TParserSimpleHTMLTestCase.TestParseDocument;
 begin
   FParser.Parse(SimpleHTMLDocument, DOCUMENT_HTML);
-  AssertFalse('Test parse html document', FParser.HasErrors);
+  AssertFalse('Error document parse: ' + FParser.Error, FParser.HasErrors);
 end;
 
-procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseTitle;
+{ Test title tag value }
+procedure TParserSimpleHTMLTestCase.TestTitleTag;
 var
-  title : TParser.TTagNode;
-begin
-  title := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
-    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TITLE));
-
-  if not title.IsOk then
-    Fail('Empty document title node');
-
-  AssertTrue('Test document title', title.Value = 'Document Title');
-end;
-
-procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseTitleCallback;
-var
-  title : string;
-begin
-  title := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
-    .FirstChildrenNode(TParser.TFilter.Create.TagNodeCallback(
-      @TagTitleCallback, @Self))
-    .Value;
-
-  AssertTrue('Test document title callback', title = 'Document Title');
-end;
-
-procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaCharset;
-var
-  charset : string;
-begin
-  charset := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
-    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_META)
-      .AttributeKey('charset'))
-    .FirstNodeAttribute(TParser.TFilter.Create.AttributeKey('charset'))
-    .Value;
-
-  AssertTrue('Test document meta charset attribute', charset = 'utf-8');
-end;
-
-procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaCharsetCallback;
-var
-  charset : string;
-begin
-  charset := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
-    .FirstChildrenNode(TParser.TFilter.Create.TagNodeCallback(@TagMetaCallback,
-      @Self)
-      .TagNodeAttributeCallback(@TagAttributeCharsetKeyCallback, @Self))
-    .FirstNodeAttribute(TParser.TFilter.Create.TagNodeAttributeCallback(
-      @TagAttributeCharsetKeyCallback, @Self))
-    .Value;
-
-  AssertTrue('Test document meta charset attribute callback', charset =
-    'utf-8');
-end;
-
-procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaKeywords;
-var
-  Keywords : TStringList;
-begin
-  Keywords := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
-    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_META)
-      .AttributeKey('name').AttributeValue('keywords'))
-    .FirstNodeAttribute(TParser.TFilter.Create.AttributeKey('content'))
-    .ValueList;
-
-  AssertTrue('Test keywords count', Keywords.Count = 2);
-  AssertTrue('Test keyword 1', Keywords[0] = 'some_keywords');
-  AssertTrue('Test keyword 2', Keywords[1] = 'keywords');
-end;
-
-procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaKeywordsCallback;
-var
-  Keywords : TStringList;
-begin
-  Keywords := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
-    .FirstChildrenNode(TParser.TFilter.Create.TagNodeCallback(@TagMetaCallback,
-      @Self)
-      .TagNodeAttributeCallback(@TagAttributeNameKeywordsCallback, @Self))
-    .FirstNodeAttribute(TParser.TFilter.Create.TagNodeAttributeCallback(
-      @TagAttributeContentKeyCallback, @Self))
-    .ValueList;
-
-  AssertTrue('Test keywords count callback', Keywords.Count = 2);
-  AssertTrue('Test keyword 1 callback', Keywords[0] = 'some_keywords');
-  AssertTrue('Test keyword 2 callback', Keywords[1] = 'keywords');
-end;
-
-procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaDescription;
-var
-  Description : string;
-begin
-  Description := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
-    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_META)
-      .AttributeKeyValue('name', 'description'))
-    .FirstNodeAttribute(TParser.TFilter.Create.AttributeKey('content'))
-    .Value;
-
-  AssertTrue('Test meta description', Description = 'description');
-end;
-
-procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseMetaDescriptionCallback;
-var
-  Description : string;
-begin
-  Description := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
-    .FirstChildrenNode(TParser.TFilter.Create.TagNodeCallback(@TagMetaCallback,
-      @Self)
-      .AttributeKeyValue('name', 'description'))
-    .FirstNodeAttribute(TParser.TFilter.Create.TagNodeAttributeCallback(
-      @TagAttributeContentKeyCallback, @Self))
-    .Value;
-
-  AssertTrue('Test meta description callback', Description = 'description');
-end;
-
-procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseLinkStylesheet;
-var
-  Stylesheet : string;
   Node : TParser.TTagNode;
-  NodeAttribute : TParser.TTagNodeAttribute;
+  Value : string;
 begin
   Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD);
+  AssertTrue('Error head node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEAD);
 
-  AssertTrue('Test node HEAD', Node.IsOk and (Node.Tag =
-    TParser.TTag.MyHTML_TAG_HEAD));
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TITLE));
+  AssertTrue('Error title tag is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_TITLE);
+
+  Value := Node.Value;
+  AssertTrue('Error title tag value is not correct', Value = 'Document Title');
+end;
+
+{ Test title tag value by callback function }
+procedure TParserSimpleHTMLTestCase.TestTitleTagCallback;
+var
+  Node : TParser.TTagNode;
+  Value : string;
+  TagId : TParser.TTag = MyHTML_TAG_TITLE;
+begin
+  Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD);
+  AssertTrue('Error head node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEAD);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.TagNodeCallback(
+    @TagIdEqualCallback, @TagId));
+  AssertTrue('Error title tag is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_TITLE);
+
+  Value := Node.Value;
+  AssertTrue('Error title node value is not correct', Value = 'Document Title');
+end;
+
+{ Test meta tag charset attribute value }
+procedure TParserSimpleHTMLTestCase.TestMetaTagCharsetAttributeValue;
+var
+  Node : TParser.TTagNode;
+  Attribute : TParser.TTagNodeAttribute;
+  Value : string;
+begin
+  Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD);
+  AssertTrue('Error head node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEAD);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_META)
+    .AttributeKey('charset'));
+  AssertTrue('Error meta tag is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_META);
+
+  Attribute := Node.FirstNodeAttribute(TParser.TFilter.Create.AttributeKey(
+    'charset'));
+  AssertTrue('Error charset attribute is nil', Attribute.IsOk);
+  AssertTrue('Error not correct attribute key', Attribute.Key = 'charset');
+
+  Value := Attribute.Value;
+  AssertTrue('Error charset attribute is not correct', Value = 'utf-8');
+end;
+
+{ Test meta tag charset attribute value by callback functions }
+procedure TParserSimpleHTMLTestCase.TestMetaTagCharsetAttributeValueCallback;
+var
+  Node : TParser.TTagNode;
+  Attribute : TParser.TTagNodeAttribute;
+  Value : string;
+  TagId : TParser.TTag = MyHTML_TAG_META;
+  CharsetAttribute : string = 'charset';
+begin
+  Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD);
+  AssertTrue('Error head node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEAD);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create
+    .TagNodeCallback(@TagIdEqualCallback, @TagId)
+    .TagNodeAttributeCallback(@TagAttributeKeyEqualCallback,
+      PChar(CharsetAttribute)));
+  AssertTrue('Error meta tag is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_META);
+
+  Attribute := Node.FirstNodeAttribute(TParser.TFilter.Create
+    .TagNodeAttributeCallback(@TagAttributeKeyEqualCallback,
+      PChar(CharsetAttribute)));
+  AssertTrue('Error charset attribute is nil', Attribute.IsOk);
+  AssertTrue('Error not correct attribute key', Attribute.Key = 'charset');
+
+  Value := Attribute.Value;
+  AssertTrue('Error charset attribute is not correct', Value = 'utf-8');
+end;
+
+{ Test meta tag keywords attribute value }
+procedure TParserSimpleHTMLTestCase.TestMetaTagKeywordsAttributeValue;
+var
+  Node : TParser.TTagNode;
+  Attribute : TParser.TTagNodeAttribute;
+  Keywords : TStringList;
+begin
+  Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD);
+  AssertTrue('Error head node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEAD);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_META)
+    .AttributeKeyValue('name', 'keywords'));
+  AssertTrue('Error meta tag is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_META);
+
+  Attribute := Node.FirstNodeAttribute(TParser.TFilter.Create
+    .AttributeKey('content'));
+  AssertTrue('Error charset attribute is nil', Attribute.IsOk);
+  AssertTrue('Error not correct attribute key', Attribute.Key = 'content');
+
+  Keywords := Attribute.ValueList;
+  AssertTrue('Error keywords list count', Keywords.Count = 2);
+  AssertTrue('Error keywords list 0 value is not correct',
+    Keywords[0] = 'some_keywords');
+  AssertTrue('Error keywords list 1 value is not correct',
+    Keywords[1] = 'keywords');
+end;
+
+{ Test meta tag keywords attribute value by callback functions }
+procedure TParserSimpleHTMLTestCase.TestMetaTagKeywordsAttributeValueCallback;
+var
+  Node : TParser.TTagNode;
+  Attribute : TParser.TTagNodeAttribute;
+  Keywords : TStringList;
+  TagId : TParser.TTag = MyHTML_TAG_META;
+  KeywordsAttribute : string = 'content';
+begin
+  Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD);
+  AssertTrue('Error head node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEAD);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create
+    .TagNodeCallback(@TagIdEqualCallback, @TagId)
+    .TagNodeAttributeCallback(@TagAttributeKeyEqualCallback,
+      PChar(KeywordsAttribute)));
+  AssertTrue('Error meta tag is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_META);
+
+  Attribute := Node.FirstNodeAttribute(TParser.TFilter.Create
+    .TagNodeAttributeCallback(@TagAttributeKeyEqualCallback,
+      PChar(KeywordsAttribute)));
+  AssertTrue('Error charset attribute is nil', Attribute.IsOk);
+  AssertTrue('Error not correct attribute key', Attribute.Key = 'content');
+
+  Keywords := Attribute.ValueList;
+  AssertTrue('Error keywords list count', Keywords.Count = 2);
+  AssertTrue('Error keywords list 0 value is not correct',
+    Keywords[0] = 'some_keywords');
+  AssertTrue('Error keywords list 0 value is not correct',
+    Keywords[1] = 'keywords');
+end;
+
+{ Test meta tag description attribute value }
+procedure TParserSimpleHTMLTestCase.TestMetaTagDescriptionAttributeValue;
+var
+  Node : TParser.TTagNode;
+  Attribute : TParser.TTagNodeAttribute;
+  Value : string;
+begin
+  Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD);
+  AssertTrue('Error head node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEAD);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_META)
+    .AttributeKeyValue('name', 'description'));
+  AssertTrue('Error meta tag is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_META);
+
+  Attribute := Node.FirstNodeAttribute(TParser.TFilter.Create
+    .AttributeKey('content'));
+  AssertTrue('Error charset attribute is nil', Attribute.IsOk);
+  AssertTrue('Error not correct attribute key', Attribute.Key = 'content');
+
+  Value := Attribute.Value;
+  AssertTrue('Error description attribute is not correct',
+    Value = 'description');
+end;
+
+{ Test meta tag description attribute value by callback functions }
+procedure TParserSimpleHTMLTestCase.TestMetaTagDescriptionAttributeValueCallback;
+var
+  Node : TParser.TTagNode;
+  Attribute : TParser.TTagNodeAttribute;
+  Value : string;
+  TagId : TParser.TTag = MyHTML_TAG_META;
+  DescriptionAttribute : string = 'content';
+begin
+  Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD);
+  AssertTrue('Error head node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEAD);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create
+    .TagNodeCallback(@TagIdEqualCallback, @TagId)
+    .AttributeKeyValue('name', 'description'));
+  AssertTrue('Error meta tag is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_META);
+
+  Attribute := Node.FirstNodeAttribute(TParser.TFilter.Create
+    .TagNodeAttributeCallback(@TagAttributeKeyEqualCallback,
+      PChar(DescriptionAttribute)));
+  AssertTrue('Error description attribute is nil', Attribute.IsOk);
+  AssertTrue('Error not correct attribute key', Attribute.Key = 'content');
+
+  Value := Attribute.Value;
+  AssertTrue('Error description attribute is not correct',
+    Value = 'description');
+end;
+
+{ Test ling tag rel attribute }
+procedure TParserSimpleHTMLTestCase.TestLinkTagStylesheetAttributeValue;
+var
+  Node : TParser.TTagNode;
+  Attribute : TParser.TTagNodeAttribute;
+  Value : string;
+begin
+  Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD);
+  AssertTrue('Error head node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEAD);
 
   Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_LINK)
-    .AttributeKey('rel').AttributeValue('stylesheet'));
+    .AttributeKeyValue('rel', 'stylesheet'));
+  AssertTrue('Error meta tag is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_LINK);
 
-  AssertTrue('Test node LINK', Node.IsOk and (Node.Tag =
-    TParser.TTag.MyHTML_TAG_LINK));
+  Attribute := Node.FirstNodeAttribute(TParser.TFilter.Create
+    .AttributeKey('href'));
+  AssertTrue('Error charset attribute is nil', Attribute.IsOk);
+  AssertTrue('Error not correct attribute key', Attribute.Key = 'href');
 
-  NodeAttribute := Node.FirstNodeAttribute(TParser.TFilter.Create.AttributeKey(
-    'href'));
-
-  AssertTrue('Test node attribute', NodeAttribute.IsOk);
-
-  Stylesheet := NodeAttribute.Value;
-
-  AssertTrue('Test link href', Stylesheet = 'style.css');
+  Value := Attribute.Value;
+  AssertTrue('Error stylesheet attribute is not correct',
+    Value = 'style.css');
 end;
 
-procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseLinkStylesheetCallback;
+{ Test ling tag rel attribute by callback functions }
+procedure TParserSimpleHTMLTestCase.TestLinkTagStylesheetAttributeValueCallback;
 var
-  Stylesheet : string;
+  Node : TParser.TTagNode;
+  Attribute : TParser.TTagNodeAttribute;
+  Value : string;
+  TagId : TParser.TTag = MyHTML_TAG_LINK;
+  StylesheetAttribute : string = 'href';
 begin
-  Stylesheet := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD)
-    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_LINK)
-      .TagNodeCallback(@TagLinkCallback, @Self)
-      .TagNodeAttributeCallback(@TagAttributeRelStylesheet, @Self))
-    .FirstNodeAttribute(TParser.TFilter.Create.AttributeKey('href'))
-    .Value;
+  Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD);
+  AssertTrue('Error head node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEAD);
 
-  AssertTrue('Test link href callback', Stylesheet = 'style.css');
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create
+    .TagNodeCallback(@TagIdEqualCallback, @TagId)
+    .AttributeKeyValue('rel', 'stylesheet'));
+  AssertTrue('Error meta tag is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_LINK);
+
+  Attribute := Node.FirstNodeAttribute(TParser.TFilter.Create
+    .TagNodeAttributeCallback(@TagAttributeKeyEqualCallback,
+      PChar(StylesheetAttribute)));
+  AssertTrue('Error charset attribute is nil', Attribute.IsOk);
+  AssertTrue('Error not correct attribute key', Attribute.Key = 'href');
+
+  Value := Attribute.Value;
+  AssertTrue('Error rel attribute is not correct', Value = 'style.css');
 end;
 
-procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseHeader;
+{ Test inner div header value }
+procedure TParserSimpleHTMLTestCase.TestWrapperHeaderClassDivValue;
 var
+  Node : TParser.TTagNode;
   Value : string;
 begin
-  Value := FParser.Parse(SimpleHTMLDocument, DOCUMENT_BODY)
-    .FirstChildrenNode(TParser.TFilter.Create.ContainsClassOnly('wrapper'))
-    .FirstChildrenNode(TParser.TFilter.Create.ContainsClassOnly('header'))
-    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_STRONG))
-    .Value;
+  Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_BODY);
+  AssertTrue('Error body node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_BODY);
 
-  AssertTrue('Test body tag class filter header', Value = 'Header:');
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create
+    .ContainsClassOnly('wrapper'));
+  AssertTrue('Error div node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create
+    .ContainsClassOnly('header'));
+  AssertTrue('Error header node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEADER);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_STRONG));
+  AssertTrue('Error strong node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_STRONG);
+
+  Value := Node.Value;
+  AssertTrue('Error inner div value is not correct', Value = 'Header:');
 end;
 
-procedure TMyHTMLParserSimpleParseTestCase.TestDocumentParseContent;
+{ Test inner div header value }
+procedure TParserSimpleHTMLTestCase
+  .TestWrapperMiddleContainerContentClassDivValue;
 var
+  Node : TParser.TTagNode;
   Value : string;
 begin
-  Value := FParser.Parse(SimpleHTMLDocument, DOCUMENT_BODY)
-    .FirstChildrenNode(TParser.TFilter.Create.ContainsClass('wrapper'))
-    .FirstChildrenNode(TParser.TFilter.Create.ContainsClass('middle'))
-    .FirstChildrenNode(TParser.TFilter.Create.ContainsClass('container'))
-    .FirstChildrenNode(TParser.TFilter.Create.ContainsClass('content'))
-    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_STRONG))
-    .Value;
+  Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_BODY);
+  AssertTrue('Error body node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_BODY);
 
-  AssertTrue('Test body tag class filter content', Value = 'Content:');
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create
+    .ContainsClass('wrapper'));
+  AssertTrue('Error div node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create
+    .ContainsClass('middle'));
+  AssertTrue('Error div node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create
+    .ContainsClass('container'));
+  AssertTrue('Error div node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create
+    .ContainsClass('content'));
+  AssertTrue('Error main node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_MAIN);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_STRONG));
+  AssertTrue('Error strong node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_STRONG);
+
+  Value := Node.Value;
+  AssertTrue('Error inner div value is not correct', Value = 'Content:');
 end;
 
 { TMyHTMLLibraryTestCase }
 { Test case for some basic library opportunities }
-
-procedure TMyHTMLLibraryTestCase.SetUp;
+procedure TMyHTMLLibrarySimpleHTMLTestCase.SetUp;
 begin
   FParserOptions := MyHTML_OPTIONS_PARSE_MODE_SEPARATELY;
   FEncoding := MyENCODING_UTF_8;
@@ -558,7 +663,7 @@ begin
   myhtml_tree_parse_flags_set(FTree, FFlags);
 end;
 
-procedure TMyHTMLLibraryTestCase.TearDown;
+procedure TMyHTMLLibrarySimpleHTMLTestCase.TearDown;
 begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
@@ -567,8 +672,7 @@ begin
 end;
 
 { Tokenize string by space symbol }
-
-function TMyHTMLLibraryTestCase.StringTokenize(AString: string
+function TMyHTMLLibrarySimpleHTMLTestCase.StringTokenize(AString: string
   ): TStringList;
 var
   Index : SizeInt;
@@ -592,8 +696,7 @@ begin
 end;
 
 { Test parse document }
-
-procedure TMyHTMLLibraryTestCase.TestParseDocument;
+procedure TMyHTMLLibrarySimpleHTMLTestCase.TestParseDocument;
 begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
@@ -605,8 +708,7 @@ begin
 end;
 
 { Test title tag value }
-
-procedure TMyHTMLLibraryTestCase.TestTitleTag;
+procedure TMyHTMLLibrarySimpleHTMLTestCase.TestTitleTag;
 
   { Find node start from ANode by tag node id }
   function FindNextNodeById (ANode : pmyhtml_tree_node_t; AId : myhtml_tags_t)
@@ -668,8 +770,7 @@ begin
 end;
 
 { Test meta tag charser attribute value }
-
-procedure TMyHTMLLibraryTestCase.TestMetaTagCharsetAttributeValue;
+procedure TMyHTMLLibrarySimpleHTMLTestCase.TestMetaTagCharsetAttributeValue;
 
   { Find node start from ANode by tag node id }
   function FindNextNodeById (ANode : pmyhtml_tree_node_t; AId : myhtml_tags_t)
@@ -735,8 +836,7 @@ begin
 end;
 
 { Test meta tag keywords attribute value }
-
-procedure TMyHTMLLibraryTestCase.TestMetaTagKeywordsAttributeValue;
+procedure TMyHTMLLibrarySimpleHTMLTestCase.TestMetaTagKeywordsAttributeValue;
 
   { Find attribute start from AAttribute by node attribute key }
   function FindNextAttributeByKeyValue (ANode : pmyhtml_tree_node_t; AKey :
@@ -803,8 +903,7 @@ begin
 end;
 
 { Test meta tag description attribute value }
-
-procedure TMyHTMLLibraryTestCase.TestMetaTagDescriptionAttributeValue;
+procedure TMyHTMLLibrarySimpleHTMLTestCase.TestMetaTagDescriptionAttributeValue;
 
   { Find attribute start from AAttribute by node attribute key }
   function FindNextAttributeByKeyValue (ANode : pmyhtml_tree_node_t; AKey :
@@ -870,8 +969,7 @@ begin
 end;
 
 { Test link tag rel attribute }
-
-procedure TMyHTMLLibraryTestCase.TestLinkTagRelAttribute;
+procedure TMyHTMLLibrarySimpleHTMLTestCase.TestLinkTagRelAttribute;
 
   { Find attribute start from AAttribute by node attribute key }
   function FindNextAttributeByKeyValue (ANode : pmyhtml_tree_node_t; AKey :
@@ -936,8 +1034,8 @@ begin
 end;
 
 initialization
-  RegisterTest(TMyHTMLLibraryTestCase);
-  RegisterTest(TMyHTMLParserSimpleParseTestCase);
+  RegisterTest(TMyHTMLLibrarySimpleHTMLTestCase);
+  RegisterTest(TParserSimpleHTMLTestCase);
   RegisterTest(TMyHTMLParserTeamtenTestCase);
   RegisterTest(TMyHTMLParserIanaTestCase);
 end.
