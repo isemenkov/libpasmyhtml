@@ -27,6 +27,12 @@ type
     procedure TearDown; override;
 
     function StringTokenize (AString : string) : TStringList;
+      {$IFNDEF DEBUG}inline;{$ENDIF}
+
+    function FindNextNodeById (ANode : pmyhtml_tree_node_t; AId : myhtml_tags_t)
+      : pmyhtml_tree_node_t; {$IFNDEF DEBUG}inline;{$ENDIF}
+    function NodeTextValue (ANode : pmyhtml_tree_node_t) : string;
+      {$IFNDEF DEBUG}inline;{$ENDIF}
   published
     procedure TestParseDocument;
     procedure TestTitleTag;
@@ -586,6 +592,39 @@ begin
   end;
 end;
 
+{ Find next node from ANode by AId }
+
+function TMyHTMLLibraryTestCase.FindNextNodeById(ANode: pmyhtml_tree_node_t;
+  AId: myhtml_tags_t): pmyhtml_tree_node_t;
+begin
+  while (ANode <> nil) and (myhtml_node_tag_id(ANode) <>
+    myhtml_tag_id_t(AId)) do
+  begin
+    ANode := myhtml_node_next(ANode);
+  end;
+  Result := ANode;
+end;
+
+{ Get node text value }
+
+function TMyHTMLLibraryTestCase.NodeTextValue(ANode: pmyhtml_tree_node_t
+  ): string;
+var
+  TextNode : pmyhtml_tree_node_t;
+begin
+  if ANode <> nil then
+  begin
+    TextNode := myhtml_node_child(ANode);
+    if (TextNode <> nil) and (myhtml_tags_t(myhtml_node_tag_id(TextNode)) =
+      MyHTML_TAG__TEXT) then
+    begin
+      Result := myhtml_node_text(TextNode, nil);
+    end else
+      Result := '';
+  end else
+    Result := '';
+end;
+
 { Test parse document }
 
 procedure TMyHTMLLibraryTestCase.TestParseDocument;
@@ -605,7 +644,7 @@ end;
 procedure TMyHTMLLibraryTestCase.TestTitleTag;
 var
   Node : pmyhtml_tree_node_t;
-  Title : pmycore_string_t;
+  Title : string;
 begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
@@ -624,33 +663,19 @@ begin
   if Node = nil then
     Fail('Empty head children node');
 
-  while myhtml_node_tag_id(Node) <> myhtml_tag_id_t(MyHTML_TAG_TITLE) do
-  begin
-    if Node = nil then
-      Fail('Title node not found');
+  Node := FindNextNodeById(Node, MyHTML_TAG_TITLE);
 
-    Node := myhtml_node_next(Node);
-  end;
-
-  Node := myhtml_node_child(Node);
   if Node = nil then
-    Fail('Title node is empty');
+    Fail('TITLE tag is not found');
 
-  if myhtml_node_tag_id(Node) = myhtml_tag_id_t(MyHTML_TAG__TEXT) then
-  begin
-    Title := myhtml_node_string(Node);
-    AssertTrue('Test document title',
-      string(mycore_string_data(Title)) = 'Document Title');
-  end else
-    Fail('Test document title');
+  Title := NodeTextValue(Node);
+
+  AssertTrue('Title text is not found', Title = 'Document Title');
 end;
 
 { Test meta tag charser attribute value }
 
 procedure TMyHTMLLibraryTestCase.TestMetaTagCharsetAttributeValue;
-
-
-
 var
   Node : pmyhtml_tree_node_t;
   Attribute : pmyhtml_tree_attr_t;
