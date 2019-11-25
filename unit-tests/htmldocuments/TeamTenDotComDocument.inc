@@ -1,5 +1,5 @@
 const
-  teamten_com =
+  TeamTenDotComDocument =
     '<!DOCTYPE html>'                                             + sLineBreak +
     '<html>'                                                      + sLineBreak +
       '<head>'                                                    + sLineBreak +

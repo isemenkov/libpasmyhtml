@@ -70,19 +70,20 @@ type
     procedure TestWrapperMiddleContainerContentClassDivValue;
   end;
 
-  { TMyHTMLParserTeamtenTestCase }
+  { TParserTeamtenTestCase }
 
-  TMyHTMLParserTeamtenTestCase = class(TTestCase)
+  TParserTeamtenTestCase = class(TTestCase)
   private
     FParser : TParser;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
 
-    procedure TestDocumentParseEachLinkCallback(ANode : TParser.TTagNode;
+    procedure TestEachLinkTagCallback (ANode : TParser.TTagNode;
       AData : Pointer);
   published
-    procedure TestDocumentParseEachLink;
+    procedure TestTitleTag;
+    procedure TestEachLinkTag;
   end;
 
   { TMyHTMLParserIanaTestCase }
@@ -110,7 +111,7 @@ type
   end;
 
 {$I htmldocuments/SimpleHTMLDocument.inc}
-{$I htmldocuments/myhtmlteamtenparse_document.inc}
+{$I htmldocuments/TeamTenDotComDocument.inc}
 {$I htmldocuments/myhtmlianaparse_document.inc}
 
 implementation
@@ -225,42 +226,66 @@ begin
   AssertTrue('Test node tag type', ANode.Tag = TParser.TTag.MyHTML_TAG_TR);
 end;
 
-{ TMyHTMLParserTeamtenTestCase }
+{ TParserTeamtenTestCase }
 
-procedure TMyHTMLParserTeamtenTestCase.SetUp;
+procedure TParserTeamtenTestCase.SetUp;
 begin
   FParser := TParser.Create(MyHTML_OPTIONS_PARSE_MODE_SEPARATELY,
     MyENCODING_UTF_8, 1, 4096, MyHTML_TREE_PARSE_FLAGS_CLEAN);
 end;
 
-procedure TMyHTMLParserTeamtenTestCase.TearDown;
+procedure TParserTeamtenTestCase.TearDown;
 begin
   FreeAndNil(FParser);
 end;
 
-procedure TMyHTMLParserTeamtenTestCase.TestDocumentParseEachLinkCallback(
+procedure TParserTeamtenTestCase.TestEachLinkTagCallback(
   ANode: TParser.TTagNode; AData: Pointer);
 begin
-  AssertTrue('Test node link callback', ANode.IsOk);
+  AssertTrue('Error node in each link tag callback function is nil',
+    ANode.IsOk);
+  AssertTrue('Error data in each link tag callback function is nil',
+    AData <> nil);
 
   TStringList(AData).Add(ANode.FirstNodeAttribute(
     TParser.TFilter.Create.AttributeKey('href')).Value);
 end;
 
-procedure TMyHTMLParserTeamtenTestCase.TestDocumentParseEachLink;
+{ Test title tag value }
+procedure TParserTeamtenTestCase.TestTitleTag;
+var
+  Node : TParser.TTagNode;
+  Value : string;
+begin
+  Node := FParser.Parse(TeamTenDotComDocument, DOCUMENT_HEAD);
+  AssertTrue('Error head node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEAD);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TITLE));
+  AssertTrue('Error title tag is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_TITLE);
+
+  Value := Node.Value;
+  AssertTrue('Error title tag value is not correct', Value =
+    'Mostly avoid unit tests');
+end;
+
+{ Test link tags contains rel attribute with stylesheet value }
+procedure TParserTeamtenTestCase.TestEachLinkTag;
 var
   Node : TParser.TTagNode;
   List : TStringList;
 begin
   List := TStringList.Create;
-  Node := FParser.Parse(teamten_com, DOCUMENT_HEAD);
 
-  AssertTrue('Head node test', Node.IsOk);
+  Node := FParser.Parse(TeamTenDotComDocument, DOCUMENT_HEAD);
+  AssertTrue('Error head node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEAD);
 
   Node := Node.EachChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_LINK)
     .AttributeKeyValue('rel', 'stylesheet'),
     TParser.TTransform.Create.TagNodeTransform(
-      @TestDocumentParseEachLinkCallback, Pointer(List)));
+      @TestEachLinkTagCallback, Pointer(List)));
 
   AssertTrue('Test find elements', List.Count = 4);
   AssertTrue('Test element 1', List[0] = '/lawrence/reset.css');
@@ -1036,7 +1061,7 @@ end;
 initialization
   RegisterTest(TMyHTMLLibrarySimpleHTMLTestCase);
   RegisterTest(TParserSimpleHTMLTestCase);
-  RegisterTest(TMyHTMLParserTeamtenTestCase);
+  RegisterTest(TParserTeamtenTestCase);
   RegisterTest(TMyHTMLParserIanaTestCase);
 end.
 
