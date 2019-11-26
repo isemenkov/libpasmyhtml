@@ -84,6 +84,7 @@ type
   published
     procedure TestTitleTag;
     procedure TestEachLinkTag;
+    procedure TestFindAllATag;
   end;
 
   { TMyHTMLParserIanaTestCase }
@@ -287,11 +288,75 @@ begin
     TParser.TTransform.Create.TagNodeTransform(
       @TestEachLinkTagCallback, Pointer(List)));
 
-  AssertTrue('Test find elements', List.Count = 4);
-  AssertTrue('Test element 1', List[0] = '/lawrence/reset.css');
-  AssertTrue('Test element 1', List[1] = '/lawrence/new.css');
-  AssertTrue('Test element 1', List[2] = '/lawrence/css/font-awesome.min.css');
-  AssertTrue('Test element 1', List[3] = 'unsolicited.css');
+  AssertTrue('Error <a> tag list count', List.Count = 4);
+  AssertTrue('Error <a> tag 1 attribute value is not correct', List[0] =
+    '/lawrence/reset.css');
+  AssertTrue('Error <a> tag 2 attribute value is not correct', List[1] =
+    '/lawrence/new.css');
+  AssertTrue('Error <a> tag 3 attribute value is not correct', List[2] =
+    '/lawrence/css/font-awesome.min.css');
+  AssertTrue('Error <a> tag 4 attribute value is not correct', List[3] =
+    'unsolicited.css');
+end;
+
+{ Test find all a tag nodes }
+procedure TParserTeamtenTestCase.TestFindAllATag;
+var
+  Node : TParser.TTagNode;
+  List : TParser.TTagNodeList;
+  Attribute : TParser.TTagNodeAttribute;
+  Value : string;
+begin
+  Node := FParser.Parse(TeamTenDotComDocument, DOCUMENT_BODY);
+  AssertTrue('Error body node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_BODY);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.ContainsClassOnly(
+    'contents'));
+  AssertTrue('Error div class="contents" node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.ContainsClassOnly(
+    'footer'));
+  AssertTrue('Error div class="footer" node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
+
+  List := Node.FindAllChildrenNodes(TParser.TFilter.Create.Tag(MyHTML_TAG_A));
+  AssertTrue('Error tags list count', List.Count = 5);
+
+  Attribute :=  List[0].FirstNodeAttribute(TParser.TFilter.Create
+    .AttributeKey('href'));
+  AssertTrue('Error attribute is nil', Attribute.IsOk);
+  Value := Attribute.Value;
+  AssertTrue('Error node attribute href is not correct', Value = '/lawrence/');
+
+  Attribute :=  List[1].FirstNodeAttribute(TParser.TFilter.Create
+    .AttributeKey('href'));
+  AssertTrue('Error attribute is nil', Attribute.IsOk);
+  Value := Attribute.Value;
+  AssertTrue('Error node attribute href is not correct', Value =
+    'mailto:lk@teamten.com');
+
+  Attribute :=  List[2].FirstNodeAttribute(TParser.TFilter.Create
+    .AttributeKey('href'));
+  AssertTrue('Error attribute is nil', Attribute.IsOk);
+  Value := Attribute.Value;
+  AssertTrue('Error node attribute href is not correct', Value =
+    'https://www.linkedin.com/pub/lawrence-kesteloot/2/68a/7a3');
+
+  Attribute :=  List[3].FirstNodeAttribute(TParser.TFilter.Create
+    .AttributeKey('href'));
+  AssertTrue('Error attribute is nil', Attribute.IsOk);
+  Value := Attribute.Value;
+  AssertTrue('Error node attribute href is not correct', Value =
+    'https://twitter.com/lkesteloot');
+
+  Attribute :=  List[4].FirstNodeAttribute(TParser.TFilter.Create
+    .AttributeKey('href'));
+  AssertTrue('Error attribute is nil', Attribute.IsOk);
+  Value := Attribute.Value;
+  AssertTrue('Error node attribute href is not correct', Value =
+    'https://github.com/lkesteloot');
 end;
 
 { TParserSimpleHTMLTestCase }
