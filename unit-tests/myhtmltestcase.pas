@@ -87,9 +87,9 @@ type
     procedure TestFindAllATag;
   end;
 
-  { TMyHTMLParserIanaTestCase }
+  { TParserIanaTestCase }
 
-  TMyHTMLParserIanaTestCase = class(TTestCase)
+  TParserIanaTestCase = class(TTestCase)
   private
     type
       TZoneInfo = class
@@ -98,133 +98,163 @@ type
         Manager : string;
       end;
 
-      TZoneInfoList = specialize TFPGList<TZoneInfo>;
+      TZoneInfoList = specialize TFPGObjectList<TZoneInfo>;
   private
     FParser : TParser;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
 
-    procedure TestDocumentParseEachNodesTrCallback (ANode : TParser.TTagNode;
+    procedure TestEachTrNodesCallback (ANode : TParser.TTagNode;
       AData : Pointer);
   published
-    procedure TestDocumentParseEachNodes;
+    procedure TestEachTrNodes;
   end;
 
 {$I htmldocuments/SimpleHTMLDocument.inc}
 {$I htmldocuments/TeamTenDotComDocument.inc}
-{$I htmldocuments/myhtmlianaparse_document.inc}
+{$I htmldocuments/IanaDocument.inc}
 
 implementation
 
 { TMyHTMLParserIanaTestCase }
 
-procedure TMyHTMLParserIanaTestCase.SetUp;
+procedure TParserIanaTestCase.SetUp;
 begin
   FParser := TParser.Create(MyHTML_OPTIONS_PARSE_MODE_SEPARATELY,
     MyENCODING_UTF_8, 1, 4096, MyHTML_TREE_PARSE_FLAGS_CLEAN);
 end;
 
-procedure TMyHTMLParserIanaTestCase.TearDown;
+procedure TParserIanaTestCase.TearDown;
 begin
   FreeAndNil(FParser);
 end;
 
-procedure TMyHTMLParserIanaTestCase.TestDocumentParseEachNodes;
+{ Test each tr node }
+procedure TParserIanaTestCase.TestEachTrNodes;
 var
   ZoneList : TZoneInfoList;
   Node : TParser.TTagNode;
 begin
   ZoneList := TZoneInfoList.Create;
 
-  Node := FParser.Parse(iana_org_document, DOCUMENT_BODY)
-    .FirstChildrenNode(TParser.TFilter.Create.ContainsId('body'));
+  Node := FParser.Parse(IanaOrgDocument, DOCUMENT_BODY);
+  AssertTrue('Error body node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_BODY);
 
-  AssertTrue('Test node contains id "body"', Node.IsOk);
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.ContainsId('body'));
+  AssertTrue('Error div class "body" node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
 
   Node := Node.FirstChildrenNode(TParser.TFilter.Create.ContainsId(
     'main_right'));
-
-  AssertTrue('Test node contains id "main_right"', Node.IsOk);
+  AssertTrue('Error div tag class "main_right" is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
 
   Node := Node.FirstChildrenNode(TParser.TFilter.Create.ContainsClass(
     'iana-table-frame'));
-
-  AssertTrue('Test node contains id "iana-table-frame"', Node.IsOk);
+  AssertTrue('Error div tag class "iana-table-frame" is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
 
   Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TABLE));
-
-  AssertTrue('Test node tag TABLE', Node.IsOk);
+  AssertTrue('Error table tag is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_TABLE);
 
   Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TBODY));
-
-  AssertTrue('Test node tag TBODY', Node.IsOk);
+  AssertTrue('Error tbody tag is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_TBODY);
 
   Node := Node.EachChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TR),
       TParser.TTransform.Create.TagNodeTransform(
-        @TestDocumentParseEachNodesTrCallback, Pointer(ZoneList)));
+        @TestEachTrNodesCallback, Pointer(ZoneList)));
 
-  AssertTrue('Test each node children list', ZoneList.Count = 5);
+  AssertTrue('Error children list count', ZoneList.Count = 5);
 
-  AssertTrue('Test list element 0 name', ZoneList[0].Name = '.aaa');
-  AssertTrue('Test list element 0 info', ZoneList[0].Info = 'generic');
-  AssertTrue('Test list element 0 manager', ZoneList[0].Manager =
-    'American Automobile Association, Inc.');
+  AssertTrue('Error list element 0 name is not correct',
+    ZoneList[0].Name = '.aaa');
+  AssertTrue('Error list element 0 info is not correct',
+    ZoneList[0].Info = 'generic');
+  AssertTrue('Error list element 0 manager is not correct',
+    ZoneList[0].Manager = 'American Automobile Association, Inc.');
 
-  AssertTrue('Test list element 1 name', ZoneList[1].Name = '.aarp');
-  AssertTrue('Test list element 1 info', ZoneList[1].Info = 'generic');
-  AssertTrue('Test list element 1 manager', ZoneList[1].Manager = 'AARP');
+  AssertTrue('Error list element 1 name is not correct',
+    ZoneList[1].Name = '.aarp');
+  AssertTrue('Error list element 1 info is not correct',
+    ZoneList[1].Info = 'generic');
+  AssertTrue('Error list element 1 manager is not correct',
+    ZoneList[1].Manager = 'AARP');
 
-  AssertTrue('Test list element 2 name', ZoneList[2].Name = '.abarth');
-  AssertTrue('Test list element 2 info', ZoneList[2].Info = 'generic');
-  AssertTrue('Test list element 2 manager', ZoneList[2].Manager =
-    'Fiat Chrysler Automobiles N.V.');
+  AssertTrue('Error list element 2 name is not correct',
+    ZoneList[2].Name = '.abarth');
+  AssertTrue('Error list element 2 info is not correct',
+    ZoneList[2].Info = 'generic');
+  AssertTrue('Error list element 2 manager is not correct',
+    ZoneList[2].Manager = 'Fiat Chrysler Automobiles N.V.');
 
-  AssertTrue('Test list element 3 name', ZoneList[3].Name = '.abb');
-  AssertTrue('Test list element 3 info', ZoneList[3].Info = 'generic');
-  AssertTrue('Test list element 3 manager', ZoneList[3].Manager = 'ABB Ltd');
+  AssertTrue('Error list element 3 name is not correct',
+    ZoneList[3].Name = '.abb');
+  AssertTrue('Error list element 3 info is not correct',
+    ZoneList[3].Info = 'generic');
+  AssertTrue('Error list element 3 manager is not correct',
+    ZoneList[3].Manager = 'ABB Ltd');
 
-  AssertTrue('Test list element 4 name', ZoneList[4].Name = '.abbott');
-  AssertTrue('Test list element 4 info', ZoneList[4].Info = 'generic');
-  AssertTrue('Test list element 4 manager', ZoneList[4].Manager =
-    'Abbott Laboratories, Inc.');
+  AssertTrue('Error list element 4 name is not correct',
+    ZoneList[4].Name = '.abbott');
+  AssertTrue('Error list element 4 info is not correct',
+    ZoneList[4].Info = 'generic');
+  AssertTrue('Error list element 4 manager is not correct',
+    ZoneList[4].Manager = 'Abbott Laboratories, Inc.');
 end;
 
-procedure TMyHTMLParserIanaTestCase.TestDocumentParseEachNodesTrCallback(
+{ Test each tr node callback function }
+procedure TParserIanaTestCase.TestEachTrNodesCallback(
   ANode: TParser.TTagNode; AData: Pointer);
 var
   Zone : TZoneInfo;
   Node : TParser.TTagNode;
+  NameNode : TParser.TTagNode;
 begin
+  AssertTrue('Error node in each tr tag callback function is nil',
+    ANode.IsOk);
+  AssertTrue('Error data in each tr tag callback function is nil',
+    AData <> nil);
   AssertTrue('Test node tag type', ANode.Tag = TParser.TTag.MyHTML_TAG_TR);
 
   Zone := TZoneInfo.Create;
 
   Node := ANode.FirstChildrenNode(TParser.TFilter.Create.Tag(
     MyHTML_TAG_TD));
-  AssertTrue('Test node children tag type', Node.Tag =
+  AssertTrue('Error tag td is nil', Node.IsOk);
+  AssertTrue('Error tag id is not correct', Node.Tag =
     TParser.TTag.MyHTML_TAG_TD);
 
-  Zone.Name := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
-    MyHTML_TAG_SPAN))
-    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_A))
-    .Value;
+  NameNode := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    MyHTML_TAG_SPAN));
+  AssertTrue('Error span tag is nil', NameNode.IsOk);
+  AssertTrue('Error tag id is not correct', NameNode.Tag = MyHTML_TAG_SPAN);
+
+  NameNode := NameNode.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    MyHTML_TAG_A));
+  AssertTrue('Error a tag is nil', NameNode.IsOk);
+  AssertTrue('Error tag id is not correct', NameNode.Tag = MyHTML_TAG_A);
+
+  Zone.Name := NameNode.Value;
 
   Node := Node.NextNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TD));
-  AssertTrue('Test node children tag type', Node.Tag =
+  AssertTrue('Error td tag is nil', Node.IsOk);
+  AssertTrue('Error tag id is not correct', Node.Tag =
     TParser.TTag.MyHTML_TAG_TD);
 
   Zone.Info := Node.Value;
 
   Node := Node.NextNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TD));
-  AssertTrue('Test node children tag type', Node.Tag =
+  AssertTrue('Error td tag is nil', Node.IsOk);
+  AssertTrue('Error tag id is not correct', Node.Tag =
     TParser.TTag.MyHTML_TAG_TD);
 
   Zone.Manager := Node.Value;
 
   TZoneInfoList(AData).Add(Zone);
-
-  AssertTrue('Test node tag type', ANode.Tag = TParser.TTag.MyHTML_TAG_TR);
 end;
 
 { TParserTeamtenTestCase }
@@ -1127,6 +1157,6 @@ initialization
   RegisterTest(TMyHTMLLibrarySimpleHTMLTestCase);
   RegisterTest(TParserSimpleHTMLTestCase);
   RegisterTest(TParserTeamtenTestCase);
-  RegisterTest(TMyHTMLParserIanaTestCase);
+  RegisterTest(TParserIanaTestCase);
 end.
 

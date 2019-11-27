@@ -1,5 +1,5 @@
 const
-  iana_org_document =
+  IanaOrgDocument =
     '<!doctype html>'                                             + sLineBreak +
       '<html>'                                                    + sLineBreak +
         '<head>'                                                  + sLineBreak +
