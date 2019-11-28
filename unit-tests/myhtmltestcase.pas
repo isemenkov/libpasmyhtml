@@ -85,6 +85,7 @@ type
     procedure TestTitleTag;
     procedure TestEachLinkTag;
     procedure TestFindAllATag;
+    procedure TestH1Tag;
   end;
 
   { TParserIanaTestCase }
@@ -387,6 +388,30 @@ begin
   Value := Attribute.Value;
   AssertTrue('Error node attribute href is not correct', Value =
     'https://github.com/lkesteloot');
+end;
+
+procedure TParserTeamtenTestCase.TestH1Tag;
+var
+  Node : TParser.TTagNode;
+  Value : string;
+begin
+  Node := FParser.Parse(TeamTenDotComDocument, DOCUMENT_BODY);
+  AssertTrue('Error body node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_BODY);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.ContainsClassOnly(
+    'contents'));
+  AssertTrue('Error div tag class="contents" is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create
+    .ContainsClassOnly('titleLines1'));
+  AssertTrue('Error h1 tag is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_H1);
+
+  Value := Node.Value;
+  AssertTrue('Error h1 value is not correct', Value =
+    'Mostly avoid unit tests');
 end;
 
 { TParserSimpleHTMLTestCase }
