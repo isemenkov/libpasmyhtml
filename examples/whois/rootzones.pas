@@ -45,8 +45,8 @@ type
 
   TRootDomainZones = class
   public
-    { Parse top level domain zones from next url }
     const
+      { Parse top level domain zones from next url }
       IANA_ORG_URL = 'https://www.iana.org/domains/root/db';
       PUBLICSUFFIX_ORG_URL = 'https://publicsuffix.org/list/'+
         'effective_tld_names.dat';
@@ -591,9 +591,16 @@ begin
               ...
   ... }
 
-  TreeChunk : FParser.Parse(FResponse.Content,
+  TreeChunk := FParser.Parse(FResponse.Content,
     TParser.TDocumentParseFrom.DOCUMENT_BODY);
-
+  TreeChunk
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsIdOnly('content'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsIdOnly('bodyContent'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsIdOnly('mw-content-text'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsClassOnly(
+      'mw-parser-output'))
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TABLE)
+      .ContainsClass('wikitable sortable jquery-tablesorter'));
 end;
 
 constructor TRootDomainZones.Create(ASession: TSession; AParser : TParser);
