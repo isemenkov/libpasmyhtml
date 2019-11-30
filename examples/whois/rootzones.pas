@@ -47,34 +47,54 @@ type
   public
     const
       { Parse top level domain zones from next url }
-      IANA_ORG_URL = 'https://www.iana.org/domains/root/db';
+      IANA_ORG_URL         = 'https://www.iana.org/domains/root/db';
       PUBLICSUFFIX_ORG_URL = 'https://publicsuffix.org/list/'+
-        'effective_tld_names.dat';
-      WIKIPEDIA_ORG_URL = 'https://en.wikipedia.org/wiki/'+
-        'List_of_Internet_top-level_domains#Country_code_top-level_domains';
+                             'effective_tld_names.dat';
+      WIKIPEDIA_ORG_URL    = 'https://en.wikipedia.org/wiki/'+
+                             'List_of_Internet_top-level_domains';
 
     type
       TDomainZoneType = (
         DOMAIN_UNKNOWN,
-        DOMAIN_GENERIC,
-        DOMAIN_GENERIC_RESTRICTED,
-        DOMAIN_COUNTRY_CODE,
-        DOMAIN_SPONSORED
+        DOMAIN_GENERIC,             { generic }
+        DOMAIN_GENERIC_RESTRICTED,  { generic-restricted }
+        DOMAIN_COUNTRY_CODE,        { country-code }
+        DOMAIN_SPONSORED,           { sponsored }
+        DOMAIN_INFRASTRUCTURE,      { infrastructure }
+        DOMAIN_TEST                 { test }
       );
 
       { TDomainZoneInfo }
 
       TDomainZoneInfo = class
-      public
-        Name : string;          { domain suffix, like .com or .co.uk }
-        Entity : string;        { intended use }
-        IconPath : string;      { URL to icon }
-        Icon : TPicture;        { icon image }
-        Note : string;          { general remarks }
-        DNSName : string;       {  }
-        Manager : string;       { entity the registry has been delegated to }
-        TypeInfo : TDomainZoneType; {  }
-        Language : string;      {  }
+      private
+        FName : string;
+        FEntity : string;        { intended use }
+        FIconPath : string;      { URL to icon }
+        FNote : string;          { general remarks }
+        FDNSName : string;       {  }
+        FManager : string;       { entity the registry has been delegated to }
+        FTypeInfo : TDomainZoneType; {  }
+        FLanguage : string;      {  }
+
+        procedure SetName (AName : string);
+        procedure SetEntity (AEntity : string);
+        procedure SetIconPath (AIconPath : string);
+        procedure SetNote (ANote : string);
+        procedure SetDNSName (ADNSName : string);
+        procedure SetManager (AManager : string);
+        procedure SetTypeInfo (ATypeInfo : TDomainZoneType);
+        procedure SetLanguage (ALanguage : string);
+      published
+        { domain suffix, like .com or .co.uk }
+        property Name : string read FName write SetName;
+        property Entity : string read FEntity write SetEntity;
+        property IconPath : string read FIconPath write SetIconPath;
+        property Note : string read FNote write SetNote;
+        property DNSName : string read FDNSName write SetDNSName;
+        property Manager : string read FManager write SetManager;
+        property TypeInfo : TDomainZoneType read FTypeInfo write SetTypeInfo;
+        property Language : string read FLanguage write SetLanguage;
       public
         procedure LoadFromStream (AStream : TStream);
         procedure SaveToStream (AStream : TStream);
@@ -133,6 +153,47 @@ type
 implementation
 
 { TRootDomainZones.TDomainZoneInfo }
+
+procedure TRootDomainZones.TDomainZoneInfo.SetName(AName: string);
+begin
+  FName := AName;
+end;
+
+procedure TRootDomainZones.TDomainZoneInfo.SetEntity(AEntity: string);
+begin
+  FEntity := AEntity;
+end;
+
+procedure TRootDomainZones.TDomainZoneInfo.SetIconPath(AIconPath: string);
+begin
+  FIconPath := AIconPath;
+end;
+
+procedure TRootDomainZones.TDomainZoneInfo.SetNote(ANote: string);
+begin
+  FNote := ANote;
+end;
+
+procedure TRootDomainZones.TDomainZoneInfo.SetDNSName(ADNSName: string);
+begin
+  FDNSName := ADNSName;
+end;
+
+procedure TRootDomainZones.TDomainZoneInfo.SetManager(AManager: string);
+begin
+  FManager := AManager;
+end;
+
+procedure TRootDomainZones.TDomainZoneInfo.SetTypeInfo(
+  ATypeInfo: TDomainZoneType);
+begin
+  FTypeInfo := ATypeInfo;
+end;
+
+procedure TRootDomainZones.TDomainZoneInfo.SetLanguage(ALanguage: string);
+begin
+  FLanguage := ALanguage;
+end;
 
 procedure TRootDomainZones.TDomainZoneInfo.LoadFromStream(AStream: TStream);
 
@@ -599,7 +660,7 @@ begin
     .FirstChildrenNode(TParser.TFilter.Create.ContainsIdOnly('mw-content-text'))
     .FirstChildrenNode(TParser.TFilter.Create.ContainsClassOnly(
       'mw-parser-output'))
-    .FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TABLE)
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TABLE)
       .ContainsClass('wikitable sortable jquery-tablesorter'));
 end;
 
