@@ -38,7 +38,7 @@ uses
   {$IFDEF UNIX}{$IFDEF UseCThreads}
   cthreads,
   {$ENDIF}{$ENDIF}
-  Classes, SysUtils, CustApp, pasmyhtml, pascurl, RootZones;
+  Classes, SysUtils, CustApp, pasmyhtml, pascurl, RootZoneDatabase;
 
 type
 
@@ -48,10 +48,11 @@ type
   private
     FSession : TSession;
     FParser : TParser;
+    FRootZonesDatabase : TRootZoneDatabase;
   protected
     procedure DoRun; override;
     procedure PrintHelp;
-
+    {
     procedure ParseRootZones;
     procedure PrintRootZonesList;
 
@@ -60,6 +61,7 @@ type
       TRootDomainZones.TDomainZonesList; AData : Pointer = nil) : Boolean;
     function LoadRootDomainZonesCache (var ADomainZones :
       TRootDomainZones.TDomainZonesList; AData : Pointer = nil) : Boolean;
+    }
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -91,11 +93,11 @@ begin
   if HasOption('h', 'help') then
     PrintHelp;
 
-  if HasOption('force-parse-zones') then
-    ParseRootZones;
+  if HasOption('force-parse-zones') then ;
+    //ParseRootZones;
 
-  if HasOption('domain-zones-list') then
-    PrintRootZonesList;
+  if HasOption('domain-zones-list') then ;
+    //PrintRootZonesList;
 
   NonOptions := TStringList.Create;
   GetNonOptions(ShortOptions, LongOptions, NonOptions);
@@ -107,7 +109,7 @@ begin
 
   Terminate;
 end;
-
+{
 procedure TApplication.ParseRootZones;
 var
   RootZones : TRootDomainZones;
@@ -197,7 +199,7 @@ begin
     writeln('');
   end;
 end;
-
+}
 procedure TApplication.PrintHelp;
 begin
   writeln(

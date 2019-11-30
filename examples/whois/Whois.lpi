@@ -43,7 +43,7 @@
         <IsPartOfProject Value="True"/>
       </Unit2>
       <Unit3>
-        <Filename Value="rootzones.pas"/>
+        <Filename Value="rootzonedatabase.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="RootZones"/>
       </Unit3>
