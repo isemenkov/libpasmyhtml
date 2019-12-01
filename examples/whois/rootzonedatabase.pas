@@ -114,7 +114,7 @@ type
   protected
     FRootZones : TRootZonesList;
   public
-
+    function GetEnumerator : TRootZoneDatabaseEnumerator;
   public
     constructor Create;
     destructor Destroy; override;
@@ -133,7 +133,88 @@ type
     property Current : TRootZoneDatabase.TDomainZone read GetCurrent;
   end;
 
+  { TRootZoneDatabaseParser }
+  { Parse database from websites }
+  TRootZoneDatabaseParser = class
+  private
+    FZoneDatabase : TRootZoneDatabase;
+    FParser : TParser;
+  public
+    function GetEnumerator : TRootZoneDatabaseEnumerator;
+  public
+    constructor Create (ADatabase : TRootZoneDatabase);
+    destructor Destroy; override;
+    procedure Parse;
+  end;
+
+  { TRootZoneDatabaseStorage }
+  { Save / Load database from stream }
+  TRootZoneDatabaseStorage = class
+  private
+    FZoneDatabase : TRootZoneDatabase;
+  public
+    function GetEnumerator : TRootZoneDatabaseEnumerator;
+  public
+    constructor Create (ADatabase : TRootZoneDatabase);
+    destructor Destroy; override;
+    procedure Save (AStream : TStream);
+    procedure Load (AStream : TStream);
+  end;
+
 implementation
+
+{ TRootZoneDatabaseStorage }
+
+function TRootZoneDatabaseStorage.GetEnumerator: TRootZoneDatabaseEnumerator;
+begin
+  Result := FZoneDatabase.GetEnumerator;
+end;
+
+constructor TRootZoneDatabaseStorage.Create(ADatabase: TRootZoneDatabase);
+begin
+  FZoneDatabase := ADatabase;
+end;
+
+destructor TRootZoneDatabaseStorage.Destroy;
+begin
+  FreeAndNil(FZoneDatabase);
+  inherited Destroy;
+end;
+
+procedure TRootZoneDatabaseStorage.Save(AStream: TStream);
+begin
+  // TODO
+end;
+
+procedure TRootZoneDatabaseStorage.Load(AStream: TStream);
+begin
+  // TODO
+end;
+
+{ TRootZoneDatabaseParser }
+
+function TRootZoneDatabaseParser.GetEnumerator: TRootZoneDatabaseEnumerator;
+begin
+  Result := FZoneDatabase.GetEnumerator;
+end;
+
+constructor TRootZoneDatabaseParser.Create(ADatabase: TRootZoneDatabase);
+begin
+  FZoneDatabase := ADatabase;
+  FParser := TParser.Create;
+end;
+
+destructor TRootZoneDatabaseParser.Destroy;
+begin
+  FreeAndNil(FParser);
+  FreeAndNil(FZoneDatabase);
+  inherited Destroy;
+end;
+
+procedure TRootZoneDatabaseParser.Parse;
+begin
+ // TODO
+end;
 
 { TRootZoneDatabaseEnumerator }
 
@@ -175,6 +256,11 @@ begin
 end;
 
 { TRootZoneDatabase }
+
+function TRootZoneDatabase.GetEnumerator: TRootZoneDatabaseEnumerator;
+begin
+  Result := TRootZoneDatabaseEnumerator.Create(Self);
+end;
 
 constructor TRootZoneDatabase.Create;
 begin
