@@ -34,6 +34,10 @@ unit RootZoneDatabase;
 
 {$mode objfpc}{$H+}
 
+{$IFOPT D+}
+  {$DEFINE DEBUG}
+{$ENDIF}
+
 interface
 
 uses
@@ -104,6 +108,7 @@ type
         constructor Create;
         destructor Destroy; override;
         procedure AddInfo (AElem : TInfoElement);
+        procedure Merge (ADomain : TDomainZone);
       public
         property Name : string read FName;
       end;
@@ -118,6 +123,7 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+    procedure AddDomain (ADomain : TDomainZone);
   end;
 
   { TRootZoneDatabaseEnumerator }
@@ -152,6 +158,7 @@ type
     function ParseIana : TTimeInterval;
     procedure ParseIanaCallback (ANode : TParser.TTagNode;
       {%H-}AData : Pointer = nil);
+    function ParsePublicsuffix : TTimeInterval;
   public
     function GetEnumerator : TRootZoneDatabaseEnumerator;
   public
@@ -254,6 +261,7 @@ procedure TRootZoneDatabaseParser.ParseIanaCallback(ANode: TParser.TTagNode;
   AData: Pointer);
 
   function ClearString (AString : string) : string;
+  {$IFNDEF DEBUG}inline;{$ENDIF}
   var
     Index : SizeInt;
   begin
@@ -310,7 +318,87 @@ begin
     ClearString(Node.Value)));
 
   if DomainZone.Name <> '' then
-    FZoneDatabase.FRootZones.Add(DomainZone.Name, DomainZone);
+    FZoneDatabase.AddDomain(DomainZone);
+end;
+
+function TRootZoneDatabaseParser.ParsePublicsuffix: TTimeInterval;
+
+  function ClearString (AString : string) : string;
+  {$IFNDEF DEBUG}inline;{$ENDIF}
+  var
+    Index : SizeInt;
+  begin
+    Result := AString;
+    for Index := Length(Result) downto 1 do
+    begin
+      { Delete controls symbols exclude space }
+      if (Ord(Result[Index]) <> Ord(' ')) and (Ord(Result[Index]) <= 32) then
+        Delete(Result, Index, 1);
+
+      { Delete multiple spaces }
+      if (Index >= 2) and (Result[Index] = ' ') and (Result[Index - 1] = ' ')
+      then
+        Delete(Result, Index, 1);
+    end;
+  end;
+
+  function ReadLine (var AString : string) : string;
+  {$IFNDEF DEBUG}inline;{$ENDIF}
+  var
+    Index : SizeInt;
+  begin
+    AString := TrimLeft(AString);
+    Index := Pos(sLineBreak, AString);
+
+    if Index <> 0 then
+    begin
+      Result := ClearString(Copy(AString, 0, Index));
+      AString := Copy(AString, Index, Length(AString) - Index +
+        Length(sLineBreak));
+    end else
+    begin
+      Result := ClearString(AString);
+      AString := '';
+    end;
+  end;
+
+  function ClearDomainName (Name : string) : string;
+  {$IFNDEF DEBUG}inline;{$ENDIF}
+  begin
+    if Name[1] = '!' then
+      Delete(Name, 1, 1);
+
+    if Name[1] = '*' then
+      Delete(Name, 1, 2);
+
+    Result := '.' + Name;
+  end;
+
+var
+  Response : TResponse;
+  DomainZone : TRootZoneDatabase.TDomainZone;
+  ListString, LineString : string;
+begin
+  FSession.Url := PUBLICSUFFIX_ORG_URL;
+  Response := TResponse.Create(FSession);
+
+  ListString := Response.Content;
+  while ListString <> '' do
+  begin
+    LineString := ReadLine(ListString);
+
+    if (Length(LineString) >= 2) and (LineString[1] <> '/') and
+      (LineString[2] <> '/') then
+    begin
+      DomainZone := TRootZoneDatabase.TDomainZone.Create;
+      DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_NAME,
+        ClearDomainName(LineString)));
+      FZoneDatabase.AddDomain(DomainZone);
+    end;
+  end;
+
+  Result := Response.TotalTime;
+  FreeAndNil(Response);
 end;
 
 function TRootZoneDatabaseParser.GetEnumerator: TRootZoneDatabaseEnumerator;
@@ -335,6 +423,7 @@ end;
 procedure TRootZoneDatabaseParser.Parse;
 begin
   ParseIana;
+  ParsePublicsuffix;
 end;
 
 { TRootZoneDatabaseEnumerator }
@@ -394,6 +483,17 @@ begin
   inherited Destroy;
 end;
 
+procedure TRootZoneDatabase.AddDomain(ADomain: TDomainZone);
+var
+  Index : Integer;
+begin
+  Index := FRootZones.IndexOf(ADomain.Name);
+  if Index = -1 then
+    FRootZones.Add(ADomain.Name, ADomain)
+  else
+    FRootZones.KeyData[ADomain.Name].Merge(ADomain);
+end;
+
 { TRootZoneDatabase.TDomainZone }
 
 function TRootZoneDatabase.TDomainZone.GetEnumerator: TDomainZoneEnumerator;
@@ -418,6 +518,35 @@ begin
     FName := AElem.Value
   else
     FInfo.Add(AElem);
+end;
+
+procedure TRootZoneDatabase.TDomainZone.Merge(ADomain: TDomainZone);
+
+  function SearchElement (AElement : TInfoElement) : Integer;
+  {$IFNDEF DEBUG}inline;{$ENDIF}
+  var
+    Index : Integer;
+  begin
+    Result := -1;
+    for Index := 0 to FInfo.Count - 1 do
+    begin
+      if (FInfo.Items[Index].InfoType = AElement.InfoType) and
+         (FInfo.Items[Index].Value = AElement.Value) then
+      begin
+        Result := Index;
+        Break;
+      end;
+    end;
+  end;
+
+var
+  Elem : TInfoElement;
+begin
+  for Elem in ADomain do
+  begin
+    if SearchElement(Elem) = -1 then
+      AddInfo(Elem);
+  end;
 end;
 
 { TRootZoneDatabase.TInfoElement }
