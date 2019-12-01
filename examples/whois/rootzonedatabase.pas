@@ -40,6 +40,7 @@ uses
   Classes, SysUtils, Graphics, fgl, pascurl, pasmyhtml;
 
 type
+  TRootZoneDatabaseEnumerator = class;
 
   { TRootZoneDatabase }
   { Database class contains root zones information }
@@ -68,20 +69,37 @@ type
         FValue : String;
       public
         constructor Create (AType : TDomainZoneInfoType; AValue : string);
-        destructor Destroy; override;
       public
         property InfoType : TDomainZoneInfoType read FType;
         property Value : string read FValue;
       end;
 
+      TDomainZone = class;
+
+      { TDomainZoneEnumerator }
+      { Domain zone enumerator }
+      TDomainZoneEnumerator = class
+      protected
+        FDomain : TDomainZone;
+        FPosition : Integer;
+        function GetCurrent : TInfoElement;
+      public
+        constructor Create (ADomainZone : TDomainZone);
+        function MoveNext : Boolean;
+        property Current : TInfoElement read GetCurrent;
+      end;
+
       { TDomainZone }
       { Root zone element }
-      TDomainZone = class (IEnumerable)
+      TDomainZone = class
       protected
-        FInfo : specialize TFPGObjectList<TInfoElement>;
+        type
+          TInfoElementList = specialize TFPGObjectList<TInfoElement>;
+      protected
+        FInfo : TInfoElementList;
         FName : string;
       public
-        function GetEnumerator : specialize IEnumerator<TInfoElement>;
+        function GetEnumerator : TDomainZoneEnumerator;
       public
         constructor Create;
         destructor Destroy; override;
@@ -91,40 +109,94 @@ type
       end;
 
   protected
-    FRootZones : specialize TFPGMap<string, TDomainZone>;
+    type
+      TRootZonesList = specialize TFPGMapObject<string, TDomainZone>;
+  protected
+    FRootZones : TRootZonesList;
   public
-    //function GetEnumerator : specialize IEnumerator<
+
   public
     constructor Create;
     destructor Destroy; override;
   end;
 
+  { TRootZoneDatabaseEnumerator }
+  { Root zone database enumerator }
+  TRootZoneDatabaseEnumerator = class
+  protected
+    FDatabase : TRootZoneDatabase;
+    FPosition : Integer;
+    function GetCurrent : TRootZoneDatabase.TDomainZone;
+  public
+    constructor Create (ADatabase : TRootZoneDatabase);
+    function MoveNext : Boolean;
+    property Current : TRootZoneDatabase.TDomainZone read GetCurrent;
+  end;
 
 implementation
+
+{ TRootZoneDatabaseEnumerator }
+
+function TRootZoneDatabaseEnumerator.GetCurrent: TRootZoneDatabase.TDomainZone;
+begin
+  Result := FDatabase.FRootZones.Data[FPosition];
+  Inc(FPosition);
+end;
+
+constructor TRootZoneDatabaseEnumerator.Create(ADatabase: TRootZoneDatabase);
+begin
+  FDatabase := ADatabase;
+  FPosition := 0;
+end;
+
+function TRootZoneDatabaseEnumerator.MoveNext: Boolean;
+begin
+  Result := FDatabase.FRootZones.Count < FPosition;
+end;
+
+{ TRootZoneDatabase.TDomainZoneEnumerator }
+
+function TRootZoneDatabase.TDomainZoneEnumerator.GetCurrent: TInfoElement;
+begin
+  Result := FDomain.FInfo.Items[FPosition];
+  Inc(FPosition);
+end;
+
+constructor TRootZoneDatabase.TDomainZoneEnumerator.Create(
+  ADomainZone: TDomainZone);
+begin
+  FDomain := ADomainZone;
+  FPosition := 0;
+end;
+
+function TRootZoneDatabase.TDomainZoneEnumerator.MoveNext: Boolean;
+begin
+  Result := FDomain.FInfo.Count < FPosition;
+end;
 
 { TRootZoneDatabase }
 
 constructor TRootZoneDatabase.Create;
 begin
-
+  FRootZones := TRootZonesList.Create;
 end;
 
 destructor TRootZoneDatabase.Destroy;
 begin
+  FreeAndNil(FRootZones);
   inherited Destroy;
 end;
 
 { TRootZoneDatabase.TDomainZone }
 
-function TRootZoneDatabase.TDomainZone.GetEnumerator:
-  specialize IEnumerator<TInfoElement>;
+function TRootZoneDatabase.TDomainZone.GetEnumerator: TDomainZoneEnumerator;
 begin
-
+  Result := TRootZoneDatabase.TDomainZoneEnumerator.Create(Self);
 end;
 
 constructor TRootZoneDatabase.TDomainZone.Create;
 begin
-
+  FInfo := TInfoElementList.Create;
 end;
 
 destructor TRootZoneDatabase.TDomainZone.Destroy;
@@ -148,11 +220,6 @@ constructor TRootZoneDatabase.TInfoElement.Create(AType: TDomainZoneInfoType;
 begin
   FType := AType;
   FValue := AValue;
-end;
-
-destructor TRootZoneDatabase.TInfoElement.Destroy;
-begin
-  inherited Destroy;
 end;
 
 end.
