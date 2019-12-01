@@ -52,16 +52,8 @@ type
   protected
     procedure DoRun; override;
     procedure PrintHelp;
-    {
     procedure ParseRootZones;
     procedure PrintRootZonesList;
-
-    procedure ParseRootZonesCallback (var AResponse : TResponse);
-    function SaveRootDomainZonesCache (ADomainZones :
-      TRootDomainZones.TDomainZonesList; AData : Pointer = nil) : Boolean;
-    function LoadRootDomainZonesCache (var ADomainZones :
-      TRootDomainZones.TDomainZonesList; AData : Pointer = nil) : Boolean;
-    }
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -71,7 +63,7 @@ const
   USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '+
     'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 '+
     'Safari/537.36';
-  ROOT_ZONES_CACHE_FILE = 'RootDomainZonesCache.bin';
+
 
 { TApplication }
 
@@ -80,8 +72,8 @@ var
   ErrorMsg: String;
   NonOptions : TStringList;
   ShortOptions : string = 'h';
-  LongOptions : array [1..4] of string = ('help', 'force-parse-zones',
-    'parse-stats', 'domain-zones-list');
+  LongOptions : array [1..3] of string = ('help', 'force-parse-zones',
+    'domain-zones-list');
 begin
   ErrorMsg:=CheckOptions(ShortOptions, LongOptions);
   if ErrorMsg<>'' then begin
@@ -93,11 +85,11 @@ begin
   if HasOption('h', 'help') then
     PrintHelp;
 
-  if HasOption('force-parse-zones') then ;
-    //ParseRootZones;
+  if HasOption('force-parse-zones') then
+    ParseRootZones;
 
-  if HasOption('domain-zones-list') then ;
-    //PrintRootZonesList;
+  if HasOption('domain-zones-list') then
+    PrintRootZonesList;
 
   NonOptions := TStringList.Create;
   GetNonOptions(ShortOptions, LongOptions, NonOptions);
@@ -109,97 +101,7 @@ begin
 
   Terminate;
 end;
-{
-procedure TApplication.ParseRootZones;
-var
-  RootZones : TRootDomainZones;
-begin
-  RootZones := TRootDomainZones.Create(FSession, FParser);
-  RootZones.ParseDomainZones(@ParseRootZonesCallback);
-  SaveRootDomainZonesCache(RootZones.DomainZones, nil);
-  FreeAndNil(RootZones);
-end;
 
-procedure TApplication.ParseRootZonesCallback(var AResponse: TResponse);
-begin
-  if HasOption('parse-stats') then
-  begin
-    writeln('Total parse time : ':20, AResponse.TotalTime.ToString);
-  end;
-end;
-
-function TApplication.SaveRootDomainZonesCache (ADomainZones:
-  TRootDomainZones.TDomainZonesList; AData : Pointer) : Boolean;
-var
-  Zone : TRootDomainZones.TDomainZoneInfo;
-  FileStream : TFileStream;
-  Index : Integer;
-begin
-  FileStream := TFileStream.Create(ROOT_ZONES_CACHE_FILE, fmCreate or
-    fmOpenWrite);
-  FileStream.Seek(0, soFromBeginning);
-
-  for Index := 0 to ADomainZones.Count - 1 do
-  begin
-    Zone := ADomainZones.Data[Index];
-    Zone.SaveToStream(FileStream);
-  end;
-
-  FreeAndNil(FileStream);
-  Result := True;
-end;
-
-function TApplication.LoadRootDomainZonesCache (var ADomainZones:
-  TRootDomainZones.TDomainZonesList; AData : Pointer) : Boolean;
-var
-  Zone : TRootDomainZones.TDomainZoneInfo;
-  FileStream : TFileStream;
-begin
-  if FileExists(ROOT_ZONES_CACHE_FILE) then
-  begin
-    FileStream := TFileStream.Create(ROOT_ZONES_CACHE_FILE, fmOpenRead);
-
-    while FileStream.Position < FileStream.Size do
-    begin
-      Zone := TRootDomainZones.TDomainZoneInfo.Create;
-      Zone.LoadFromStream(FileStream);
-      ADomainZones.Add(Zone.Name, Zone);
-    end;
-
-    FreeAndNil(FileStream);
-
-    Result := True;
-  end else
-    Result := False;
-end;
-
-procedure TApplication.PrintRootZonesList;
-var
-  RootZones : TRootDomainZones;
-  Zone : TRootDomainZones.TDomainZoneInfo;
-  Index : Integer;
-begin
-  RootZones := TRootDomainZones.Create(FSession, FParser);
-  RootZones.LoadCallback(@LoadRootDomainZonesCache, nil);
-
-  writeln('Root domain zones count : ', RootZones.DomainZones.Count);
-  writeln('');
-
-  for Index := 0 to RootZones.DomainZones.Count - 1 do
-  begin
-    Zone := RootZones.DomainZones.Data[Index];
-    writeln(IntToStr(Index + 1) + '. Name : ':20, Zone.Name);
-
-    if Zone.TypeInfo <> DOMAIN_UNKNOWN then
-      writeln('Type : ':20, Zone.TypeInfo);
-
-    if Zone.Manager <> '' then
-      writeln('Manager : ':20, Zone.Manager);
-
-    writeln('');
-  end;
-end;
-}
 procedure TApplication.PrintHelp;
 begin
   writeln(
@@ -223,19 +125,60 @@ begin
   );
 end;
 
+procedure TApplication.ParseRootZones;
+var
+  RootZonesDatabase : TRootZoneDatabaseParser;
+begin
+  RootZonesDatabase := TRootZoneDatabaseParser.Create(FRootZonesDatabase,
+    FSession, FParser);
+  RootZonesDatabase.Parse;
+end;
+
+procedure TApplication.PrintRootZonesList;
+var
+  DomainZone : TRootZoneDatabase.TDomainZone;
+  Element : TRootZoneDatabase.TInfoElement;
+  Counter : Integer;
+begin
+  Counter := 1;
+  for DomainZone in FRootZonesDatabase do
+  begin
+    Writeln(IntToStr(Counter) + '. Name: ':13, DomainZone.Name);
+
+    for Element in DomainZone do
+    begin
+      case Element.InfoType of
+        INFO_ENTITY   : Writeln('Entity: ':13, Element.Value);
+        INFO_ICONPATH : Writeln('Icon path: ':13, Element.Value);
+        INFO_NOTE     : Writeln('Note: ':13, Element.Value);
+        INFO_DNSNAME  : Writeln('DNS name: ':13, Element.Value);
+        INFO_MANAGER  : Writeln('Manager: ':13, Element.Value);
+        INFO_TYPE     : Writeln('Type: ':13, Element.Value);
+        INFO_LANGUAGE : Writeln('Language: ':13, Element.Value);
+      end;
+    end;
+
+    Inc(Counter);
+    Writeln;
+  end;
+end;
+
 constructor TApplication.Create(TheOwner: TComponent);
 begin
   inherited Create(TheOwner);
-  StopOnException:=True;
+  StopOnException := True;
+
   FSession := TSession.Create;
   FSession.HTTP.UserAgent := USER_AGENT;
   FParser := TParser.Create;
+  FRootZonesDatabase := TRootZoneDatabase.Create;
 end;
 
 destructor TApplication.Destroy;
 begin
   FreeAndNil(FSession);
   FreeAndNil(FParser);
+  FreeAndNil(FRootZonesDatabase);
   inherited Destroy;
 end;
 

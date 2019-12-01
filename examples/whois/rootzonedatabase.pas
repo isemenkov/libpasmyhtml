@@ -150,7 +150,8 @@ type
     FParser : TParser;
 
     function ParseIana : TTimeInterval;
-    procedure ParseIanaCallback (ANode : TParser.TTagNode; AData : Pointer);
+    procedure ParseIanaCallback (ANode : TParser.TTagNode;
+      {%H-}AData : Pointer = nil);
   public
     function GetEnumerator : TRootZoneDatabaseEnumerator;
   public
@@ -279,7 +280,7 @@ begin
   { ...
     <td>
       <span class="domain tld">
-        <a href="/domains/root/db/aaa.html">.aaa</a>    [<-- Zone.Name]
+        <a href="/domains/root/db/aaa.html">.aaa</a>    [<-- INFO_NAME]
       </span>
     </td>
   ... }
@@ -292,7 +293,24 @@ begin
     .FirstChildrenNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_A))
     .Value)));
 
+  { ...
+    <td>generic</td>                                    [<-- INFO_TYPE]
+  ... }
 
+  Node := Node.NextNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TD));
+  DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_TYPE,
+    ClearString(Node.Value)));
+
+  { ...
+    <td>American Automobile Association, Inc.</td>      [<-- INFO_MANAGER]
+  ... }
+
+  Node := Node.NextNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TD));
+  DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_MANAGER,
+    ClearString(Node.Value)));
+
+  if DomainZone.Name <> '' then
+    FZoneDatabase.FRootZones.Add(DomainZone.Name, DomainZone);
 end;
 
 function TRootZoneDatabaseParser.GetEnumerator: TRootZoneDatabaseEnumerator;
@@ -316,7 +334,7 @@ end;
 
 procedure TRootZoneDatabaseParser.Parse;
 begin
- // TODO
+  ParseIana;
 end;
 
 { TRootZoneDatabaseEnumerator }
