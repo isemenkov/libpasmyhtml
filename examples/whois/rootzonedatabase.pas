@@ -232,7 +232,7 @@ end;
 
 function TRootZoneDatabaseEnumerator.MoveNext: Boolean;
 begin
-  Result := FDatabase.FRootZones.Count < FPosition;
+  Result := FPosition < FDatabase.FRootZones.Count;
 end;
 
 { TRootZoneDatabase.TDomainZoneEnumerator }
@@ -252,7 +252,7 @@ end;
 
 function TRootZoneDatabase.TDomainZoneEnumerator.MoveNext: Boolean;
 begin
-  Result := FDomain.FInfo.Count < FPosition;
+  Result := FPosition < FDomain.FInfo.Count;
 end;
 
 { TRootZoneDatabase }

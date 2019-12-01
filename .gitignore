@@ -1,7 +1,9 @@
 
 #examples
 /examples/whois/Whois
-/examples/whois/RootDomainZonesCache.bin
+/examples/whois/unit-tests/UnitTests
+/examples/whois/unit-tests/UnitTests.ico
+/examples/whois/unit-tests/UnitTests.fpcunit.ini
 
 #unit-test
 /unit-tests/libpasmyhtml_testproject
