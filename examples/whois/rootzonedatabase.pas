@@ -137,12 +137,25 @@ type
   { Parse database from websites }
   TRootZoneDatabaseParser = class
   private
+    const
+      { Parse top level domain zones from url }
+      IANA_ORG_URL         = 'https://www.iana.org/domains/root/db';
+      PUBLICSUFFIX_ORG_URL = 'https://publicsuffix.org/list/'+
+                             'effective_tld_names.dat';
+      WIKIPEDIA_ORG_URL    = 'https://en.wikipedia.org/wiki/'+
+                             'List_of_Internet_top-level_domains';
+  private
     FZoneDatabase : TRootZoneDatabase;
+    FSession : TSession;
     FParser : TParser;
+
+    function ParseIana : TTimeInterval;
+    procedure ParseIanaCallback (ANode : TParser.TTagNode; AData : Pointer);
   public
     function GetEnumerator : TRootZoneDatabaseEnumerator;
   public
-    constructor Create (ADatabase : TRootZoneDatabase);
+    constructor Create (ADatabase : TRootZoneDatabase; ASession : TSession;
+      AParser : TParser);
     destructor Destroy; override;
     procedure Parse;
   end;
@@ -193,20 +206,110 @@ end;
 
 { TRootZoneDatabaseParser }
 
+function TRootZoneDatabaseParser.ParseIana: TTimeInterval;
+var
+  Response : TResponse;
+begin
+  FSession.Url := IANA_ORG_URL;
+  Response := TResponse.Create(FSession);
+
+  { ...
+    <body>
+      <div id="body">
+        <div id="main_right">
+        ...
+          <div class="iana-table-frame">
+          ...
+            <table id="tld-table" class="iana-table">
+              ...
+              <tbody>
+                <tr>
+                  ...
+                </tr>
+                <tr>
+                  ...
+                </tr>
+                ...
+  ... }
+
+  FParser.Parse(Response.Content, DOCUMENT_BODY)
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsIdOnly('body'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsIdOnly('main_right'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsClassOnly(
+      'iana-table-frame'))
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(
+      TParser.TTag.MyHTML_TAG_TABLE))
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(
+      TParser.TTag.MyHTML_TAG_TBODY))
+    .EachChildrenNode(TParser.TFilter.Create.Tag(
+      TParser.TTag.MyHTML_TAG_TR),
+      TParser.TTransform.Create.TagNodeTransform(@ParseIanaCallback));
+
+  Result := Response.TotalTime;
+  FreeAndNil(Response);
+end;
+
+procedure TRootZoneDatabaseParser.ParseIanaCallback(ANode: TParser.TTagNode;
+  AData: Pointer);
+
+  function ClearString (AString : string) : string;
+  var
+    Index : SizeInt;
+  begin
+    Result := AString;
+    for Index := Length(Result) downto 1 do
+    begin
+      { Delete controls symbols exclude space }
+      if (Ord(Result[Index]) <> Ord(' ')) and (Ord(Result[Index]) <= 32) then
+        Delete(Result, Index, 1);
+
+      { Delete multiple spaces }
+      if (Index >= 2) and (Result[Index] = ' ') and (Result[Index - 1] = ' ')
+      then
+        Delete(Result, Index, 1);
+    end;
+  end;
+
+var
+  Node : TParser.TTagNode;
+  DomainZone : TRootZoneDatabase.TDomainZone;
+begin
+  DomainZone := TRootZoneDatabase.TDomainZone.Create;
+
+  { ...
+    <td>
+      <span class="domain tld">
+        <a href="/domains/root/db/aaa.html">.aaa</a>    [<-- Zone.Name]
+      </span>
+    </td>
+  ... }
+
+  Node := ANode.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_TD));
+  DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_NAME,
+    ClearString(Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
+      TParser.TTag.MyHTML_TAG_SPAN))
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_A))
+    .Value)));
+
+
+end;
+
 function TRootZoneDatabaseParser.GetEnumerator: TRootZoneDatabaseEnumerator;
 begin
   Result := FZoneDatabase.GetEnumerator;
 end;
 
-constructor TRootZoneDatabaseParser.Create(ADatabase: TRootZoneDatabase);
+constructor TRootZoneDatabaseParser.Create(ADatabase: TRootZoneDatabase;
+  ASession : TSession; AParser : TParser);
 begin
   FZoneDatabase := ADatabase;
-  FParser := TParser.Create;
+  FSession := ASession;
+  FParser := AParser;
 end;
 
 destructor TRootZoneDatabaseParser.Destroy;
 begin
-  FreeAndNil(FParser);
   FreeAndNil(FZoneDatabase);
   inherited Destroy;
 end;
