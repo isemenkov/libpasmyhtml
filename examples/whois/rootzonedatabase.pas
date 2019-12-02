@@ -159,6 +159,9 @@ type
     procedure ParseIanaCallback (ANode : TParser.TTagNode;
       {%H-}AData : Pointer = nil);
     function ParsePublicsuffix : TTimeInterval;
+    function ParseWikipedia : TTimeInterval;
+    procedure ParseWikipedia1Callback (ANode : TParser.TTagNode;
+      {%H-}AData : Pointer = nil);
   public
     function GetEnumerator : TRootZoneDatabaseEnumerator;
   public
@@ -401,6 +404,116 @@ begin
   FreeAndNil(Response);
 end;
 
+function TRootZoneDatabaseParser.ParseWikipedia: TTimeInterval;
+var
+  Response : TResponse;
+begin
+  FSession.Url := WIKIPEDIA_ORG_URL;
+  Response := TResponse.Create(FSession);
+
+   { ...
+   <body>
+     ...
+     <div id="content" ...>
+       ...
+       <div id="bodyContent" ...>
+         ...
+         <div id="mw-content-text" ...>
+           <div class="mw-parser-output">
+             ...
+             <table class="wikitable sortable jquery-tablesorter">
+               ...
+               <tbody>
+                 <tr valign="top">
+                   ...
+                 </tr>
+                 ...
+               </tbody>
+               ...
+             </table>
+             ...
+           ...
+   ... }
+
+  FParser.Parse(Response.Content, DOCUMENT_BODY)
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsIdOnly('content'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsIdOnly('bodyContent'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsIdOnly('mw-content-text'))
+    .FirstChildrenNode(TParser.TFilter.Create.ContainsClassOnly(
+      'mw-parser-output'))
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(
+      TParser.TTag.MyHTML_TAG_TABLE)
+      .ContainsClass('wikitable sortable'))
+    .FirstChildrenNode(TParser.TFilter.Create.Tag(
+      TParser.TTag.MyHTML_TAG_TBODY))
+    .EachChildrenNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TR),
+      TParser.TTransform.Create.TagNodeTransform(@ParseWikipedia1Callback));
+
+
+  Result := Response.TotalTime;
+  FreeAndNil(Response);
+end;
+
+procedure TRootZoneDatabaseParser.ParseWikipedia1Callback(
+  ANode: TParser.TTagNode; AData: Pointer);
+
+  function ClearString (AString : string) : string;
+  {$IFNDEF DEBUG}inline;{$ENDIF}
+  var
+    Index : SizeInt;
+  begin
+    Result := AString;
+    for Index := Length(Result) downto 1 do
+    begin
+      { Delete controls symbols exclude space }
+      if (Ord(Result[Index]) <> Ord(' ')) and (Ord(Result[Index]) <= 32) then
+        Delete(Result, Index, 1);
+
+      { Delete multiple spaces }
+      if (Index >= 2) and (Result[Index] = ' ') and (Result[Index - 1] = ' ')
+      then
+        Delete(Result, Index, 1);
+    end;
+  end;
+
+var
+  Node : TParser.TTagNode;
+  DomainZone : TRootZoneDatabase.TDomainZone;
+begin
+  DomainZone := TRootZoneDatabase.TDomainZone.Create;
+
+  { ...
+    <td>
+     <a href="/wiki/.com" title=".com">.com</a>               [<-- INFO_NAME]
+    </td>
+  ... }
+
+  Node := ANode.FirstNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_TD));
+  DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_NAME,
+    ClearString(Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
+      TParser.TTag.MyHTML_TAG_A)).Value)));
+
+  { ...
+    <td>commercial</td>                                       [<-- INFO_TYPE]
+  ... }
+
+  Node := Node.NextNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_TD));
+  DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_TYPE,
+    ClearString(Node.Value)));
+
+  { ...
+    <td>
+     <a href="/wiki/Verisign" title="Verisign">Verisign</a>   [<-- INFO_MANAGER]
+    </td>
+    <td>
+     [... text ... ]                                          [<-- INFO_NOTE]
+    </td>
+    ...
+  ... }
+end;
+
 function TRootZoneDatabaseParser.GetEnumerator: TRootZoneDatabaseEnumerator;
 begin
   Result := FZoneDatabase.GetEnumerator;
@@ -422,8 +535,9 @@ end;
 
 procedure TRootZoneDatabaseParser.Parse;
 begin
-  ParseIana;
-  ParsePublicsuffix;
+  //ParseIana;
+  //ParsePublicsuffix;
+  ParseWikipedia;
 end;
 
 { TRootZoneDatabaseEnumerator }
