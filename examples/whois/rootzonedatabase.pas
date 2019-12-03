@@ -483,12 +483,13 @@ begin
   DomainZone := TRootZoneDatabase.TDomainZone.Create;
 
   { ...
-    <td>
-     <a href="/wiki/.com" title=".com">.com</a>               [<-- INFO_NAME]
-    </td>
+    <tr>
+      <td>
+       <a href="/wiki/.com" title=".com">.com</a>             [<-- INFO_NAME]
+      </td>
   ... }
 
-  Node := ANode.FirstNode(TParser.TFilter.Create.Tag(
+  Node := ANode.FirstChildrenNode(TParser.TFilter.Create.Tag(
     TParser.TTag.MyHTML_TAG_TD));
   DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_NAME,
     ClearString(Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
@@ -512,6 +513,9 @@ begin
     </td>
     ...
   ... }
+
+  if DomainZone.Name <> '' then
+    FZoneDatabase.AddDomain(DomainZone);
 end;
 
 function TRootZoneDatabaseParser.GetEnumerator: TRootZoneDatabaseEnumerator;
