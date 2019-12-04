@@ -112,11 +112,64 @@ type
     procedure TestEachTrNodes;
   end;
 
+  { TParserHtml5TestCase }
+
+  TParserHtml5TestCase = class(TTestCase)
+  private
+    FParser : TParser;
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    procedure TestH1Tag;
+  end;
+
 {$I htmldocuments/SimpleHTMLDocument.inc}
 {$I htmldocuments/TeamTenDotComDocument.inc}
 {$I htmldocuments/IanaDocument.inc}
+{$I htmldocuments/Html5TestPage.inc}
 
 implementation
+
+{ TParserHtml5TestCase }
+
+procedure TParserHtml5TestCase.SetUp;
+begin
+  FParser := TParser.Create(MyHTML_OPTIONS_PARSE_MODE_SEPARATELY,
+    MyENCODING_UTF_8, 1, 4096, MyHTML_TREE_PARSE_FLAGS_CLEAN);
+end;
+
+procedure TParserHtml5TestCase.TearDown;
+begin
+  FreeAndNil(FParser);
+end;
+
+procedure TParserHtml5TestCase.TestH1Tag;
+var
+  Node : TParser.TTagNode;
+  Value : string;
+begin
+  Node := FParser.Parse(Html5TestPage, DOCUMENT_BODY);
+  AssertTrue('Error body node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_BODY);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.AttributeKeyValue(
+    'role', 'document'));
+  AssertTrue('Error div node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.AttributeKeyValue(
+    'role', 'banner'));
+  AssertTrue('Error header node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEADER);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_H1));
+  AssertTrue('Error h1 node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_H1);
+
+  Value := Node.Value;
+  AssertTrue('Error h1 tag value is not correct', Value = 'HTML5 Test Page');
+end;
 
 { TMyHTMLParserIanaTestCase }
 
@@ -1183,5 +1236,6 @@ initialization
   RegisterTest(TParserSimpleHTMLTestCase);
   RegisterTest(TParserTeamtenTestCase);
   RegisterTest(TParserIanaTestCase);
+  RegisterTest(TParserHtml5TestCase);
 end.
 
