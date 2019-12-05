@@ -502,17 +502,31 @@ begin
   Node := Node.NextNode(TParser.TFilter.Create.Tag(
     TParser.TTag.MyHTML_TAG_TD));
   DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_TYPE,
-    ClearString(Node.Value)));
+    ClearString(Node.ConcatValue)));
 
   { ...
     <td>
      <a href="/wiki/Verisign" title="Verisign">Verisign</a>   [<-- INFO_MANAGER]
     </td>
+  ... }
+
+  Node := Node.NextNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_TD));
+  DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_MANAGER,
+    ClearString(Node.ConcatValue)));
+
+  { ...
     <td>
-     [... text ... ]                                          [<-- INFO_NOTE]
+      [... text ... ]                                         [<-- INFO_NOTE]
     </td>
     ...
   ... }
+
+  Node := Node.NextNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_TD));
+  DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_NOTE,
+    ClearString(Node.ConcatValue(TParser.TFilter.Create.NotContainsClass(
+      'noprint')))));
 
   if DomainZone.Name <> '' then
     FZoneDatabase.AddDomain(DomainZone);
