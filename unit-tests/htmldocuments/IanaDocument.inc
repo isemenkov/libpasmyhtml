@@ -45,7 +45,7 @@ const
                 'including gTLDs such as <span '                  +
                 'class="domain">.com</span>, and country-code '   +
                 'TLDs such as <span class="domain">.uk</span>. As'+
-                'the manager of the DNS root zone, we are '       +
+                ' the manager of the DNS root zone, we are '      +
                 'responsible for coordinating these delegations ' +
                 'in accordance with our <a href="/domains/'       +
                 'root/">policies and procedures</a>.</p>'         + sLineBreak +

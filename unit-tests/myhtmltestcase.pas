@@ -108,8 +108,11 @@ type
 
     procedure TestEachTrNodesCallback (ANode : TParser.TTagNode;
       AData : Pointer);
+    procedure TestReplaceTextNodeCallback (ANode : TParser.TTagNode;
+      AData : Pointer);
   published
     procedure TestEachTrNodes;
+    procedure TestReplaceTextNode;
   end;
 
   { TParserHtml5TestCase }
@@ -260,6 +263,40 @@ begin
     ZoneList[4].Manager = 'Abbott Laboratories, Inc.');
 end;
 
+{ Test text node with other tags inside }
+procedure TParserIanaTestCase.TestReplaceTextNode;
+var
+  Node : TParser.TTagNode;
+  Value : string;
+begin
+  Node := FParser.Parse(IanaOrgDocument, DOCUMENT_BODY);
+  AssertTrue('Error body node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_BODY);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.ContainsIdOnly('body'));
+  AssertTrue('Error div tag node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.ContainsIdOnly(
+    'main_right'));
+  AssertTrue('Error div tag node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_P));
+  AssertTrue('Error p tag node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_P);
+
+  Value := '';
+  Node.EachChildrenNode(nil, TParser.TTransform.Create.TagNodeTransform(
+    @TestReplaceTextNodeCallback, @Value));
+
+  AssertTrue('Error value is not correct', Value = 'The Root Zone Database ' +
+    'represents the delegation details of top-level domains, including gTLDs ' +
+    'such as .com, and country-code TLDs such as .uk. As the manager of the ' +
+    'DNS root zone, we are responsible for coordinating these delegations ' +
+    'in accordance with our policies and procedures.');
+end;
+
 { Test each tr node callback function }
 procedure TParserIanaTestCase.TestEachTrNodesCallback(
   ANode: TParser.TTagNode; AData: Pointer);
@@ -309,6 +346,25 @@ begin
   Zone.Manager := Node.Value;
 
   TZoneInfoList(AData).Add(Zone);
+end;
+
+{ Test text node with other tags inside callback function }
+procedure TParserIanaTestCase.TestReplaceTextNodeCallback(
+  ANode: TParser.TTagNode; AData: Pointer);
+var
+  Value : ^string;
+begin
+  AssertTrue('Error node in test replace text node callback function is nil',
+    ANode.IsOk);
+  AssertTrue('Error data in test replace text node callback function is nil',
+    AData <> nil);
+
+  Value := AData;
+
+  if ANode.Tag = MyHTML_TAG__TEXT then
+    Value^ := Value^ + ANode.Value
+  else
+    Value^ := Value^ + ANode.FirstChildrenNode.Value;
 end;
 
 { TParserTeamtenTestCase }
