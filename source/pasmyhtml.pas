@@ -124,6 +124,11 @@ type
 
         { Return tag text value }
         function GetValue : string; {$IFNDEF DEBUG}inline;{$ENDIF}
+
+        { Return tag text value through inside tags. Return all tags
+          concatinated text values for all nodes }
+        function GetConcatValue : string; {$IFNDEF DEBUG}inline;
+          {$ENDIF}
       public
         constructor Create (ANode : pmyhtml_tree_node_t);
         destructor Destroy; override;
@@ -186,6 +191,9 @@ type
 
         { Return tag text value }
         property Value : string read GetValue;
+
+        { Return tag text values included all inside tags values }
+        property ConcatValue : string read GetConcatValue;
       end;
 
       { TTagNodeAttribute }
@@ -1062,6 +1070,28 @@ begin
       Result := myhtml_node_text(TextNode, nil);
     end else
       Result := '';
+  end else
+    Result := '';
+end;
+
+function TParser.TTagNode.GetConcatValue: string;
+var
+  Node : TTagNode;
+begin
+  if IsOk then
+  begin
+    Result := '';
+
+    Node := FirstChildrenNode;
+    while Node.IsOk do
+    begin
+      if Node.Tag = MyHTML_TAG__TEXT then
+        Result := Result + Node.Value
+      else
+        Result := Result + Node.FirstChildrenNode.Value;
+
+      Node := Node.NextNode;
+    end;
   end else
     Result := '';
 end;
