@@ -250,6 +250,21 @@ type
             destructor Destroy; override;
           end;
 
+          { TTagIdExclude }
+
+          TTagIdExclude = class (IFilter)
+          private
+            FTag : TTag;
+          protected
+            function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; override;
+              overload;
+            function IsEqual ({%H-}ANodeAttribute : pmyhtml_tree_attr_t) :
+              Boolean; override; overload;
+          public
+            constructor Create (ATag : TTag);
+            destructor Destroy; override;
+          end;
+
           { TTagNodeCallback }
 
           TTagNodeEqualCallback = class (IFilter)
@@ -407,6 +422,9 @@ type
         { Set tag id for filtering }
         function Tag (ATag : TTag) : TFilter;
 
+        { Node tag id not equal ATag }
+        function ExcludeTag (ATag : TTag) : TFilter;
+
         { Set tag attribute key for filtering }
         {!!! Only for attributes filtrations, not tag nodes }
         function AttributeKey (AKey : string) : TFilter;
@@ -532,6 +550,31 @@ type
   end;
 
 implementation
+
+{ TParser.TFilter.TTagIdExclude }
+
+function TParser.TFilter.TTagIdExclude.IsEqual(ANode: pmyhtml_tree_node_t
+  ): Boolean;
+begin
+  Result := (ANode <> nil) and (myhtml_node_tag_id(ANode) <>
+    myhtml_tag_id_t(FTag));
+end;
+
+function TParser.TFilter.TTagIdExclude.IsEqual(
+  ANodeAttribute: pmyhtml_tree_attr_t): Boolean;
+begin
+  Result := True; { not filtering by attribute }
+end;
+
+constructor TParser.TFilter.TTagIdExclude.Create(ATag: TTag);
+begin
+  FTag := ATag;
+end;
+
+destructor TParser.TFilter.TTagIdExclude.Destroy;
+begin
+  inherited Destroy;
+end;
 
 { TParser.TTransform.TMutableTagNode }
 
@@ -903,6 +946,12 @@ end;
 function TParser.TFilter.Tag(ATag: TTag): TFilter;
 begin
   FFiltersList.Add(TTagIdEqual.Create(ATag));
+  Result := Self;
+end;
+
+function TParser.TFilter.ExcludeTag(ATag: TTag): TFilter;
+begin
+  FFiltersList.Add(TTagIdExclude.Create(ATag));
   Result := Self;
 end;
 
