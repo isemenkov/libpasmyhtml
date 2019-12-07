@@ -169,6 +169,10 @@ type
       {%H-}AData : Pointer = nil);
     procedure ParseWikipedia4Callback (ANode : TParser.TTagNode;
       {%H-}AData : Pointer = nil);
+    procedure ParseWikipedia5Callback (ANode : TParser.TTagNode;
+      {%H-}AData : Pointer = nil);
+    procedure ParseWikipediaEachTableCallback (ANode : TParser.TTagNode;
+      {%H-}AData : Pointer = nil);
   public
     function GetEnumerator : TRootZoneDatabaseEnumerator;
   public
@@ -481,6 +485,11 @@ begin
     .EachChildrenNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TR),
       TParser.TTransform.Create.TagNodeTransform(@ParseWikipedia4Callback));
 
+  Node.EachNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_TABLE).ContainsClass('wikitable'),
+    TParser.TTransform.Create.TagNodeTransform(
+      @ParseWikipediaEachTableCallback));
+
   Result := Response.TotalTime;
   FreeAndNil(Response);
 end;
@@ -713,7 +722,7 @@ begin
     TParser.TTag.MyHTML_TAG_TD));
   DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_NOTE,
     ClearString(Node.ConcatValue(TParser.TFilter.Create.NotContainsClass(
-      'reference')))));
+      'reference noprint')))));
 
   if DomainZone.Name <> '' then
     FZoneDatabase.AddDomain(DomainZone);
@@ -768,7 +777,7 @@ begin
     TParser.TTag.MyHTML_TAG_TD));
   DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_DNSNAME,
     ClearString(Node.ConcatValue(TParser.TFilter.Create.NotContainsClass(
-      'reference')))));
+      'reference noprint')))));
 
   { ...
     <td>
@@ -784,7 +793,7 @@ begin
     TParser.TTag.MyHTML_TAG_TD));
   DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_REGION,
     ClearString(Node.ConcatValue(TParser.TFilter.Create.NotContainsClass(
-      'reference')))));
+      'reference noprint')))));
 
   { ...
     <td>
@@ -796,10 +805,101 @@ begin
     TParser.TTag.MyHTML_TAG_TD));
   DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_LANGUAGE,
     ClearString(Node.ConcatValue(TParser.TFilter.Create.NotContainsClass(
-      'reference')))));
+      'reference noprint')))));
 
   if DomainZone.Name <> '' then
     FZoneDatabase.AddDomain(DomainZone);
+end;
+
+procedure TRootZoneDatabaseParser.ParseWikipedia5Callback(
+  ANode: TParser.TTagNode; AData: Pointer);
+
+  function ClearString (AString : string) : string;
+  {$IFNDEF DEBUG}inline;{$ENDIF}
+  var
+    Index : SizeInt;
+  begin
+    Result := AString;
+    for Index := Length(Result) downto 1 do
+    begin
+      { Delete controls symbols exclude space }
+      if (Ord(Result[Index]) <> Ord(' ')) and (Ord(Result[Index]) <= 32) then
+        Delete(Result, Index, 1);
+
+      { Delete multiple spaces }
+      if (Index >= 2) and (Result[Index] = ' ') and (Result[Index - 1] = ' ')
+      then
+        Delete(Result, Index, 1);
+    end;
+  end;
+
+var
+  Node : TParser.TTagNode;
+  DomainZone : TRootZoneDatabase.TDomainZone;
+begin
+  DomainZone := TRootZoneDatabase.TDomainZone.Create;
+
+  { ...
+    <tr>
+      <td>
+        <a class="mw-redirect" href="/wiki/.academy" title="/academy">
+          .academy</a>                                        [<-- INFO_NAME]
+      </td>
+  ... }
+
+  Node := ANode.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_TD));
+  DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_NAME,
+    ClearString(Node.ConcatValue(TParser.TFilter.Create.NotContainsClass(
+      'reference noprint')))));
+
+  { ...
+    <td>academic institutes</td>                              [<-- INFO_ENTITY]
+  ... }
+
+  Node := Node.NextNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_TD));
+  DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_ENTITY,
+    ClearString(Node.ConcatValue(TParser.TFilter.Create.NotContainsClass(
+      'reference noprint')))));
+
+  { ...
+    <td>-</td>                                                [<-- INFO_NOTE]
+  ... }
+
+  Node := Node.NextNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_TD));
+  DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_NOTE,
+    ClearString(Node.ConcatValue(TParser.TFilter.Create.NotContainsClass(
+      'reference noprint')))));
+
+  { ...
+    <td>
+      <a href="/wiki/Donuts_(company)" title="Donuts (company)">
+        Donuts</a>                                            [<-- INFO_MANAGER]
+      <sup id="cite_ref-76" class="reference">
+        <a href="#cite_note-76">[donuts 1]</a>
+      </sup>
+    </td>
+  ... }
+
+  Node := Node.NextNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_TD));
+  DomainZone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_MANAGER,
+    ClearString(Node.ConcatValue(TParser.TFilter.Create.NotContainsClass(
+      'reference noprint')))));
+
+  if DomainZone.Name <> '' then
+    FZoneDatabase.AddDomain(DomainZone);
+end;
+
+procedure TRootZoneDatabaseParser.ParseWikipediaEachTableCallback(
+  ANode: TParser.TTagNode; AData: Pointer);
+begin
+  ANode.FirstChildrenNode(TParser.TFilter.Create.Tag(
+      TParser.TTag.MyHTML_TAG_TBODY))
+    .EachChildrenNode(TParser.TFilter.Create.Tag(TParser.TTag.MyHTML_TAG_TR),
+      TParser.TTransform.Create.TagNodeTransform(@ParseWikipedia5Callback));
 end;
 
 function TRootZoneDatabaseParser.GetEnumerator: TRootZoneDatabaseEnumerator;
@@ -823,8 +923,8 @@ end;
 
 procedure TRootZoneDatabaseParser.Parse;
 begin
-  //ParseIana;
-  //ParsePublicsuffix;
+  ParseIana;
+  ParsePublicsuffix;
   ParseWikipedia;
 end;
 
