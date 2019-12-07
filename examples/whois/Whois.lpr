@@ -143,18 +143,19 @@ begin
   Counter := 1;
   for DomainZone in FRootZonesDatabase do
   begin
-    Writeln(IntToStr(Counter) + '. Name: ':13, DomainZone.Name);
+    Writeln(IntToStr(Counter) + '. Name: ':20, DomainZone.Name);
 
     for Element in DomainZone do
     begin
       case Element.InfoType of
-        INFO_ENTITY   : Writeln('Entity: ':13, Element.Value);
-        INFO_ICONPATH : Writeln('Icon path: ':13, Element.Value);
-        INFO_NOTE     : Writeln('Note: ':13, Element.Value);
-        INFO_DNSNAME  : Writeln('DNS name: ':13, Element.Value);
-        INFO_MANAGER  : Writeln('Manager: ':13, Element.Value);
-        INFO_TYPE     : Writeln('Type: ':13, Element.Value);
-        INFO_LANGUAGE : Writeln('Language: ':13, Element.Value);
+        INFO_ENTITY   : Writeln('Entity: ':20, Element.Value);
+        INFO_ICONPATH : Writeln('Icon path: ':20, Element.Value);
+        INFO_NOTE     : Writeln('Note: ':20, Element.Value);
+        INFO_DNSNAME  : Writeln('DNS name: ':20, Element.Value);
+        INFO_MANAGER  : Writeln('Manager: ':20, Element.Value);
+        INFO_REGION   : Writeln('Region/Country: ':20, Element.Value);
+        INFO_TYPE     : Writeln('Type: ':20, Element.Value);
+        INFO_LANGUAGE : Writeln('Language: ':20, Element.Value);
       end;
     end;
 
