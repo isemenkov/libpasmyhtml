@@ -1018,8 +1018,10 @@ procedure TRootZoneDatabase.TDomainZone.AddInfo(AElem: TInfoElement);
 begin
   if AElem.InfoType = INFO_NAME then
     FName := AElem.Value
-  else
-    FInfo.Add(AElem);
+  else begin
+    if AElem.Value <> '' then
+      FInfo.Add(AElem);
+  end;
 end;
 
 procedure TRootZoneDatabase.TDomainZone.Merge(ADomain: TDomainZone);
