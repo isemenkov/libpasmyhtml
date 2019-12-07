@@ -349,8 +349,6 @@ type
 
           TNotContainsAttributeOnlyValue = class (IFilter)
           private
-            {FKey : string;
-            FValue : string;}
             FFilter : TContainsAttributeOnlyValue;
           protected
             function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; override;
@@ -384,9 +382,8 @@ type
 
           TNotContainsAttributeAllValues = class (IFilter)
           private
-            {FKey : string;
-            FTagNodeAttributeValueList : TStringList;}
-            FFilter : TContainsAttributeAllValues;
+            FKey : string;
+            FTagNodeAttributeValueList : TStringList;
           protected
             function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean;
               override; overload;
@@ -593,8 +590,45 @@ end;
 
 function TParser.TFilter.TNotContainsAttributeAllValues.IsEqual(
   ANode: pmyhtml_tree_node_t): Boolean;
+
+  function FindAttribute : pmyhtml_tree_attr_t; {$IFNDEF DEBUG}inline;{$ENDIF}
+  begin
+    Result := nil;
+    if ANode <> nil then
+      Result := myhtml_attribute_by_key(ANode, PChar(FKey), Length(FKey));
+  end;
+
+  function CheckAttributeAllValues (AAttribute : pmyhtml_tree_attr_t) : Boolean;
+    {$IFNDEF DEBUG}inline;{$ENDIF}
+  var
+    ValueList : TStringList;
+    Value : string;
+  begin
+    ValueList := TTagNodeAttribute.StringTokenize(myhtml_attribute_value(
+      AAttribute, nil));
+    Result := True;
+    for Value in FTagNodeAttributeValueList do
+    begin
+      if ValueList.IndexOf(Value) <> -1 then
+      begin
+        Result := False;
+        Break;
+      end;
+    end;
+  end;
+
+var
+  NodeAttr : pmyhtml_tree_attr_t;
 begin
-  Result := not FFilter.IsEqual(ANode);
+  if FTagNodeAttributeValueList.Count > 0 then
+  begin
+    NodeAttr := FindAttribute;
+    if NodeAttr = nil then
+      Result := True
+    else
+      Result := CheckAttributeAllValues(NodeAttr);
+  end else
+    Result := True;
 end;
 
 function TParser.TFilter.TNotContainsAttributeAllValues.IsEqual(
@@ -606,18 +640,20 @@ end;
 constructor TParser.TFilter.TNotContainsAttributeAllValues.Create(AKey: string;
   AValueList: string);
 begin
-  FFilter := TContainsAttributeAllValues.Create(AKey, AValueList);
+  FKey := AKey;
+  FTagNodeAttributeValueList := TTagNodeAttribute.StringTokenize(AValueList);
 end;
 
 constructor TParser.TFilter.TNotContainsAttributeAllValues.Create(AKey: string;
   AValueList: TStringList);
 begin
-  FFilter := TContainsAttributeAllValues.Create(AKey, AValueList);
+  FKey := AKey;
+  FTagNodeAttributeValueList := AValueList;
 end;
 
 destructor TParser.TFilter.TNotContainsAttributeAllValues.Destroy;
 begin
-  FreeAndNil(FFilter);
+  FreeAndNil(FTagNodeAttributeValueList);
   inherited Destroy;
 end;
 
@@ -715,6 +751,7 @@ end;
 
 destructor TParser.TFilter.TContainsAttributeAllValues.Destroy;
 begin
+  FreeAndNil(FTagNodeAttributeValueList);
   inherited Destroy;
 end;
 
