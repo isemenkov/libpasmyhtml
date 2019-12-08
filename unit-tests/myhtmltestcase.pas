@@ -123,6 +123,7 @@ type
     procedure TearDown; override;
   published
     procedure TestH1Tag;
+    procedure TestEachHeadingNodes;
   end;
 
 {$I htmldocuments/SimpleHTMLDocument.inc}
@@ -170,6 +171,101 @@ begin
 
   Value := Node.Value;
   AssertTrue('Error h1 tag value is not correct', Value = 'HTML5 Test Page');
+end;
+
+procedure TParserHtml5TestCase.TestEachHeadingNodes;
+var
+  Node, TagNode : TParser.TTagNode;
+  Value : string;
+  Index : Integer;
+begin
+  Node := FParser.Parse(Html5TestPage, DOCUMENT_BODY);
+  AssertTrue('Error body node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_BODY);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_DIV).ContainsIdOnly('top'));
+  AssertTrue('Error div node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_MAIN));
+  AssertTrue('Error main node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_MAIN);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_SECTION).ContainsIdOnly('text'));
+  AssertTrue('Error section node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_SECTION);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_ARTICLE).ContainsIdOnly('text__headings'));
+  AssertTrue('Error article node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_ARTICLE);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_DIV));
+  AssertTrue('Error div node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
+
+  Index := 1;
+  for TagNode in Node.FirstChildrenNode do
+  begin
+    if TagNode.Tag = TParser.TTag.MyHTML_TAG__TEXT then
+      Continue;
+
+    case Index of
+      1 : begin
+        Value := TagNode.Value;
+        AssertTrue('Error h1 node is nil', TagNode.IsOk);
+        AssertTrue('Error not correct tag id', TagNode.Tag = MyHTML_TAG_H1);
+        AssertTrue('Error h1 tag value is not correct', Value =
+          'Heading 1');
+        Inc(Index);
+      end;
+      2 : begin
+        Value := TagNode.Value;
+        AssertTrue('Error h2 node is nil', TagNode.IsOk);
+        AssertTrue('Error not correct tag id', TagNode.Tag = MyHTML_TAG_H2);
+        AssertTrue('Error h2 tag value is not correct', Value =
+          'Heading 2');
+        Inc(Index);
+      end;
+      3 : begin
+        Value := TagNode.Value;
+        AssertTrue('Error h3 node is nil', TagNode.IsOk);
+        AssertTrue('Error not correct tag id', TagNode.Tag = MyHTML_TAG_H3);
+        AssertTrue('Error h3 tag value is not correct', Value =
+          'Heading 3');
+        Inc(Index);
+      end;
+      4 : begin
+        Value := TagNode.Value;
+        AssertTrue('Error h4 node is nil', TagNode.IsOk);
+        AssertTrue('Error not correct tag id', TagNode.Tag = MyHTML_TAG_H4);
+        AssertTrue('Error h4 tag value is not correct', Value =
+          'Heading 4');
+        Inc(Index);
+      end;
+      5 : begin
+        Value := TagNode.Value;
+        AssertTrue('Error h5 node is nil', TagNode.IsOk);
+        AssertTrue('Error not correct tag id', TagNode.Tag = MyHTML_TAG_H5);
+        AssertTrue('Error h5 tag value is not correct', Value =
+          'Heading 5');
+        Inc(Index);
+      end;
+      6 : begin
+        Value := TagNode.Value;
+        AssertTrue('Error h6 node is nil', TagNode.IsOk);
+        AssertTrue('Error not correct tag id', TagNode.Tag = MyHTML_TAG_H6);
+        AssertTrue('Error h6 tag value is not correct', Value =
+          'Heading 6');
+        Inc(Index);
+      end else
+        Fail('Error not correct index');
+    end;
+  end;
 end;
 
 { TMyHTMLParserIanaTestCase }

@@ -114,6 +114,11 @@ type
         function FilterNode (ANode : pmyhtml_tree_node_t; AFilter : TFilter) :
           pmyhtml_tree_node_t; {$IFNDEF DEBUG}inline;{$ENDIF}
 
+        { Apply AFilter to ANode element if it is. Return pmyhtml_tree_node_t if
+          element find or nil. Try to find node is reverse direction }
+        function ReverseFilterNode (ANode : pmyhtml_tree_node_t; AFilter :
+          TFilter) : pmyhtml_tree_Node_t; {$IFNDEF DEBUG}inline;{$ENDIF}
+
         { Apply AFilter to AAttribute if it is. Return filtered
           pmyhtml_tree_attr_t element if find or nil }
         function FilterAttribute (AAttribute : pmyhtml_tree_attr_t; AFilter :
@@ -124,6 +129,26 @@ type
 
         { Return tag text value }
         function GetValue : string; {$IFNDEF DEBUG}inline;{$ENDIF}
+
+        { Return node parent if exists, broken node overwise }
+        function GetParent : TTagNode; {$IFNDEF DEBUG}inline;{$ENDIF}
+      public
+        type
+          { TTagNodeEnumerator }
+          { TagNode enumerator }
+          TTagNodeEnumerator = class
+          protected
+            FNode, FNextNode : TTagNode;
+            FFilter : TFilter;
+            function GetCurrent : TTagNode;
+          public
+            constructor Create (ANode : TTagNode; AFilter : TFilter = nil);
+            function MoveNext : Boolean; inline;
+            property Current : TTagNode read GetCurrent;
+          end;
+
+        { Get TagNode enumerator function }
+        function GetEnumerator : TTagNodeEnumerator; inline;
       public
         constructor Create (ANode : pmyhtml_tree_node_t);
         destructor Destroy; override;
@@ -134,9 +159,11 @@ type
         { If AFilter is set return first filtered node else return self }
         function FirstNode (AFilter : TFilter = nil) : TTagNode;
 
-        { If FirstNode AFilter is set apply it to try to find next element else
-          return next node or nil if isn't }
+        { Try to find next element else return nil if isn't }
         function NextNode (AFilter : TFilter = nil) : TTagNode;
+
+        { Try to find prev element else return nil if isn't }
+        function PrevNode (AFilter : TFilter = nil) : TTagNode;
 
         { For each node (if AFilter is present for filtered nodes, else for each
           nodes) apply ATransform callback. If ATransform isn't do nothing }
@@ -147,9 +174,13 @@ type
           all nodes list }
         function FindAllNodes (AFilter : TFilter = nil) : TTagNodeList;
 
-        { Return first filtered current node children. If AFilter isn't return
-          first children node. If node not found return broken node }
+        { Return first filtered current node children. If AFilter isn't present
+          return first children node. If node not found return broken node }
         function FirstChildrenNode (AFilter : TFilter = nil) : TTagNode;
+
+        { Return last filtered current node children. If AFilter isn't present
+          return last children node. If node not found retun broken node }
+        function LastChildrenNode (AFilter : TFilter = nil) : TTagNode;
 
         { For each filtered current node childrens applies ATransfrom callback.
           If ATransform isn't do nothing }
@@ -184,6 +215,9 @@ type
       public
         { Return tag id }
         property Tag : TTag read GetTag;
+
+        { Return parent node is exists, broken node overwise }
+        property Parent : TTagNode read GetParent;
 
         { Return tag text value }
         property Value : string read GetValue;
@@ -353,7 +387,7 @@ type
           protected
             function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; override;
               overload;
-            function IsEqual (ANodeAttribute : pmyhtml_tree_attr_t) :
+            function IsEqual ({%H-}ANodeAttribute : pmyhtml_tree_attr_t) :
               Boolean; override; overload;
           public
             constructor Create (AKey : string; AValue : string);
@@ -387,7 +421,7 @@ type
           protected
             function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean;
               override; overload;
-            function IsEqual (ANodeAttribute : pmyhtml_tree_attr_t) :
+            function IsEqual ({%H-}ANodeAttribute : pmyhtml_tree_attr_t) :
               Boolean; override; overload;
           public
             constructor Create (AKey : string; AValueList : string); overload;
@@ -415,6 +449,9 @@ type
       public
         constructor Create;
         destructor Destroy; override;
+
+        { Set custom filter }
+        function CustomFilter (AFilter : IFilter) : TFilter;
 
         { Set tag id for filtering }
         function Tag (ATag : TTag) : TFilter;
@@ -547,6 +584,28 @@ type
   end;
 
 implementation
+
+{ TParser.TTagNode.TTagNodeEnumerator }
+
+function TParser.TTagNode.TTagNodeEnumerator.GetCurrent: TTagNode;
+begin
+  Result := FNode;
+  FNode := FNextNode;
+  FNextNode := FNode.NextNode(FFilter);
+end;
+
+constructor TParser.TTagNode.TTagNodeEnumerator.Create (ANode: TTagNode;
+  AFilter: TFilter);
+begin
+  FNode := ANode;
+  FFilter := AFilter;
+  FNextNode := ANode.NextNode(AFilter);
+end;
+
+function TParser.TTagNode.TTagNodeEnumerator.MoveNext: Boolean;
+begin
+  Result := FNextNode.IsOk;
+end;
 
 { TParser.TFilter.TTagIdExclude }
 
@@ -980,6 +1039,12 @@ begin
   inherited Destroy;
 end;
 
+function TParser.TFilter.CustomFilter(AFilter: IFilter): TFilter;
+begin
+  FFiltersList.Add(AFilter);
+  Result := Self;
+end;
+
 function TParser.TFilter.Tag(ATag: TTag): TFilter;
 begin
   FFiltersList.Add(TTagIdEqual.Create(ATag));
@@ -1134,6 +1199,21 @@ begin
     Result := ANode;
 end;
 
+function TParser.TTagNode.ReverseFilterNode(ANode: pmyhtml_tree_node_t;
+  AFilter: TFilter): pmyhtml_tree_Node_t;
+var
+  Node : pmyhtml_tree_node_t;
+ begin
+  if AFilter <> nil then
+  begin
+    Node := ANode;
+    while (Node <> nil) and (not AFilter.IsEqual(Node)) do
+      Node := myhtml_node_prev(Node);
+    Result := Node;
+  end else
+    Result := ANode;
+end;
+
 function TParser.TTagNode.FilterAttribute(AAttribute : pmyhtml_tree_attr_t;
   AFilter : TFilter) : pmyhtml_tree_attr_t;
 var
@@ -1220,6 +1300,20 @@ begin
   Result := FNode <> nil;
 end;
 
+function TParser.TTagNode.GetParent: TTagNode;
+begin
+  if IsOk then
+  begin
+    Result := TTagNode.Create(myhtml_node_parent(FNode));
+  end else
+    Result := TTagNode.Create(nil);
+end;
+
+function TParser.TTagNode.GetEnumerator: TTagNodeEnumerator;
+begin
+  Result := TTagNodeEnumerator.Create(Self);
+end;
+
 function TParser.TTagNode.FirstNode(AFilter: TFilter): TTagNode;
 begin
   if IsOk then
@@ -1234,6 +1328,15 @@ begin
   if IsOk then
   begin
     Result := TTagNode.Create(FilterNode(myhtml_node_next(FNode), AFilter));
+  end else
+    Result := TTagNode.Create(nil);
+end;
+
+function TParser.TTagNode.PrevNode(AFilter: TFilter): TTagNode;
+begin
+  if IsOk then
+  begin
+    Result := TTagNode.Create(FilterNode(myhtml_node_prev(FNode), AFilter));
   end else
     Result := TTagNode.Create(nil);
 end;
@@ -1280,6 +1383,16 @@ begin
   if IsOk then
   begin
     Result := TTagNode.Create(FilterNode(myhtml_node_child(FNode), AFilter));
+  end else
+    Result := TTagNode.Create(nil);
+end;
+
+function TParser.TTagNode.LastChildrenNode(AFilter: TFilter): TTagNode;
+begin
+  if IsOk then
+  begin
+    Result := TTagNode.Create(ReverseFilterNode(myhtml_node_last_child(FNode),
+      AFilter));
   end else
     Result := TTagNode.Create(nil);
 end;
