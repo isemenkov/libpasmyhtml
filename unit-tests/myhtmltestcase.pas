@@ -209,11 +209,9 @@ begin
   AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
 
   Index := 1;
-  for TagNode in Node.FirstChildrenNode do
+  for TagNode in Node.FirstChildrenNode.Filter(
+    TParser.TFilter.Create.ExcludeTag(TParser.TTag.MyHTML_TAG__TEXT)) do
   begin
-    if TagNode.Tag = TParser.TTag.MyHTML_TAG__TEXT then
-      Continue;
-
     case Index of
       1 : begin
         Value := TagNode.Value;
@@ -261,11 +259,12 @@ begin
         AssertTrue('Error not correct tag id', TagNode.Tag = MyHTML_TAG_H6);
         AssertTrue('Error h6 tag value is not correct', Value =
           'Heading 6');
-        Inc(Index);
       end else
         Fail('Error not correct index');
     end;
   end;
+
+  AssertTrue('Error index is must be 6', Index = 6);
 end;
 
 { TMyHTMLParserIanaTestCase }

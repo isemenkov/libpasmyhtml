@@ -138,17 +138,21 @@ type
           { TagNode enumerator }
           TTagNodeEnumerator = class
           protected
-            FNode, FNextNode : TTagNode;
+            FNode : TTagNode;
             FFilter : TFilter;
             function GetCurrent : TTagNode;
           public
             constructor Create (ANode : TTagNode; AFilter : TFilter = nil);
             function MoveNext : Boolean; inline;
+            function GetEnumerator : TTagNodeEnumerator;
             property Current : TTagNode read GetCurrent;
           end;
 
-        { Get TagNode enumerator function }
+        { Get TagNode enumerator }
         function GetEnumerator : TTagNodeEnumerator; inline;
+
+        { GetTagNode filtered enumerator }
+        function Filter (AFilter : TFilter = nil) : TTagNodeEnumerator; inline;
       public
         constructor Create (ANode : pmyhtml_tree_node_t);
         destructor Destroy; override;
@@ -590,21 +594,24 @@ implementation
 function TParser.TTagNode.TTagNodeEnumerator.GetCurrent: TTagNode;
 begin
   Result := FNode;
-  FNode := FNextNode;
-  FNextNode := FNode.NextNode(FFilter);
+  FNode := FNode.NextNode(FFilter);
 end;
 
 constructor TParser.TTagNode.TTagNodeEnumerator.Create (ANode: TTagNode;
   AFilter: TFilter);
 begin
-  FNode := ANode;
+  FNode := ANode.NextNode(AFilter);
   FFilter := AFilter;
-  FNextNode := ANode.NextNode(AFilter);
 end;
 
 function TParser.TTagNode.TTagNodeEnumerator.MoveNext: Boolean;
 begin
-  Result := FNextNode.IsOk;
+  Result := FNode.IsOk;
+end;
+
+function TParser.TTagNode.TTagNodeEnumerator.GetEnumerator: TTagNodeEnumerator;
+begin
+  Result := Self;
 end;
 
 { TParser.TFilter.TTagIdExclude }
@@ -1312,6 +1319,11 @@ end;
 function TParser.TTagNode.GetEnumerator: TTagNodeEnumerator;
 begin
   Result := TTagNodeEnumerator.Create(Self);
+end;
+
+function TParser.TTagNode.Filter(AFilter: TFilter): TTagNodeEnumerator;
+begin
+  Result := TTagNodeEnumerator.Create(Self, AFilter);
 end;
 
 function TParser.TTagNode.FirstNode(AFilter: TFilter): TTagNode;
