@@ -50,7 +50,7 @@ type
       { TTagTreeItem }
 
       TTagTreeItem = class
-      protected
+      private
         FParent : TTagTreeItem;
         FChildren : TTagTreeItemList;
 
@@ -73,27 +73,32 @@ type
         constructor Create (ANode : TParser.TTagNode; AColor : TColor);
         destructor Destroy; override;
 
+        function AddChildren (ANode : TParser.TTagNode; AColor : TColor) :
+          TTagTreeItem;
+
         property Tag : TParser.TTag read FTagElement write SetTagElement;
         property Color : TColor read FTagElementColor write SetTagElementColor;
         property Data : Pointer read FTagElementData write SetTagElementData;
         property DrawOffset : Integer read FTagElementDrawOffset
           write SetTagElementDrawOffset;
+        property Childrens : TTagTreeItemList read FChildren;
       end;
 
   private
     FBitmap : TBGRABitmap;
-    FItems : TCustomTagTreeItemList;
+    FItems : TTagTreeItemList;
+
   protected
-    function GetItem (AIndex : Integer) : TCustomTagTreeItem;
-    procedure SetItem (AIndex : Integer; AItem : TCustomTagTreeItem);
+    class function GetControlClassDefaultSize : TSize; override;
+    procedure DoOnResize; override;
+    procedure RenderControl; virtual;
+    procedure CalculateScrollRanges; {$IFNDEF DEBUG}inline;{$ENDIF}
   public
     constructor Create (AOwner : TComponent);
     destructor Destroy; override;
-  public
-    function AddItem (ANode : TParser.TTagNode) : TCustomTagTreeItem;
-  public
-    property Items[Index : Integer] : TCustomTagTreeItem read GetItem
-      write SetItem;
+    procedure Paint; override;
+
+    property Items : TTagTreeItemList read FItems;
   end;
 
 procedure Register;
@@ -139,6 +144,13 @@ begin
   inherited Destroy;
 end;
 
+function TCustomTagTreeView.TTagTreeItem.AddChildren(ANode: TParser.TTagNode;
+  AColor: TColor): TTagTreeItem;
+begin
+  FChildren.Add(TTagTreeItem.Create(ANode, AColor));
+  Result := Self;
+end;
+
 destructor TCustomTagTreeViewTTagTreeItem.Destroy;
 begin
   FreeAndNil(FChildren);
@@ -146,6 +158,27 @@ begin
 end;
 
 { TCustomTagTreeView }
+
+class function TCustomTagTreeView.GetControlClassDefaultSize: TSize;
+begin
+  Result.cx := 100;
+  Result.cy := 100;
+end;
+
+procedure TCustomTagTreeView.DoOnResize;
+begin
+  // TODO
+end;
+
+procedure TCustomTagTreeView.RenderControl;
+begin
+  // TODO
+end;
+
+procedure TCustomTagTreeView.CalculateScrollRanges;
+begin
+  // TODO
+end;
 
 constructor TCustomTagTreeView.Create(AOwner: TComponent);
 begin
@@ -158,6 +191,12 @@ begin
   FreeAndNil(FBitmap);
   FreeAndNil(FItems);
   inherited Destroy;
+end;
+
+procedure TCustomTagTreeView.Paint;
+begin
+  FBitmap.Draw(Canvas, 0, 0);
+  inherited Paint;
 end;
 
 end.
