@@ -39,54 +39,56 @@ uses
 
 type
 
-  { TCustomTagTreeView }
+  { TiCustomTreeView }
 
-  TCustomTagTreeView = class(TScrollingWinControl)
+  TiCustomTreeView = class(TScrollingWinControl)
   public
     type
-      TTagTreeItem = class;
-      TTagTreeItemList = specialize TFPGObjectList<TTagTreeItem>;
+      TiTreeItem = class;
+      TiTreeItemList = specialize TFPGObjectList<TiTreeItem>;
 
-      { TTagTreeItem }
-
-      TTagTreeItem = class
+      TiTreeItem = class
       private
-        FParent : TTagTreeItem;
-        FChildren : TTagTreeItemList;
+        FElementParent : TiTreeItem;
+        FElementChildrens : TiTreeItemList;
 
-        FTagElement : TParser.TTag;
-        FTagElementTitle : string;
-        FTagElementAttributes : string;
-        FTagElementColor : TColor;
-        FTagElementData : Pointer;
-        FTagElementDrawOffset : Integer;
+        FElementTitle : string;
+        FElementText : string;
+        FElementColor : TColor;
 
-        procedure SetTagElement (ATag : TParser.TTag);
+        FData : Pointer;
+
+        FDrawElementOffset : Integer;
+
+        procedure SetElementTitle (ATitle : string);
           {$IFNDEF DEBUG}inline;{$ENDIF}
-        procedure SetTagElementColor (AColor : TColor);
+        procedure SetElementText (AText : string);
           {$IFNDEF DEBUG}inline;{$ENDIF}
-        procedure SetTagElementData (AData : Pointer);
+        procedure SetElementColor (AColor : TColor);
           {$IFNDEF DEBUG}inline;{$ENDIF}
-        procedure SetTagElementDrawOffset (ADrawOffset : Integer);
+        procedure SetData (AData : Pointer); {$IFNDEF DEBUG}inline;{$ENDIF}
+        procedure SetDrawElementOffset (AOffset : Integer);
           {$IFNDEF DEBUG}inline;{$ENDIF}
+      protected
+        property Parent : TiTreeItem read FElementParent;
+        property Childrens : TiTreeItemList read FElementChildrens;
+
+        property Title : string read FElementTitle write SetElementTitle;
+        property Text : string read FElementText write SetElementText;
+        property Color : TColor read FElementColor write SetElementColor;
+
+        property Data : Pointer read FData write SetData;
+
+        property DrawOffset : Integer read FDrawElementOffset
+          write SetDrawElementOffset;
       public
-        constructor Create (ANode : TParser.TTagNode; AColor : TColor);
+        constructor Create (ATitle, AText : string; AColor : TColor);
         destructor Destroy; override;
-
-        function AddChildren (ANode : TParser.TTagNode; AColor : TColor) :
-          TTagTreeItem;
-
-        property Tag : TParser.TTag read FTagElement write SetTagElement;
-        property Color : TColor read FTagElementColor write SetTagElementColor;
-        property Data : Pointer read FTagElementData write SetTagElementData;
-        property DrawOffset : Integer read FTagElementDrawOffset
-          write SetTagElementDrawOffset;
-        property Childrens : TTagTreeItemList read FChildren;
       end;
 
   private
     FBitmap : TBGRABitmap;
-    FItems : TTagTreeItemList;
+    FItems : TiTreeItemList;
 
   protected
     class function GetControlClassDefaultSize : TSize; override;
@@ -97,9 +99,33 @@ type
     constructor Create (AOwner : TComponent);
     destructor Destroy; override;
     procedure Paint; override;
-
-    property Items : TTagTreeItemList read FItems;
+  protected
+    property Items : TiTreeItemList read FItems;
   end;
+
+  TiCustomHTMLTreeView = class (TiCustomTreeView)
+  public
+    type
+      TiTagTreeItem = class (TiCustomTreeView.TiTreeItem)
+      private
+        FTagElement : TParser.TTag;
+      public
+        constructor Create (ANode : TParser.TTagNode; AColor : TColor);
+        destructor Destroy; override;
+
+        property Parent;
+        property Childrens;
+        property Tag : TParser.TTag read FTagElement write SetTagElement;
+        property Color;
+      end;
+
+  public
+    constructor Create (ANode : TParser.TTagNode; AColor : TColor);
+    destructor Destroy; override;
+  end;
+
+
+
 
 procedure Register;
 
@@ -110,93 +136,6 @@ begin
   RegisterComponents('libPasMyHTML',[TCustomTagTreeView]);
 end;
 
-{ TCustomTagTreeView.TTagTreeItem }
 
-procedure TCustomTagTreeView.TTagTreeItem.SetTagElement(ATag: TParser.TTag);
-begin
-  FTagElement := ATag;
-end;
-
-procedure TCustomTagTreeView.TTagTreeItem.SetTagElementColor(AColor: TColor);
-begin
-  FTagElementColor := AColor;
-end;
-
-procedure TCustomTagTreeView.TTagTreeItem.SetTagElementData(AData: Pointer);
-begin
-  FTagElementData := AData;
-end;
-
-procedure TCustomTagTreeView.TTagTreeItem.SetTagElementDrawOffset(ADrawOffset:
-  Integer);
-begin
-  FTagElementDrawOffset := ADrawOffset;
-end;
-
-constructor TCustomTagTreeView.TTagTreeItem.Create(ANode: TParser.TTagNode;
-  AColor: TColor);
-begin
-  FChildren := TTagTreeItemList.Create(True);
-end;
-
-destructor TCustomTagTreeView.TTagTreeItem.Destroy;
-begin
-  inherited Destroy;
-end;
-
-function TCustomTagTreeView.TTagTreeItem.AddChildren(ANode: TParser.TTagNode;
-  AColor: TColor): TTagTreeItem;
-begin
-  FChildren.Add(TTagTreeItem.Create(ANode, AColor));
-  Result := Self;
-end;
-
-destructor TCustomTagTreeViewTTagTreeItem.Destroy;
-begin
-  FreeAndNil(FChildren);
-  inherited Destroy;
-end;
-
-{ TCustomTagTreeView }
-
-class function TCustomTagTreeView.GetControlClassDefaultSize: TSize;
-begin
-  Result.cx := 100;
-  Result.cy := 100;
-end;
-
-procedure TCustomTagTreeView.DoOnResize;
-begin
-  // TODO
-end;
-
-procedure TCustomTagTreeView.RenderControl;
-begin
-  // TODO
-end;
-
-procedure TCustomTagTreeView.CalculateScrollRanges;
-begin
-  // TODO
-end;
-
-constructor TCustomTagTreeView.Create(AOwner: TComponent);
-begin
-  //FBitmap := TBGRABitmap.Create();
-  FItems := TCustomTagTreeItemList.Create(True);
-end;
-
-destructor TCustomTagTreeView.Destroy;
-begin
-  FreeAndNil(FBitmap);
-  FreeAndNil(FItems);
-  inherited Destroy;
-end;
-
-procedure TCustomTagTreeView.Paint;
-begin
-  FBitmap.Draw(Canvas, 0, 0);
-  inherited Paint;
-end;
 
 end.
