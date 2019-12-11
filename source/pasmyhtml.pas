@@ -105,6 +105,27 @@ type
       { TTagNode }
       { Class implements HTML tag and functions to operation with it }
       TTagNode = class
+      public
+        type
+          { TTagNodeEnumerator }
+          { TagNode enumerator }
+          TTagNodeEnumerator = class
+          protected
+            FNode : TTagNode;
+            FFilter : TFilter;
+            function GetCurrent : TTagNode; inline;
+          public
+            constructor Create (ANode : TTagNode; AFilter : TFilter = nil);
+            function MoveNext : Boolean; inline;
+            function GetEnumerator : TTagNodeEnumerator; inline;
+            property Current : TTagNode read GetCurrent;
+          end;
+
+        { Get TagNode enumerator }
+        function GetEnumerator : TTagNodeEnumerator; inline;
+
+        { GetTagNode filtered enumerator }
+        function Filter (AFilter : TFilter = nil) : TTagNodeEnumerator; inline;
       private
         FNode : pmyhtml_tree_node_t;
         FNodeAttribute : pmyhtml_tree_attr_t;
@@ -132,27 +153,16 @@ type
 
         { Return node parent if exists, broken node overwise }
         function GetParent : TTagNode; {$IFNDEF DEBUG}inline;{$ENDIF}
-      public
-        type
-          { TTagNodeEnumerator }
-          { TagNode enumerator }
-          TTagNodeEnumerator = class
-          protected
-            FNode : TTagNode;
-            FFilter : TFilter;
-            function GetCurrent : TTagNode;
-          public
-            constructor Create (ANode : TTagNode; AFilter : TFilter = nil);
-            function MoveNext : Boolean; inline;
-            function GetEnumerator : TTagNodeEnumerator;
-            property Current : TTagNode read GetCurrent;
-          end;
 
-        { Get TagNode enumerator }
-        function GetEnumerator : TTagNodeEnumerator; inline;
+        { Return TRUE if element is empty }
+        function GetIsEmpty : Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
 
-        { GetTagNode filtered enumerator }
-        function Filter (AFilter : TFilter = nil) : TTagNodeEnumerator; inline;
+        { Return TRUE if element is self-closed }
+        function GetIsSelfClose : Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
+
+        { Get/Set custom data from/to node }
+        function GetData : Pointer; {$IFNDEF DEBUG}inline;{$ENDIF}
+        procedure SetData (AData : Pointer); {$IFNDEF DEBUG}inline;{$ENDIF}
       public
         constructor Create (ANode : pmyhtml_tree_node_t);
         destructor Destroy; override;
@@ -215,13 +225,21 @@ type
           attributes }
         function FindAllNodeAttributes (AFilter : TFilter = nil) :
           TTagNodeAttributeList;
-
       public
         { Return tag id }
         property Tag : TTag read GetTag;
 
         { Return parent node is exists, broken node overwise }
         property Parent : TTagNode read GetParent;
+
+        { Return TRUE if element is void }
+        property IsEmpty : Boolean read GetIsEmpty;
+
+        { Return TRUE if element is self-closed }
+        property IsSelfClose : Boolean read GetIsSelfClose;
+
+        { Custom data pointer stored in node }
+        property Data : Pointer read GetData write SetData;
 
         { Return tag text value }
         property Value : string read GetValue;
@@ -243,10 +261,10 @@ type
         class function StringTokenize (AString : string) : TStringList;
       private
         { Return attribute key }
-        function GetKey : string;
+        function GetKey : string; inline;
 
         { Return attribute value }
-        function GetValue : string;
+        function GetValue : string; inline;
 
         { Return attribute values tokenize by space }
         function GetValueList : TStringList;
@@ -455,57 +473,70 @@ type
         destructor Destroy; override;
 
         { Set custom filter }
-        function CustomFilter (AFilter : IFilter) : TFilter;
+        function CustomFilter (AFilter : IFilter) : TFilter; {$IFNDEF DEBUG}
+          inline;{$ENDIF}
 
         { Set tag id for filtering }
-        function Tag (ATag : TTag) : TFilter;
+        function Tag (ATag : TTag) : TFilter; {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Node tag id not equal ATag }
-        function ExcludeTag (ATag : TTag) : TFilter;
+        function ExcludeTag (ATag : TTag) : TFilter; {$IFNDEF DEBUG}inline;
+          {$ENDIF}
 
         { Set tag attribute key for filtering }
         {!!! Only for attributes filtrations, not tag nodes }
-        function AttributeKey (AKey : string) : TFilter;
+        function AttributeKey (AKey : string) : TFilter; {$IFNDEF DEBUG}inline;
+          {$ENDIF}
 
         { Set tag attribute value for filtering }
         {!!! Only for attributes filtrations, not tag nodes }
-        function AttributeValue (AValue : string) : TFilter;
+        function AttributeValue (AValue : string) : TFilter; {$IFNDEF DEBUG}
+          inline;{$ENDIF}
 
         { Set attribute key and value for filtering }
         {!!! Only for tag nodes filtrations, not attributes }
         function AttributeKeyValue (AKey : string; AValue : string) : TFilter;
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Set class which must be in attribute "class" list }
         { If "class" attribute is exists new class is added in list }
-        function ContainsClass (AClass : string) : TFilter;
+        function ContainsClass (AClass : string) : TFilter; {$IFNDEF DEBUG}
+          inline;{$ENDIF}
 
         { Set class which must not be in attribute "class" list }
         { If "class" attribute is exists new class is added in list }
-        function NotContainsClass (AClass : string) : TFilter;
+        function NotContainsClass (AClass : string) : TFilter; {$IFNDEF DEBUG}
+          inline;{$ENDIF}
 
         { Set class only which must be in attribute }
         { If "class" attribute is exists in list it is rewriting }
-        function ContainsClassOnly (AClass : string) : TFilter;
+        function ContainsClassOnly (AClass : string) : TFilter; {$IFNDEF DEBUG}
+          inline;{$ENDIF}
 
         { Set class only which must not be in attribute }
         { If "class" attribute is exists in list it is rewriting }
         function NotContainsClassOnly (AClass : string) : TFilter;
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Set id which must be in attribute "id" list }
         { If "id" attribute is exists new id is added in list }
-        function ContainsId (AId : string) : TFilter;
+        function ContainsId (AId : string) : TFilter; {$IFNDEF DEBUG}inline;
+          {$ENDIF}
 
         { Set id which must not be in attribute "id" list }
         { If "id" attribute is exists new id is added in list }
-        function NotContainsId (AId : string) : TFilter;
+        function NotContainsId (AId : string) : TFilter; {$IFNDEF DEBUG}inline;
+          {$ENDIF}
 
         { Set id only which must be in attribute }
         { If "id" attribute is exists in list it is rewriting }
-        function ContainsIdOnly (AId : string) : TFilter;
+        function ContainsIdOnly (AId : string) : TFilter; {$IFNDEF DEBUG}inline;
+          {$ENDIF}
 
         { Set id only which must not be in attribute }
         { If "id" attribute is exists in list it is rewriting }
-        function NotContainsIdOnly (AId : string) : TFilter;
+        function NotContainsIdOnly (AId : string) : TFilter; {$IFNDEF DEBUG}
+          inline;{$ENDIF}
 
         { Set tag filtering callback. Set AData pointer to pass it to callback.
           Return self }
@@ -531,6 +562,19 @@ type
           public
             constructor Create (ANode : pmyhtml_tree_node_t);
             destructor Destroy; override;
+
+            { Add child node to current node. If children already exists it will
+              be added to the last }
+            function AddChildren (ANode : TTagNode) : TMutableTagNode;
+              {$IFNDEF DEBUG}inline;{$ENDIF}
+
+            { Add child node immediately before current node }
+            function AddChildrenBefore (ANode : TTagNode) : TMutableTagNode;
+              {$IFNDEF DEBUG}inline;{$ENDIF}
+
+            { Add child node immediately after the current node }
+            function AddChildrenAfter (ANode : TTagNode) : TMutableTagNode;
+              {$IFNDEF DEBUG}inline;{$ENDIF}
           end;
       private
         FTagNodeCallback : TTagNodeTransformCallback;
@@ -559,8 +603,6 @@ type
           callback. Return self }
         function TagNodeAttributeTransform (ACallback :
           TTagNodeAttributeTransformCallback; AData : Pointer) : TTransform;
-
-
       end;
   private
     FHTML : pmyhtml_t;
@@ -650,6 +692,36 @@ end;
 destructor TParser.TTransform.TMutableTagNode.Destroy;
 begin
   inherited Destroy;
+end;
+
+function TParser.TTransform.TMutableTagNode.AddChildren(ANode: TTagNode
+  ): TMutableTagNode;
+begin
+  if IsOk then
+  begin
+    myhtml_tree_node_add_child(FNode, ANode.FNode);
+  end;
+  Result := Self;
+end;
+
+function TParser.TTransform.TMutableTagNode.AddChildrenBefore(ANode: TTagNode
+  ): TMutableTagNode;
+begin
+  if IsOk then
+  begin
+    myhtml_tree_node_insert_before(FNode, ANode.FNode);
+  end;
+  Result := Self;
+end;
+
+function TParser.TTransform.TMutableTagNode.AddChildrenAfter(ANode: TTagNode
+  ): TMutableTagNode;
+begin
+  if IsOk then
+  begin
+    myhtml_tree_node_insert_after(FNode, ANode.FNode);
+  end;
+  Result := Self;
 end;
 
 { TParser.TFilter.TNotContainsAttributeAllValues }
@@ -1314,6 +1386,26 @@ begin
     Result := TTagNode.Create(myhtml_node_parent(FNode));
   end else
     Result := TTagNode.Create(nil);
+end;
+
+function TParser.TTagNode.GetIsEmpty: Boolean;
+begin
+  Result := myhtml_node_is_void_element(FNode);
+end;
+
+function TParser.TTagNode.GetIsSelfClose: Boolean;
+begin
+  Result := myhtml_node_is_close_self(FNode);
+end;
+
+function TParser.TTagNode.GetData: Pointer;
+begin
+  Result := myhtml_node_get_data(FNode);
+end;
+
+procedure TParser.TTagNode.SetData(AData: Pointer);
+begin
+  myhtml_node_set_data(FNode, AData);
 end;
 
 function TParser.TTagNode.GetEnumerator: TTagNodeEnumerator;
