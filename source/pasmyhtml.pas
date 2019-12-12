@@ -144,6 +144,10 @@ type
           pmyhtml_tree_attr_t element if find or nil }
         function FilterAttribute (AAttribute : pmyhtml_tree_attr_t; AFilter :
           TFilter) : pmyhtml_tree_attr_t; {$IFNDEF DEBUG}inline;{$ENDIF}
+
+        function ReverseFilterAttribute (AAttribute : pmyhtml_tree_attr_t;
+          AFilter : TFIlter) : pmyhtml_tree_attr_t; {$IFNDEF DEBUG}inline;
+          {$ENDIF}
       private
         { Return tag id }
         function GetTag :  TTag; {$IFNDEF DEBUG}inline;{$ENDIF}
@@ -210,9 +214,19 @@ type
         function FirstNodeAttribute (AFilter : TFilter = nil) :
           TTagNodeAttribute;
 
-        { Return next node attribute appling FirstNodeAttribute AFilter if
-          exists. If node attribute not exists return broken attribute }
+        { Find last node attribute using AFilter if it is else return last
+          attribute. If node haven't attributes return broken attribute }
+        function LastNodeAttribute (AFilter : TFilter = nil) :
+          TTagNodeAttribute;
+
+        { Return next node attribute applying AFilter if exists. If node
+          attribute not exists return broken attribute }
         function NextNodeAttribute (AFilter : TFilter = nil) :
+          TTagNodeAttribute;
+
+        { Retunr prev node attribute applying AFilter if exists. If node
+          attribute not exists return broken attribute }
+        function PrevNodeAttribute (AFilter : TFilter = nil) :
           TTagNodeAttribute;
 
         { For each node node attribute (if AFilter is present for filtered
@@ -1308,6 +1322,21 @@ begin
     Result := AAttribute;
 end;
 
+function TParser.TTagNode.ReverseFilterAttribute(
+  AAttribute: pmyhtml_tree_attr_t; AFilter: TFIlter): pmyhtml_tree_attr_t;
+var
+  NodeAttr : pmyhtml_tree_attr_t;
+begin
+  if AFilter <> nil then
+  begin
+    NodeAttr := AAttribute;
+    while (NodeAttr <> nil) and (not AFilter.IsEqual(NodeAttr)) do
+      NodeAttr := myhtml_attribute_prev(NodeAttr);
+    Result := NodeAttr;
+  end else
+    Result := AAttribute;
+end;
+
 function TParser.TTagNode.GetTag: TTag;
 begin
   if IsOk then
@@ -1548,13 +1577,36 @@ begin
    Result := TTagNodeAttribute.Create(nil);
 end;
 
+function TParser.TTagNode.LastNodeAttribute(AFilter: TFilter
+  ): TTagNodeAttribute;
+begin
+  if IsOk then
+  begin
+    FNodeAttribute := myhtml_node_attribute_last(FNode);
+    Result := TTagNodeAttribute.Create(ReverseFilterAttribute(FNodeAttribute,
+      AFilter));
+  end else
+    Result := TTagNodeAttribute.Create(nil);
+end;
+
 function TParser.TTagNode.NextNodeAttribute (AFilter : TFilter):
   TTagNodeAttribute;
 begin
-  if FNodeAttribute <> nil then
+  if IsOk then
   begin
     Result := TTagNodeAttribute.Create(FilterAttribute(
       myhtml_attribute_next(FNodeAttribute), AFilter));
+  end else
+    Result := TTagNodeAttribute.Create(nil);
+end;
+
+function TParser.TTagNode.PrevNodeAttribute(AFilter: TFilter
+  ): TTagNodeAttribute;
+begin
+  if IsOk then
+  begin
+    Result := TTagNodeAttribute.Create(FilterAttribute(
+      myhtml_attribute_prev(FNodeAttribute), AFilter));
   end else
     Result := TTagNodeAttribute.Create(nil);
 end;
