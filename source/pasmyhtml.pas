@@ -145,8 +145,10 @@ type
         function FilterAttribute (AAttribute : pmyhtml_tree_attr_t; AFilter :
           TFilter) : pmyhtml_tree_attr_t; {$IFNDEF DEBUG}inline;{$ENDIF}
 
+        { Apply AFilter to AAttribute if it is. Return filtered
+          pmyhtml_tree_attr_t element if find or nil }
         function ReverseFilterAttribute (AAttribute : pmyhtml_tree_attr_t;
-          AFilter : TFIlter) : pmyhtml_tree_attr_t; {$IFNDEF DEBUG}inline;
+          AFilter : TFilter) : pmyhtml_tree_attr_t; {$IFNDEF DEBUG}inline;
           {$ENDIF}
       private
         { Return tag id }

@@ -81,6 +81,26 @@ type
 
         property DrawOffset : Integer read FDrawElementOffset
           write SetDrawElementOffset;
+
+        property Align;
+        property Anchors;
+        property AnchorSide;
+        property AnchorSideLeft;
+        property AnchorSideTop;
+        property AnchorSideRight;
+        property AnchorSideBottom;
+        property BorderStyle;
+        property BorderWidth;
+        property BorderSpacing;
+        property Cursor;
+        property HorzScrollBar;
+        property VertScrollBar;
+        property Enabled;
+        property Visible;
+        property Left;
+        property Height;
+        property Top;
+        property Width;
       public
         constructor Create (ATitle, AText : string; AColor : TColor);
         destructor Destroy; override;
