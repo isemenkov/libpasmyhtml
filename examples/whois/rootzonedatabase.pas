@@ -119,12 +119,16 @@ type
       TRootZonesList = specialize TFPGMapObject<string, TDomainZone>;
   protected
     FRootZones : TRootZonesList;
+
+    function GetCount : Integer;
   public
     function GetEnumerator : TRootZoneDatabaseEnumerator;
   public
     constructor Create;
     destructor Destroy; override;
     procedure AddDomain (ADomain : TDomainZone);
+  public
+    property Count : Integer read GetCount;
   end;
 
   { TRootZoneDatabaseEnumerator }
@@ -968,6 +972,11 @@ begin
 end;
 
 { TRootZoneDatabase }
+
+function TRootZoneDatabase.GetCount: Integer;
+begin
+  Result := FRootZones.Count;
+end;
 
 function TRootZoneDatabase.GetEnumerator: TRootZoneDatabaseEnumerator;
 begin

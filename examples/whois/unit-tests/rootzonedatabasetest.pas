@@ -45,7 +45,7 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
   published
-    procedure Test;
+    procedure TestDatabaseCount;
   end;
 
 implementation
@@ -281,9 +281,18 @@ begin
   FreeAndNil(FDatabase);
 end;
 
-procedure TRootZoneDatabaseTestCase.Test;
+procedure TRootZoneDatabaseTestCase.TestDatabaseCount;
+var
+  Zone : TRootZoneDatabase.TDomainZone;
 begin
+  Zone := TRootZoneDatabase.TDomainZone.Create;
+  Zone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_NAME, '.test'));
+  Zone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_TYPE, 'Test zone'));
+  Zone.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_NOTE, 'Test zone' +
+    'notes'));
+  FDatabase.AddDomain(Zone);
 
+  AssertTrue('Error database element count', FDatabase.Count = 1);
 end;
 
 initialization
