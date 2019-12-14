@@ -55,6 +55,7 @@ type
         FElementTitle : string;
         FElementText : string;
         FElementColor : TColor;
+        FElementCollapsed : Boolean;
 
         FData : Pointer;
 
@@ -69,6 +70,7 @@ type
         procedure SetData (AData : Pointer); {$IFNDEF DEBUG}inline;{$ENDIF}
         procedure SetDrawElementOffset (AOffset : Integer);
           {$IFNDEF DEBUG}inline;{$ENDIF}
+        function GetCollapsed : Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
       protected
         property Parent : TiTreeItem read FElementParent;
         property Childrens : TiTreeItemList read FElementChildrens;
@@ -76,6 +78,7 @@ type
         property Title : string read FElementTitle write SetElementTitle;
         property Text : string read FElementText write SetElementText;
         property Color : TColor read FElementColor write SetElementColor;
+        property Collapsed : Boolean read GetCollapsed;
 
         property Data : Pointer read FData write SetData;
 
