@@ -47,8 +47,11 @@ type
       TiTreeItem = class;
       TiTreeItemList = specialize TFPGObjectList<TiTreeItem>;
 
+      { TiTreeItem }
+
       TiTreeItem = class
       private
+        FData: Pointer;
         FElementParent : TiTreeItem;
         FElementChildrens : TiTreeItemList;
 
@@ -56,20 +59,19 @@ type
         FElementText : string;
         FElementColor : TColor;
         FElementCollapsed : Boolean;
-
-        FData : Pointer;
+        FElementData : Pointer;
 
         FDrawElementOffset : Integer;
 
-        procedure SetElementTitle (ATitle : string);
-          {$IFNDEF DEBUG}inline;{$ENDIF}
-        procedure SetElementText (AText : string);
-          {$IFNDEF DEBUG}inline;{$ENDIF}
-        procedure SetElementColor (AColor : TColor);
-          {$IFNDEF DEBUG}inline;{$ENDIF}
+        procedure SetElementTitle (ATitle : string); {$IFNDEF DEBUG}inline;
+          {$ENDIF}
+        procedure SetElementText (AText : string); {$IFNDEF DEBUG}inline;
+          {$ENDIF}
+        procedure SetElementColor (AColor : TColor); {$IFNDEF DEBUG}inline;
+          {$ENDIF}
         procedure SetData (AData : Pointer); {$IFNDEF DEBUG}inline;{$ENDIF}
-        procedure SetDrawElementOffset (AOffset : Integer);
-          {$IFNDEF DEBUG}inline;{$ENDIF}
+        procedure SetDrawElementOffset (AOffset : Integer); {$IFNDEF DEBUG}
+          inline;{$ENDIF}
         function GetCollapsed : Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
       protected
         property Parent : TiTreeItem read FElementParent;
@@ -84,28 +86,10 @@ type
 
         property DrawOffset : Integer read FDrawElementOffset
           write SetDrawElementOffset;
-
-        property Align;
-        property Anchors;
-        property AnchorSide;
-        property AnchorSideLeft;
-        property AnchorSideTop;
-        property AnchorSideRight;
-        property AnchorSideBottom;
-        property BorderStyle;
-        property BorderWidth;
-        property BorderSpacing;
-        property Cursor;
-        property HorzScrollBar;
-        property VertScrollBar;
-        property Enabled;
-        property Visible;
-        property Left;
-        property Height;
-        property Top;
-        property Width;
       public
         constructor Create (ATitle, AText : string; AColor : TColor);
+        constructor Create (AParent : TiTreeItem; ATitle, ATest : string;
+          AColor : TColor);
         destructor Destroy; override;
       end;
 
@@ -113,6 +97,8 @@ type
     FBitmap : TBGRABitmap;
     FItems : TiTreeItemList;
 
+    FElementMaxTextLength : Cardinal;
+    FItemHeight : Cardinal;
   protected
     class function GetControlClassDefaultSize : TSize; override;
     procedure DoOnResize; override;
@@ -123,6 +109,25 @@ type
     destructor Destroy; override;
     procedure Paint; override;
   protected
+    property Align;
+    property Anchors;
+    property AnchorSide;
+    property AnchorSideLeft;
+    property AnchorSideTop;
+    property AnchorSideRight;
+    property AnchorSideBottom;
+    property BorderStyle;
+    property BorderWidth;
+    property BorderSpacing;
+    property Cursor;
+    property HorzScrollBar;
+    property VertScrollBar;
+    property Enabled;
+    property Visible;
+    property Left;
+    property Height;
+    property Top;
+    property Width;
     property Items : TiTreeItemList read FItems;
   end;
 
@@ -140,6 +145,7 @@ type
         property Childrens;
         property Tag : TParser.TTag read FTagElement write SetTagElement;
         property Color;
+        property Collapsed;
       end;
 
   public
@@ -157,6 +163,119 @@ implementation
 procedure Register;
 begin
   RegisterComponents('libPasMyHTML',[TCustomTagTreeView]);
+end;
+
+{ TiCustomTreeView }
+
+class function TiCustomTreeView.GetControlClassDefaultSize: TSize;
+begin
+  Result := inherited GetControlClassDefaultSize;
+end;
+
+procedure TiCustomTreeView.DoOnResize;
+begin
+  RenderControl;
+  CalculateScrollRanges;
+  Invalidate;
+end;
+
+procedure TiCustomTreeView.RenderControl;
+begin
+
+end;
+
+procedure TiCustomTreeView.CalculateScrollRanges;
+begin
+  VertScrollBar.Range := 0;
+  HorzScrollBar.Range := 0;
+  if FBitmap.Height > ClientHeight then
+    VertScrollBar.Range := FBitmap.Height;
+  if FBitmap.Width > ClientWidth then
+    HorzScrollBar.Range := FBitmap.Width;
+end;
+
+constructor TiCustomTreeView.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  with GetControlClassDefaultSize do
+    SetInitialBounds(0, 0, cx, cy);
+  FBitmap := TBGRABitmap.Create(ClientWidth, ClientHeight, BGRAWhite);
+  FItems := TiTreeItemList.Create(True);
+  FElementMaxTextLength := 0;
+  FItemHeight := 16;
+end;
+
+destructor TiCustomTreeView.Destroy;
+begin
+  FreeAndNil(FItems);
+  FreeAndNil(FBitmap);
+  inherited Destroy;
+end;
+
+procedure TiCustomTreeView.Paint;
+begin
+  FBitmap.Draw(Canvas, 0, 0, False);
+  inherited Paint;
+end;
+
+{ TiCustomTreeView.TiTreeItem }
+
+procedure TiCustomTreeView.TiTreeItem.SetElementTitle(ATitle: string);
+begin
+  FElementTitle := ATitle;
+end;
+
+procedure TiCustomTreeView.TiTreeItem.SetElementText(AText: string);
+begin
+  FElementText := AText;
+end;
+
+procedure TiCustomTreeView.TiTreeItem.SetElementColor(AColor: TColor);
+begin
+  FElementColor := AColor;
+end;
+
+procedure TiCustomTreeView.TiTreeItem.SetData(AData: Pointer);
+begin
+  FElementData := AData;
+end;
+
+procedure TiCustomTreeView.TiTreeItem.SetDrawElementOffset(AOffset: Integer);
+begin
+  FDrawElementOffset := AOffset;
+end;
+
+function TiCustomTreeView.TiTreeItem.GetCollapsed: Boolean;
+begin
+  Result := FElementCollapsed;
+end;
+
+constructor TiCustomTreeView.TiTreeItem.Create(ATitle, AText: string;
+  AColor: TColor);
+begin
+  FElementParent := nil;
+  FElementChildrens := TiTreeItemList.Create(True);
+  FElementCollapsed := False;
+  FElementTitle := ATitle;
+  FElementText := AText;
+  FElementColor := AColor;
+end;
+
+constructor TiCustomTreeView.TiTreeItem.Create(AParent: TiTreeItem; ATitle,
+  ATest: string; AColor: TColor);
+begin
+  FElementParent := AParent;
+  FElementChildrens := TiTreeItemList.Create(True);
+  FElementCollapsed := False;
+  FElementTitle := ATitle;
+  FElementText := AText;
+  FElementColor := AColor;
+end;
+
+destructor TiCustomTreeView.TiTreeItem.Destroy;
+begin
+  FreeAndNil(FElementChildrens);
+  inherited Destroy;
 end;
 
 
