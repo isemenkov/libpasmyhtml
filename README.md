@@ -37,7 +37,8 @@ It is object pascal bindings and wrapper around [MyHTML library](https://github.
     Tree : pmyhtml_tree_t;
     Encoding : myencoding_t;
 
-  function FindNextNodeById (ANode : pmyhtml_tree_node_t; AId : myhtml_tags_t) : pmyhtml_tree_node_t; inline;
+  function FindNextNodeById (ANode : pmyhtml_tree_node_t; AId : myhtml_tags_t) : pmyhtml_tree_node_t; 
+    inline;
   begin
   	while (ANode <> nil) and (myhtml_node_tag_id(ANode) <> myhtml_tag_id_t(AId)) do
   	begin
@@ -127,7 +128,8 @@ It is object pascal bindings and wrapper around [MyHTML library](https://github.
     Value : string;
 
   begin
-    Parser := TParser.Create(MyHTML_OPTIONS_PARSE_MODE_SEPARATELY, MyENCODE_UTF_8, 1, 4096, MyHTML_TREE_PARSE_FLAGS_CLEAN);
+    Parser := TParser.Create(MyHTML_OPTIONS_PARSE_MODE_SEPARATELY, MyENCODE_UTF_8, 1, 4096,
+      MyHTML_TREE_PARSE_FLAGS_CLEAN);
     Node := Parser.Parse(HTMLDocument, DOCUMENT_HEAD);
     Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TITLE));
     if Node.IsOk then
