@@ -24,9 +24,9 @@ It is object pascal bindings and wrapper around [MyHTML library](https://github.
       '<meta name="keywords" content="some_keywords keywords" />' + sLineBreak +
       '<meta name="description" content="description" />'         + sLineBreak +
       '<link href="style.css" rel="stylesheet">'                  + sLineBreak +
-    '</head>'												      + sLineBreak +
+    '</head>'                                                     + sLineBreak +
     '<body>'                                                      + sLineBreak +
-    '</body>'													  + sLineBreak +
+    '</body>'                                                     + sLineBreak +
     '</html>';
 
   var
@@ -117,9 +117,9 @@ It is object pascal bindings and wrapper around [MyHTML library](https://github.
       '<meta name="keywords" content="some_keywords keywords" />' + sLineBreak +
       '<meta name="description" content="description" />'         + sLineBreak +
       '<link href="style.css" rel="stylesheet">'                  + sLineBreak +
-    '</head>'												      + sLineBreak +
+    '</head>'                                                     + sLineBreak +
     '<body>'                                                      + sLineBreak +
-    '</body>'													  + sLineBreak +
+    '</body>'                                                     + sLineBreak +
     '</html>';
 
   var
