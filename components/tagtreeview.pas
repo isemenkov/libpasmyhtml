@@ -72,7 +72,8 @@ type
         procedure SetData (AData : Pointer); {$IFNDEF DEBUG}inline;{$ENDIF}
         procedure SetDrawElementOffset (AOffset : Integer); {$IFNDEF DEBUG}
           inline;{$ENDIF}
-        function GetCollapsed : Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
+        procedure SetCollapsed (ACollapsed : Boolean); {$IFNDEF DEBUG}inline;
+          {$ENDIF}
       protected
         property Parent : TiTreeItem read FElementParent;
         property Childrens : TiTreeItemList read FElementChildrens;
@@ -80,7 +81,7 @@ type
         property Title : string read FElementTitle write SetElementTitle;
         property Text : string read FElementText write SetElementText;
         property Color : TColor read FElementColor write SetElementColor;
-        property Collapsed : Boolean read GetCollapsed;
+        property Collapsed : Boolean read FElementCollapsed write SetCollapsed;
 
         property Data : Pointer read FData write SetData;
 
@@ -97,13 +98,35 @@ type
     FBitmap : TBGRABitmap;
     FItems : TiTreeItemList;
 
+    FElementFontAntialias : Boolean;
+    FElementFontStyle : TFontStyles;
     FElementMaxTextLength : Cardinal;
-    FItemHeight : Cardinal;
+    FElementHeight : Cardinal;
+    FElementPaddingTop, FElementPaddingRight, FElementPaddingBottom,
+      FElementPaddingLeft : Cardinal;
+    FElementTitleRoundRect : Cardinal;
+
+    procedure SetElementFontAntialias (AFontAntialias : Boolean); {$IFNDEF
+      DEBUG}inline;{$ENDIF}
+    procedure SetElementFontStyle (AStyle : TFontStyles); {$IFNDEF DEBUG}
+      inline;{$ENDIF}
+    procedure SetElementHeight (AHeight : Cardinal); {$IFNDEF DEBUG}inline;
+      {$ENDIF}
+    procedure SetElementPaddingTop (APadding : Cardinal); {$IFNDEF DEBUG}
+      inline;{$ENDIF}
+    procedure SetElementPaddingRight (APadding : Cardinal); {$IFNDEF DEBUG}
+      inline;{$ENDIF}
+    procedure SetElementPaddingBottom (APadding : Cardinal); {$IFNDEF DEBUG}
+      inline;{$ENDIF}
+    procedure SetElementPaddingLeft (APadding : Cardinal); {$IFNDEF DEBUG}
+      inline;{$ENDIF}
+    procedure SetElementRoundRect (ARound : Cardinal); {$IFNDEF DEBUG}inline;
+      {$ENDIF}
   protected
     class function GetControlClassDefaultSize : TSize; override;
     procedure DoOnResize; override;
     procedure RenderControl; virtual;
-    procedure CalculateScrollRanges; {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure CalculateScrollRanges; virtual;
   public
     constructor Create (AOwner : TComponent);
     destructor Destroy; override;
@@ -128,7 +151,23 @@ type
     property Height;
     property Top;
     property Width;
+    property FontAntialias : Boolean read FElementFontAntialias write
+      SetElementFontAntialias default True;
+    property FontStyle : TFontStyles read FElementFontStyle write
+      SetElementFontStyle default [fsBold];
     property Items : TiTreeItemList read FItems;
+    property ItemHeight : Cardinal read FElementHeight write SetElementHeight
+      default 16;
+    property ItemTopPadding : Cardinal read FElementPaddingTop write
+      SetElementPaddingTop default 2;
+    property ItemRightPadding : Cardinal read FElementPaddingRight write
+      SetElementPaddingRight default 2;
+    property ItemBottomPadding : Cardinal read FElementPaddingBottom write
+      SetElementPaddingBottom default 2;
+    property ItemLeftPadding : Cardinal read FElementPaddingLeft write
+      SetElementPaddingLeft default 2;
+    property ItemRoundRect : Cardinal read FElementTitleRoundRect write
+      SetElementRoundRect default 8;
   end;
 
   TiCustomHTMLTreeView = class (TiCustomTreeView)
