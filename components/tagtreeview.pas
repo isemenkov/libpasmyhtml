@@ -94,6 +94,10 @@ type
         destructor Destroy; override;
       end;
 
+      TPadding = record
+        Top, Right, Bottom, Left : Integer;
+      end;
+
   private
     FBitmap : TBGRABitmap;
     FItems : TiTreeItemList;
@@ -102,9 +106,9 @@ type
     FElementFontStyle : TFontStyles;
     FElementMaxTextLength : Cardinal;
     FElementHeight : Cardinal;
-    FElementPaddingTop, FElementPaddingRight, FElementPaddingBottom,
-      FElementPaddingLeft : Cardinal;
+    FElementTitlePadding : TPadding;
     FElementTitleRoundRect : Cardinal;
+    FElementTextPadding : TPadding;
 
     procedure SetElementFontAntialias (AFontAntialias : Boolean); {$IFNDEF
       DEBUG}inline;{$ENDIF}
@@ -112,16 +116,12 @@ type
       inline;{$ENDIF}
     procedure SetElementHeight (AHeight : Cardinal); {$IFNDEF DEBUG}inline;
       {$ENDIF}
-    procedure SetElementPaddingTop (APadding : Cardinal); {$IFNDEF DEBUG}
+    procedure SetElementTitlePadding (APadding : TPadding); {$IFNDEF DEBUG}
       inline;{$ENDIF}
-    procedure SetElementPaddingRight (APadding : Cardinal); {$IFNDEF DEBUG}
+    procedure SetElementTitleRoundRect (ARound : Cardinal); {$IFNDEF DEBUG}
       inline;{$ENDIF}
-    procedure SetElementPaddingBottom (APadding : Cardinal); {$IFNDEF DEBUG}
+    procedure SetElementTextPadding (APadding : TPadding); {$IFNDEF DEBUG}
       inline;{$ENDIF}
-    procedure SetElementPaddingLeft (APadding : Cardinal); {$IFNDEF DEBUG}
-      inline;{$ENDIF}
-    procedure SetElementRoundRect (ARound : Cardinal); {$IFNDEF DEBUG}inline;
-      {$ENDIF}
   protected
     class function GetControlClassDefaultSize : TSize; override;
     procedure DoOnResize; override;
@@ -158,16 +158,12 @@ type
     property Items : TiTreeItemList read FItems;
     property ItemHeight : Cardinal read FElementHeight write SetElementHeight
       default 16;
-    property ItemTopPadding : Cardinal read FElementPaddingTop write
-      SetElementPaddingTop default 2;
-    property ItemRightPadding : Cardinal read FElementPaddingRight write
-      SetElementPaddingRight default 2;
-    property ItemBottomPadding : Cardinal read FElementPaddingBottom write
-      SetElementPaddingBottom default 2;
-    property ItemLeftPadding : Cardinal read FElementPaddingLeft write
-      SetElementPaddingLeft default 2;
-    property ItemRoundRect : Cardinal read FElementTitleRoundRect write
-      SetElementRoundRect default 8;
+    property ItemTitlePadding : TPadding read FElementTitlePadding write
+      SetElementTitlePadding;
+    property ItemTitleRoundRect : Cardinal read FElementTitleRoundRect write
+      SetElementTitleRoundRect default 8;
+    property ItemTextPadding : TPadding read FElementTextPadding write
+      SetElementTextPadding;
   end;
 
   TiCustomHTMLTreeView = class (TiCustomTreeView)

@@ -40,11 +40,11 @@ It is object pascal bindings and wrapper around [MyHTML library](https://github.
   function FindNextNodeById (ANode : pmyhtml_tree_node_t; AId : myhtml_tags_t) : pmyhtml_tree_node_t; 
     inline;
   begin
-  	while (ANode <> nil) and (myhtml_node_tag_id(ANode) <> myhtml_tag_id_t(AId)) do
-  	begin
-  	  ANode := myhtml_node_next(ANode);
-  	end;
-  	Result := ANode;
+    while (ANode <> nil) and (myhtml_node_tag_id(ANode) <> myhtml_tag_id_t(AId)) do
+    begin
+      ANode := myhtml_node_next(ANode);
+    end;
+    Result := ANode;
   end;
 
   function NodeTextValue (ANode : pmyhtml_tree_node_t) : string; inline;
@@ -123,7 +123,7 @@ It is object pascal bindings and wrapper around [MyHTML library](https://github.
     '</html>';
 
   var
-  	Parser : TParser;
+    Parser : TParser;
     Node : TParser.TTagNode;
     Value : string;
 
