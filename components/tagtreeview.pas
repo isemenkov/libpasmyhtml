@@ -39,6 +39,12 @@ uses
 
 type
 
+  { TPadding }
+
+  TPadding = record
+    Top, Right, Bottom, Left : Integer;
+  end;
+
   { TiCustomTreeView }
 
   TiCustomTreeView = class(TScrollingWinControl)
@@ -92,10 +98,6 @@ type
         constructor Create (AParent : TiTreeItem; ATitle, ATest : string;
           AColor : TColor);
         destructor Destroy; override;
-      end;
-
-      TPadding = record
-        Top, Right, Bottom, Left : Integer;
       end;
 
   private
@@ -188,12 +190,21 @@ type
     destructor Destroy; override;
   end;
 
-
-
-
+function Padding (ATop, ARight, ABottom, ALeft : Integer) : TPadding;
 procedure Register;
 
 implementation
+
+function Padding(ATop, ARight, ABottom, ALeft: Integer): TPadding;
+begin
+  with Result do
+  begin
+    Top := ATop;
+    Right := ARight;
+    Bottom := ABottom;
+    Left := ALeft;
+  end;
+end;
 
 procedure Register;
 begin
