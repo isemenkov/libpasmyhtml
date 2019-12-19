@@ -34,6 +34,7 @@ type
     procedure TestNameProperty;
     procedure TestDomainZoneNameAndEntity;
     procedure TestDomainZoneElements;
+    procedure TestDomainZoneMerge;
   end;
 
   { TRootZoneDatabaseTestCase }
@@ -170,6 +171,42 @@ begin
   end;
 
   AssertTrue('Error not all domain zone elements added in list', Counter = 7);
+end;
+
+procedure TDomainZoneTestCase.TestDomainZoneMerge;
+var
+  Zone1, Zone2 : TRootZoneDatabase.TDomainZone;
+  Element : TRootZoneDatabase.TInfoElement;
+  Counter : Integer;
+begin
+  Counter := 0;
+
+  Zone1 := TRootZoneDatabase.TDomainZone.Create;
+  Zone1.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_NAME, 'Zone1'));
+  Zone1.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_MANAGER, 'Manager'));
+
+  Zone2 := TRootZoneDatabase.TDomainZone.Create;
+  Zone2.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_ENTITY, 'Entity'));
+
+  Zone1.Merge(Zone2);
+
+  AssertTrue('Error domain zone name is not correct', Zone1.Name = 'Zone1');
+
+  for Element in Zone1 do
+    case Element.InfoType of
+      INFO_MANAGER : begin
+        Inc(Counter);
+        AssertTrue('Error domain zone manager element is not correct',
+          Element.Value = 'Manager');
+      end;
+      INFO_ENTITY : begin
+        Inc(Counter);
+        AssertTrue('Error domain zone entity element is not correct',
+          Element.Value = 'Entity');
+      end;
+    end;
+
+  AssertTrue('Error not all domain zone elements added in list', Counter = 2);
 end;
 
 { TInfoElementTestCase }
