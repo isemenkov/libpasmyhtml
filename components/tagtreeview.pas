@@ -111,6 +111,7 @@ type
     FElementTitlePadding : TPadding;
     FElementTitleRoundRect : Cardinal;
     FElementTextPadding : TPadding;
+    FElementDrawOffset : Integer;
 
     procedure SetElementFontAntialias (AFontAntialias : Boolean); {$IFNDEF
       DEBUG}inline;{$ENDIF}
@@ -124,6 +125,8 @@ type
       inline;{$ENDIF}
     procedure SetElementTextPadding (APadding : TPadding); {$IFNDEF DEBUG}
       inline;{$ENDIF}
+    procedure SetElementDrawOffset (AOffset : Integer); {$IFNDEF DEBUG}inline;
+      {$ENDIF}
   protected
     class function GetControlClassDefaultSize : TSize; override;
     procedure DoOnResize; override;
@@ -166,6 +169,8 @@ type
       SetElementTitleRoundRect default 8;
     property ItemTextPadding : TPadding read FElementTextPadding write
       SetElementTextPadding;
+    property ItemDrawOffset : Integer read FElementDrawOffset write
+      SetElementDrawOffset;
   end;
 
   TiCustomHTMLTreeView = class (TiCustomTreeView)
@@ -183,11 +188,42 @@ type
         property Tag : TParser.TTag read FTagElement write SetTagElement;
         property Color;
         property Collapsed;
+        property Data;
       end;
 
   public
     constructor Create (ANode : TParser.TTagNode; AColor : TColor);
+    constructor Create (AParent : TiTagTreeItem; ANode : TParser.TTagNode;
+      AColor : TColor);
     destructor Destroy; override;
+  public
+    property Align;
+    property Anchors;
+    property AnchorSide;
+    property AnchorSideLeft;
+    property AnchorSideTop;
+    property AnchorSideRight;
+    property AnchorSideBottom;
+    property BorderStyle;
+    property BorderWidth;
+    property BorderSpacing;
+    property Cursor;
+    property HorzScrollBar;
+    property VertScrollBar;
+    property Enabled;
+    property Visible;
+    property Left;
+    property Height;
+    property Top;
+    property Width;
+    property FontAntialias;
+    property FontStyle;
+    property Items;
+    property ItemHeight;
+    property ItemTitlePadding;
+    property ItemTitleRoundRect;
+    property ItemTextPadding;
+    property ItemDrawOffset;
   end;
 
 function Padding (ATop, ARight, ABottom, ALeft : Integer) : TPadding;
@@ -212,6 +248,48 @@ begin
 end;
 
 { TiCustomTreeView }
+
+procedure TiCustomTreeView.SetElementFontAntialias(AFontAntialias: Boolean);
+begin
+  if FElementFontAntialias <> AFontAntialias then
+    FElementFontAntialias := AFontAntialias;
+end;
+
+procedure TiCustomTreeView.SetElementFontStyle(AStyle: TFontStyles);
+begin
+  if FElementFontStyle <> AStyle then
+    FElementFontStyle := AStyle;
+end;
+
+procedure TiCustomTreeView.SetElementHeight(AHeight: Cardinal);
+begin
+  if FElementHeight <> AHeight then
+    FElementHeight := AHeight;
+end;
+
+procedure TiCustomTreeView.SetElementTitlePadding(APadding: TPadding);
+begin
+  if FElementTitlePadding <> APadding then
+    FElementTitlePadding := APadding;
+end;
+
+procedure TiCustomTreeView.SetElementTitleRoundRect(ARound: Cardinal);
+begin
+  if FElementTitleRoundRect <> ARound then
+    FElementTitleRoundRect := ARound;
+end;
+
+procedure TiCustomTreeView.SetElementTextPadding(APadding: TPadding);
+begin
+  if FElementTextPadding <> APadding then
+    FElementTextPadding := APadding;
+end;
+
+procedure TiCustomTreeView.SetElementDrawOffset(AOffset: Integer);
+begin
+  if FElementDrawOffset <> AOffset then
+    FElementDrawOffset := AOffset;
+end;
 
 class function TiCustomTreeView.GetControlClassDefaultSize: TSize;
 begin
@@ -268,32 +346,38 @@ end;
 
 procedure TiCustomTreeView.TiTreeItem.SetElementTitle(ATitle: string);
 begin
-  FElementTitle := ATitle;
+  if FElementTitle <> ATitle then
+    FElementTitle := ATitle;
 end;
 
 procedure TiCustomTreeView.TiTreeItem.SetElementText(AText: string);
 begin
-  FElementText := AText;
+  if FElementText <> AText then
+    FElementText := AText;
 end;
 
 procedure TiCustomTreeView.TiTreeItem.SetElementColor(AColor: TColor);
 begin
-  FElementColor := AColor;
+  if FElementColor <> AColor then
+    FElementColor := AColor;
 end;
 
 procedure TiCustomTreeView.TiTreeItem.SetData(AData: Pointer);
 begin
-  FElementData := AData;
+  if FElementData <> AData then
+    FElementData := AData;
 end;
 
 procedure TiCustomTreeView.TiTreeItem.SetDrawElementOffset(AOffset: Integer);
 begin
-  FDrawElementOffset := AOffset;
+  if FElementDrawOffset <> AOffset then
+    FDrawElementOffset := AOffset;
 end;
 
-function TiCustomTreeView.TiTreeItem.GetCollapsed: Boolean;
+procedure TiCustomTreeView.TiTreeItem.SetCollapsed(ACollapsed: Boolean);
 begin
-  Result := FElementCollapsed;
+  if FElementCollapsed <> ACollapsed then
+    Result := FElementCollapsed;
 end;
 
 constructor TiCustomTreeView.TiTreeItem.Create(ATitle, AText: string;
