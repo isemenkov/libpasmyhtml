@@ -40,57 +40,82 @@ uses
 type
 
   { TPadding }
-
+  { Stored paddings gap size data }
   TPadding = record
     Top, Right, Bottom, Left : Integer;
   end;
 
   { TiCustomTreeView }
-
+  { Custom tree view control }
   TiCustomTreeView = class(TScrollingWinControl)
   public
     type
+      { Tree view item element type }
+      PiTreeItem = ^TiTreeItem;
       TiTreeItem = class;
+
+      { Tree view items list type }
       TiTreeItemList = specialize TFPGObjectList<TiTreeItem>;
 
-      { TiTreeItem }
+      { Pointer list for tree view items }
+      TiDrawTreeItemList = specialize TGPGList<PiTreeItem>;
 
+      { TiTreeItem }
+      { Tree view item element }
       TiTreeItem = class
       private
-        FData: Pointer;
+        { Current item parent element }
         FElementParent : TiTreeItem;
+        { List of current items childrens }
         FElementChildrens : TiTreeItemList;
 
+        { Current element title }
         FElementTitle : string;
+        { Current element text }
         FElementText : string;
+        { Current element label color }
         FElementColor : TColor;
+        { Current element collapsed state }
         FElementCollapsed : Boolean;
+        { Item additional user controlled data pointer }
         FElementData : Pointer;
-
+        { Current element start draw offset }
         FDrawElementOffset : Integer;
 
+        { Set current element label title }
         procedure SetElementTitle (ATitle : string); {$IFNDEF DEBUG}inline;
           {$ENDIF}
+        { Set current element text }
         procedure SetElementText (AText : string); {$IFNDEF DEBUG}inline;
           {$ENDIF}
+        { Set current element label color }
         procedure SetElementColor (AColor : TColor); {$IFNDEF DEBUG}inline;
           {$ENDIF}
+        { Set current element user data pointer }
         procedure SetData (AData : Pointer); {$IFNDEF DEBUG}inline;{$ENDIF}
+        { Set current element start draw offset data }
         procedure SetDrawElementOffset (AOffset : Integer); {$IFNDEF DEBUG}
           inline;{$ENDIF}
+        { Set current element collapse state }
         procedure SetCollapsed (ACollapsed : Boolean); {$IFNDEF DEBUG}inline;
           {$ENDIF}
       protected
+        { Element parent item if exists }
         property Parent : TiTreeItem read FElementParent;
+        { Element children's elements }
         property Childrens : TiTreeItemList read FElementChildrens;
 
+        { Element label title }
         property Title : string read FElementTitle write SetElementTitle;
+        { Element text }
         property Text : string read FElementText write SetElementText;
+        { Element label color }
         property Color : TColor read FElementColor write SetElementColor;
+        { Element collapse state }
         property Collapsed : Boolean read FElementCollapsed write SetCollapsed;
-
+        { Element user pointer data }
         property Data : Pointer read FData write SetData;
-
+        { Element start draw offset data }
         property DrawOffset : Integer read FDrawElementOffset
           write SetDrawElementOffset;
       public
@@ -101,36 +126,62 @@ type
       end;
 
   private
+    { Control canvas }
     FBitmap : TBGRABitmap;
+    { Control's element items }
     FItems : TiTreeItemList;
-
+    { List of controls draw items }
+    FDrawItems : TiDrawTreeItemList;
+    { Control element's font antialias }
     FElementFontAntialias : Boolean;
-    FElementFontStyle : TFontStyles;
+    { Elements max text length }
     FElementMaxTextLength : Cardinal;
+    { Contol element heigth size }
     FElementHeight : Cardinal;
+    { Control label title element's font style }
+    FElementTitleFontStyle : TFontStyles;
+    { Control label padding }
     FElementTitlePadding : TPadding;
+    { Control label round rect corner radius }
     FElementTitleRoundRect : Cardinal;
+    { Control text text element's font style }
+    FElementTextFontStyle : TFontStyles;
+    { Control text padding }
     FElementTextPadding : TPadding;
+    { Control element's draw level offset }
     FElementDrawOffset : Integer;
 
+    { Set control item antialias font }
     procedure SetElementFontAntialias (AFontAntialias : Boolean); {$IFNDEF
       DEBUG}inline;{$ENDIF}
-    procedure SetElementFontStyle (AStyle : TFontStyles); {$IFNDEF DEBUG}
+    { Set control item label title font style }
+    procedure SetElementTitleFontStyle (AStyle : TFontStyles); {$IFNDEF DEBUG}
       inline;{$ENDIF}
+    { Set control item height }
     procedure SetElementHeight (AHeight : Cardinal); {$IFNDEF DEBUG}inline;
       {$ENDIF}
+    { Set control label title padding sizes }
     procedure SetElementTitlePadding (APadding : TPadding); {$IFNDEF DEBUG}
       inline;{$ENDIF}
+    { Set control label title round rect radius size }
     procedure SetElementTitleRoundRect (ARound : Cardinal); {$IFNDEF DEBUG}
       inline;{$ENDIF}
+    { Set control item text padding }
     procedure SetElementTextPadding (APadding : TPadding); {$IFNDEF DEBUG}
       inline;{$ENDIF}
+    { Set control text font style }
+    procedure SetElementTextFontStyle (AStyle : TFontStyles); {$IFNDEF DEBUG}
+      inline;{$ENDIF}
+    { Set control item draw level offset }
     procedure SetElementDrawOffset (AOffset : Integer); {$IFNDEF DEBUG}inline;
       {$ENDIF}
   protected
     class function GetControlClassDefaultSize : TSize; override;
     procedure DoOnResize; override;
+    { Repaint control }
     procedure RenderControl; virtual;
+    //procedure Calculate
+    { Recalc scroll bars }
     procedure CalculateScrollRanges; virtual;
   public
     constructor Create (AOwner : TComponent);
@@ -158,8 +209,10 @@ type
     property Width;
     property FontAntialias : Boolean read FElementFontAntialias write
       SetElementFontAntialias default True;
-    property FontStyle : TFontStyles read FElementFontStyle write
-      SetElementFontStyle default [fsBold];
+    property ItemTitleFontStyle : TFontStyles read FElementTitleFontStyle write
+      SetElementTitleFontStyle default [fsBold];
+    property ItemTextFontStyle : TFontStyles read FElementTextFontStyle write
+      SetElementTextFontStyle default [];
     property Items : TiTreeItemList read FItems;
     property ItemHeight : Cardinal read FElementHeight write SetElementHeight
       default 16;
@@ -255,10 +308,10 @@ begin
     FElementFontAntialias := AFontAntialias;
 end;
 
-procedure TiCustomTreeView.SetElementFontStyle(AStyle: TFontStyles);
+procedure TiCustomTreeView.SetElementTitleFontStyle(AStyle: TFontStyles);
 begin
-  if FElementFontStyle <> AStyle then
-    FElementFontStyle := AStyle;
+  if FElementTitleFontStyle <> AStyle then
+    FElementTitleFontStyle := AStyle;
 end;
 
 procedure TiCustomTreeView.SetElementHeight(AHeight: Cardinal);
@@ -285,6 +338,12 @@ begin
     FElementTextPadding := APadding;
 end;
 
+procedure TiCustomTreeView.SetElementTextFontStyle(AStyle: TFontStyles);
+begin
+  if FElementTextFontStyle <> AStyle then
+    FElementTextFontStyle := AStyle;
+end;
+
 procedure TiCustomTreeView.SetElementDrawOffset(AOffset: Integer);
 begin
   if FElementDrawOffset <> AOffset then
@@ -304,6 +363,11 @@ begin
 end;
 
 procedure TiCustomTreeView.RenderControl;
+begin
+
+end;
+
+procedure TiCustomTreeView.Calculate;
 begin
 
 end;
