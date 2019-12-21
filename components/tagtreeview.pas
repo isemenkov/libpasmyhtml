@@ -58,12 +58,13 @@ type
       TiTreeItemList = specialize TFPGObjectList<TiTreeItem>;
 
       { Pointer list for tree view items }
-      TiDrawTreeItemList = specialize TGPGList<PiTreeItem>;
+      TiDrawTreeItemList = specialize TFPGList<PiTreeItem>;
 
       { TiTreeItem }
       { Tree view item element }
       TiTreeItem = class
       private
+        FData: Pointer;
         { Current item parent element }
         FElementParent : TiTreeItem;
         { List of current items childrens }
@@ -124,7 +125,11 @@ type
         { Set current element collapse state }
         procedure SetCollapsed (ACollapsed : Boolean); {$IFNDEF DEBUG}inline;
           {$ENDIF}
+        { Check if current element is root }
+        function IsRootElement : Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
       protected
+        { Is current element is root }
+        property IsRoot : Boolean read IsRootElement;
         { Element parent item if exists }
         property Parent : TiTreeItem read FElementParent;
         { Element children's elements }
@@ -213,13 +218,22 @@ type
     procedure DoOnResize; override;
     { Repaint control }
     procedure RenderControl; virtual;
-    //procedure Calculate
+    { Calculate control }
+    procedure CalculateControl; virtual;
     { Recalc scroll bars }
     procedure CalculateScrollRanges; virtual;
   public
     constructor Create (AOwner : TComponent);
     destructor Destroy; override;
     procedure Paint; override;
+
+    function AddItem (AItem : TiTreeItem) : TiTreeItem; override;
+    function AddItem (AParent : TiTreeItem; AItem : TiTreeItem) : TiTreeItem;
+      override;
+    function AddItem (ALabelTitle, AText : string; ALabelColor : TColor) :
+      TiTreeItem; override;
+    function AddItem (AParent : TiTreeItem; ALabelTitle, AText : string;
+      ALabelColor : TColor) : TiTreeItem; override;
   protected
     property Align;
     property Anchors;
@@ -403,9 +417,45 @@ begin
 
 end;
 
-procedure TiCustomTreeView.Calculate;
-begin
+procedure TiCustomTreeView.CalculateControl;
 
+  function GetElementMaxTextLength (AElement : TiTreeItem; AElementLevel :
+    Cardinal) : Cardinal; {$IFNDEF DEBUG}inline;{$ENDIF}
+  begin
+    Result := (AElementLevel * DrawOffset) + ItemLabelPadding.Left +
+      + ItemLabelPadding.Right + ItemTextPadding.Left + ItemTextPadding.Right;
+    FBitmap.FontHeight := ItemHeight - ItemLabelPadding.Top -
+      ItemLabelPadding.Bottom;
+    FBitmap.FontStyle := LabelFontStyle;
+    Inc(Result, FBitmap.TextSize(AElement.LabelTitle);
+    FBitmap.FontStyle := TextFontStyle;
+    Inc(Result, FBitmap.TextSize(AElement.Text);
+  end;
+
+  procedure CalcTextLength (AElement : TiTreeItem; AElementLevel : Cardinal;
+    Drawable : Boolean); {$IFNDEF DEBUG}inline;{$ENDIF}
+  var
+    ElementLength : Cardinal;
+  begin
+    ElementLegnth := GetElementMaxTextLength(AElement, AElementLevel);
+    FElementMaxTextLength := Max(FElementMaxTextLength, ElementLength);
+    if Drawable then
+      FDrawElementMaxTextLength := Max(FDrawElementMaxTextLength,
+        ElementLength);
+  end;
+
+var
+  Item : TiTreeItem;
+begin
+  for Item in FItems do
+  begin
+    Item.DrawOffset := 0;
+    FDrawItems.Add(Item);
+    CalcTextLength(Item, 0, True);
+  end;
+
+  FElementMaxTextLength := Max(FElementMaxTextLength, ClientWidth);
+  FDrawElementMaxTextLength := Max(FDrawElementMaxTextLength, ClientWidth);
 end;
 
 procedure TiCustomTreeView.CalculateScrollRanges;
@@ -425,8 +475,15 @@ begin
     SetInitialBounds(0, 0, cx, cy);
   FBitmap := TBGRABitmap.Create(ClientWidth, ClientHeight, BGRAWhite);
   FItems := TiTreeItemList.Create(True);
+  FDrawItems := TiDrawTreeItemList.Create;
+  FElementFontAntialias := True;
   FElementMaxTextLength := 0;
-  FItemHeight := 16;
+  FDrawElementMaxTextLength := 0;
+  FElementHeight := 16;
+  FElementLabelPadding := Padding(1, 2);
+  FElementLabelRoundRect := 8;
+  FElementTextPadding := Padding(1, 1);
+  FElementDrawOffset := 15;
 end;
 
 destructor TiCustomTreeView.Destroy;
@@ -510,6 +567,11 @@ procedure TiCustomTreeView.TiTreeItem.SetCollapsed(ACollapsed: Boolean);
 begin
   if FElementCollapsed <> ACollapsed then
     Result := FElementCollapsed;
+end;
+
+function TiCustomTreeView.TiTreeItem.IsRootElement: Boolean;
+begin
+  Result := (FElementParent = nil);
 end;
 
 constructor TiCustomTreeView.TiTreeItem.Create(ALabelTitle, AText: string;
