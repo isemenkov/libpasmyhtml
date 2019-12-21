@@ -158,7 +158,8 @@ type
         property BackgroundColor : TColor read FElementBackgroundColor write
           SetElementBackgroundColor;
         { Element collapse state }
-        property Collapsed : Boolean read FElementCollapsed write SetCollapsed;
+        property IsCollapsed : Boolean read FElementCollapsed write
+          SetCollapsed;
         { Element user pointer data }
         property Data : Pointer read FData write SetData;
         { Element start draw offset data }
@@ -213,8 +214,9 @@ type
     { Set control item draw level offset }
     procedure SetElementDrawOffset (AOffset : Integer); {$IFNDEF DEBUG}inline;
       {$ENDIF}
-  protected
+  public
     class function GetControlClassDefaultSize : TSize; override;
+  protected
     procedure DoOnResize; override;
     { Repaint control }
     procedure RenderControl; virtual;
@@ -223,17 +225,17 @@ type
     { Recalc scroll bars }
     procedure CalculateScrollRanges; virtual;
   public
-    constructor Create (AOwner : TComponent);
+    constructor Create (AOwner : TComponent); override;
     destructor Destroy; override;
     procedure Paint; override;
 
-    function AddItem (AItem : TiTreeItem) : TiTreeItem; override;
+    function AddItem (AItem : TiTreeItem) : TiTreeItem; overload;
     function AddItem (AParent : TiTreeItem; AItem : TiTreeItem) : TiTreeItem;
-      override;
+      overload;
     function AddItem (ALabelTitle, AText : string; ALabelColor : TColor) :
-      TiTreeItem; override;
+      TiTreeItem; overload;
     function AddItem (AParent : TiTreeItem; ALabelTitle, AText : string;
-      ALabelColor : TColor) : TiTreeItem; override;
+      ALabelColor : TColor) : TiTreeItem; overload;
   protected
     property Align;
     property Anchors;
@@ -276,9 +278,14 @@ type
       SetElementDrawOffset;
   end;
 
+  { TiCustomHTMLTreeView }
+
   TiCustomHTMLTreeView = class (TiCustomTreeView)
   public
     type
+
+      { TiTagTreeItem }
+
       TiTagTreeItem = class (TiCustomTreeView.TiTreeItem)
       private
         FTagElement : TParser.TTag;
@@ -288,9 +295,8 @@ type
 
         property Parent;
         property Childrens;
-        property Tag : TParser.TTag read FTagElement write SetTagElement;
-        property Color;
-        property Collapsed;
+        property Tag : TParser.TTag read FTagElement; //write SetTagElement;
+        property IsCollapsed;
         property Data;
       end;
 
@@ -320,7 +326,6 @@ type
     property Top;
     property Width;
     property FontAntialias;
-    property FontStyle;
     property Items;
     property ItemHeight;
     property ItemLabelPadding;
@@ -329,11 +334,19 @@ type
     property ItemDrawOffset;
   end;
 
+operator= (ALeft, ARight : TPadding) : Boolean;
+
 function Padding (ATop, ARight, ABottom, ALeft : Integer) : TPadding; overload;
 function Padding (ATopBottom, ARightLeft : Integer) : TPadding; overload;
 procedure Register;
 
 implementation
+
+operator=(ALeft, ARight: TPadding) : Boolean;
+begin
+  Result := (ALeft.Top = ARight.Top) and (ALeft.Right = ARight.Right) and
+    (ALeft.Bottom = ARight.Bottom) and (ALeft.Left = ARight.Left);
+end;
 
 function Padding(ATop, ARight, ABottom, ALeft: Integer): TPadding;
 begin
@@ -359,7 +372,39 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('libPasMyHTML',[TCustomTagTreeView]);
+  RegisterComponents('libPasMyHTML',[TiCustomTreeView]);
+end;
+
+{ TiCustomHTMLTreeView }
+
+constructor TiCustomHTMLTreeView.Create(ANode: TParser.TTagNode; AColor: TColor
+  );
+begin
+  //
+end;
+
+constructor TiCustomHTMLTreeView.Create(AParent: TiTagTreeItem;
+  ANode: TParser.TTagNode; AColor: TColor);
+begin
+  //
+end;
+
+destructor TiCustomHTMLTreeView.Destroy;
+begin
+  inherited Destroy;
+end;
+
+{ TiCustomHTMLTreeView.TiTagTreeItem }
+
+constructor TiCustomHTMLTreeView.TiTagTreeItem.Create(ANode: TParser.TTagNode;
+  AColor: TColor);
+begin
+  //
+end;
+
+destructor TiCustomHTMLTreeView.TiTagTreeItem.Destroy;
+begin
+  inherited Destroy;
 end;
 
 { TiCustomTreeView }
@@ -413,8 +458,49 @@ begin
 end;
 
 procedure TiCustomTreeView.RenderControl;
-begin
 
+  procedure DrawItem (ARect : TRect; AElement : TiTreeItem); {$IFNDEF DEBUG}
+    inline;{$ENDIF}
+  var
+    LabelTextSize, TextSize : TSize;
+  begin
+    FBitmap.FontAntialias := FontAntialias;
+    FBitmap.FontHeight := FElementHeight - FElementLabelPadding.Top -
+      FElementLabelPadding.Bottom - 2;
+
+    { Draw label }
+    FBitmap.FontStyle := AElement.LabelFontStyle;
+    LabelTextSize := FBitmap.TextSize(AElement.LabelTitle);
+    FBitmap.FillRoundRect(ARect.Left + AElement.DrawOffset, ARect.Top + 1,
+      LabelTextSize.Width + ItemLabelPadding.Left + ItemLabelPadding.Right +
+      AElement.DrawOffset, ARect.Bottom - 1, ItemLabelRoundRect,
+      ItemLabelRoundRect, ColorToBGRA(AElement.LabelColor));
+    FBitmap.TextOut(ARect.Left + AElement.DrawOffset + ItemLabelPadding.Left,
+      ARect.Top + ItemLabelPadding.Top, AElement.LabelTitle,
+      ColorToBGRA(AElement.LabelFontColor));
+
+    { Draw text }
+    FBitmap.FontStyle := AElement.TextFontStyle;
+    TextSize := FBitmap.TextSize(AElement.Text);
+    FBitmap.TextOut(ARect.Left + AElement.DrawOffset + ItemLabelPadding.Left +
+      LabelTextSize.Width + ItemLabelPadding.Right + ItemTextPadding.Left,
+      ARect.Top + ItemTextPadding.Top, AElement.Text,
+      ColorToBGRA(AElement.TextFontColor));
+  end;
+
+var
+  Index : Integer;
+begin
+  CalculateControl;
+
+  FBitmap.SetSize(FDrawElementMaxTextLength, ClientHeight);
+  FBitmap.Fill(BGRAWhite);
+
+  for Index := 0 to FDrawItems.Count - 1 do
+  begin
+    DrawItem(TRect.Create(0, Index * FElementHeight, ClientWidth, Index *
+      FElementHeight + FElementHeight), TiTreeItem(FDrawItems[Index]));
+  end;
 end;
 
 procedure TiCustomTreeView.CalculateControl;
@@ -422,14 +508,14 @@ procedure TiCustomTreeView.CalculateControl;
   function GetElementMaxTextLength (AElement : TiTreeItem; AElementLevel :
     Cardinal) : Cardinal; {$IFNDEF DEBUG}inline;{$ENDIF}
   begin
-    Result := (AElementLevel * DrawOffset) + ItemLabelPadding.Left +
+    Result := AElement.DrawOffset + ItemLabelPadding.Left +
       + ItemLabelPadding.Right + ItemTextPadding.Left + ItemTextPadding.Right;
     FBitmap.FontHeight := ItemHeight - ItemLabelPadding.Top -
-      ItemLabelPadding.Bottom;
-    FBitmap.FontStyle := LabelFontStyle;
-    Inc(Result, FBitmap.TextSize(AElement.LabelTitle);
-    FBitmap.FontStyle := TextFontStyle;
-    Inc(Result, FBitmap.TextSize(AElement.Text);
+      ItemLabelPadding.Bottom - 2;
+    FBitmap.FontStyle := AElement.LabelFontStyle;
+    Inc(Result, FBitmap.TextSize(AElement.LabelTitle).Width);
+    FBitmap.FontStyle := AElement.TextFontStyle;
+    Inc(Result, FBitmap.TextSize(AElement.Text).Width);
   end;
 
   procedure CalcTextLength (AElement : TiTreeItem; AElementLevel : Cardinal;
@@ -437,22 +523,35 @@ procedure TiCustomTreeView.CalculateControl;
   var
     ElementLength : Cardinal;
   begin
-    ElementLegnth := GetElementMaxTextLength(AElement, AElementLevel);
+    ElementLength := GetElementMaxTextLength(AElement, AElementLevel);
     FElementMaxTextLength := Max(FElementMaxTextLength, ElementLength);
     if Drawable then
       FDrawElementMaxTextLength := Max(FDrawElementMaxTextLength,
         ElementLength);
   end;
 
+  procedure CalcElement (AElement : TiTreeItem; AElementLevel : Cardinal;
+    Drawable : Boolean); {$IFNDEF DEBUG}inline;{$ENDIF}
+  var
+    Item : TiTreeItem;
+  begin
+    AElement.DrawOffset := ItemDrawOffset * AElementLevel;
+    CalcTextLength(AElement, AElementLevel, Drawable);
+
+    if Drawable then
+      FDrawItems.Add(Pointer(AElement));
+
+    for Item in AElement.Childrens do
+    begin
+      CalcElement(Item, AElementLevel + 1, not AElement.IsCollapsed);
+    end;
+  end;
+
 var
   Item : TiTreeItem;
 begin
   for Item in FItems do
-  begin
-    Item.DrawOffset := 0;
-    FDrawItems.Add(Item);
-    CalcTextLength(Item, 0, True);
-  end;
+    CalcElement(Item, 1, True);
 
   FElementMaxTextLength := Max(FElementMaxTextLength, ClientWidth);
   FDrawElementMaxTextLength := Max(FDrawElementMaxTextLength, ClientWidth);
@@ -479,11 +578,11 @@ begin
   FElementFontAntialias := True;
   FElementMaxTextLength := 0;
   FDrawElementMaxTextLength := 0;
-  FElementHeight := 16;
-  FElementLabelPadding := Padding(1, 2);
-  FElementLabelRoundRect := 8;
-  FElementTextPadding := Padding(1, 1);
-  FElementDrawOffset := 15;
+  FElementHeight := 17;
+  FElementLabelPadding := Padding(1, 10);
+  FElementLabelRoundRect := 17;
+  FElementTextPadding := Padding(1, 5);
+  FElementDrawOffset := 20;
 end;
 
 destructor TiCustomTreeView.Destroy;
@@ -499,18 +598,50 @@ begin
   inherited Paint;
 end;
 
+function TiCustomTreeView.AddItem(AItem: TiTreeItem): TiTreeItem;
+begin
+  FItems.Add(AItem);
+  Result := FItems[FItems.Count - 1];
+end;
+
+function TiCustomTreeView.AddItem(AParent: TiTreeItem; AItem: TiTreeItem
+  ): TiTreeItem;
+begin
+  AParent.FElementChildrens.Add(AItem);
+  AParent.FElementCollapsed := False;
+  Result := AParent.FElementChildrens[AParent.FElementChildrens.Count - 1];
+end;
+
+function TiCustomTreeView.AddItem(ALabelTitle, AText: string;
+  ALabelColor: TColor): TiTreeItem;
+var
+  Item : TiTreeItem;
+begin
+  Item := TiTreeItem.Create(ALabeltitle, AText, ALabelColor);
+  Result := AddItem(Item);
+end;
+
+function TiCustomTreeView.AddItem(AParent: TiTreeItem; ALabelTitle,
+  AText: string; ALabelColor: TColor): TiTreeItem;
+var
+  Item : TiTreeItem;
+begin
+  Item := TiTreeItem.Create(ALabelTitle, Atext, ALabelColor);
+  Result := AddItem(AParent, Item);
+end;
+
 { TiCustomTreeView.TiTreeItem }
 
 procedure TiCustomTreeView.TiTreeItem.SetElementLabel(ALabel: string);
 begin
-  if FElementLabel <> ATitle then
-    FElementLabel := ATitle;
+  if FElementLabel <> ALabel then
+    FElementLabel := ALabel;
 end;
 
 procedure TiCustomTreeView.TiTreeItem.SetElementLabelColor(AColor: TColor);
 begin
   if FElementLabelColor <> AColor then
-    FElementTitleColor := AColor;
+    FElementLabelColor := AColor;
 end;
 
 procedure TiCustomTreeView.TiTreeItem.SetElementLabelFontColor(AColor: TColor);
@@ -559,14 +690,14 @@ end;
 
 procedure TiCustomTreeView.TiTreeItem.SetDrawElementOffset(AOffset: Integer);
 begin
-  if FElementDrawOffset <> AOffset then
+  if FDrawElementOffset <> AOffset then
     FDrawElementOffset := AOffset;
 end;
 
 procedure TiCustomTreeView.TiTreeItem.SetCollapsed(ACollapsed: Boolean);
 begin
   if FElementCollapsed <> ACollapsed then
-    Result := FElementCollapsed;
+    FElementCollapsed := ACollapsed;
 end;
 
 function TiCustomTreeView.TiTreeItem.IsRootElement: Boolean;
@@ -580,16 +711,16 @@ begin
   FElementParent := nil;
   FElementChildrens := TiTreeItemList.Create(True);
   FElementLabel := ALabelTitle;
-  FElementLabelColor := clYellow;
+  FElementLabelColor := AColor;
   FElementLabelFontColor := clBlack;
   FElementLabelFontStyle := [fsBold];
   FElementText := AText;
   FElementTextFontColor := clBlack;
   FElementTextFontStyle := [];
   FElementBackgroundColor := clWhite;
-  FElementCollapsed := False;
+  FElementCollapsed := True;
   FElementData := nil;
-  FElementDrawOffset := 0;
+  FDrawElementOffset := 0;
 end;
 
 constructor TiCustomTreeView.TiTreeItem.Create(AParent: TiTreeItem; ALabelTitle,
@@ -605,9 +736,9 @@ begin
   FElementTextFontColor := clBlack;
   FElementTextFontStyle := [];
   FElementBackgroundColor := clWhite;
-  FElementCollapsed := False;
+  FElementCollapsed := True;
   FElementData := nil;
-  FElementDrawOffset := 0;
+  FDrawElementOffset := 0;
 end;
 
 destructor TiCustomTreeView.TiTreeItem.Destroy;
