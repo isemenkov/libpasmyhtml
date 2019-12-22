@@ -40,8 +40,14 @@ uses
 type
 
   { TPadding }
-  { Stored paddings gap size data }
+  { Stored paddings inner gap size data }
   TPadding = record
+    Top, Right, Bottom, Left : Integer;
+  end;
+
+  { TMargin }
+  { Stored margin outer gap size data }
+  TMargin = record
     Top, Right, Bottom, Left : Integer;
   end;
 
@@ -104,6 +110,8 @@ type
         FItemData : Pointer;
         { Current element start draw offset }
         FItemDrawOffset : Integer;
+        { OnUpdate event }
+        FUpdateEvent : TNotifyEvent;
 
         { Check if current element is root }
         function IsRootElement : Boolean;
@@ -116,6 +124,7 @@ type
           {$IFNDEF DEBUG}inline;{$ENDIF}
         { Return current element label background color }
         function GetElementLabelBackgroundColor : TBGRAPixel;
+          {$IFNDEF DEBUG}inline;{$ENDIF}
         { Set element label background color }
         procedure SetElementLabelBackgroundColor (AColor : TBGRAPixel);
           {$IFNDEF DEBUG}inline;{$ENDIF}
@@ -210,13 +219,15 @@ type
         property BackgroundColor : TColor read FItemBackgroundColor write
           SetElementBackgroundColor;
         { Element collapse state }
-        property IsCollapsed : Boolean read FItemCollapsed write
+        property Collapsed : Boolean read FItemCollapsed write
           SetCollapsed;
         { Element user pointer data }
         property Data : Pointer read FItemData write SetData;
         { Element start draw offset data }
         property DrawOffset : Integer read FItemDrawOffset
           write SetDrawElementOffset;
+        { TiTreeItem update property event }
+        property OnUpdate : TNotifyEvent read FUpdateEvent write FUpdateEvent;
       public
         constructor Create (ALabelTitle, AText : string; AColor : TColor);
         destructor Destroy; override;
@@ -237,8 +248,6 @@ type
     FDrawElementMaxTextLength : Cardinal;
     { Contol element heigth size }
     FElementHeight : Cardinal;
-    { Gap between items top and bottom }
-    FElementGap : Cardinal;
     { Control label padding }
     FElementLabelPadding : TPadding;
     { Control label round rect corner radius }
@@ -266,8 +275,6 @@ type
     { Set control item draw level offset }
     procedure SetElementDrawOffset (AOffset : Integer);
       {$IFNDEF DEBUG}inline;{$ENDIF}
-  public
-    class function GetControlClassDefaultSize : TSize; override;
   protected
     procedure DoOnResize; override;
     { Repaint control }
@@ -276,6 +283,8 @@ type
     procedure CalculateControl; virtual;
     { Recalc scroll bars }
     procedure CalculateScrollRanges; virtual;
+  public
+    class function GetControlClassDefaultSize : TSize; override;
   public
     constructor Create (AOwner : TComponent); override;
     destructor Destroy; override;
@@ -315,13 +324,13 @@ type
     property Items : TiTreeItemList read FItems;
     { Element item height }
     property ItemHeight : Cardinal read FElementHeight write SetElementHeight
-      default 16;
+      default 17;
     { Element label padding }
     property ItemLabelPadding : TPadding read FElementLabelPadding write
       SetElementLabelPadding;
     { Element label round rect radius }
     property ItemLabelRoundRect : Cardinal read FElementLabelRoundRect write
-      SetElementLabelRoundRect default 8;
+      SetElementLabelRoundRect default 17;
     { Element text padding }
     property ItemTextPadding : TPadding read FElementTextPadding write
       SetElementTextPadding;
@@ -348,7 +357,7 @@ type
         property Parent;
         property Childrens;
         property Tag : TParser.TTag read FTagElement; //write SetTagElement;
-        property IsCollapsed;
+        property Collapsed;
         property Data;
       end;
 
@@ -380,10 +389,12 @@ type
   end;
 
 operator= (ALeft, ARight : TPadding) : Boolean;
-operator= (ALeft, ARight : TFontProperty) : Boolean;
+operator= (ALeft, ARight : TMargin) : Boolean;
 
 function Padding (ATop, ARight, ABottom, ALeft : Integer) : TPadding; overload;
 function Padding (ATopBottom, ARightLeft : Integer) : TPadding; overload;
+function Margin (ATop, ARight, ABottom, ALeft : Integer) : TMargin; overload;
+function Margin (ATopBottom, ARightLeft : Integer) : TMargin; overload;
 procedure Register;
 
 implementation
@@ -394,12 +405,10 @@ begin
     (ALeft.Bottom = ARight.Bottom) and (ALeft.Left = ARight.Left);
 end;
 
-operator=(ALeft, ARight: TFontProperty): Boolean;
+operator=(ALeft, ARight: TMargin): Boolean;
 begin
-  Result := (ALeft.Font = ARight.Font) and (ALeft.FontColorOpacity =
-    ARight.FontColorOpacity) and (ALeft.FontQuality = ARight.FontQuality) and
-    (ALeft.FontOrientation = ARight.FontOrientation) and (ALeft.FontAntialias =
-    ARight.FontAntialias) and (ALeft.FontRenderer = ARight.FontRenderer);
+  Result := (ALeft.Top = ARight.Top) and (ALeft.Right = ARight.Right) and
+    (ALeft.Bottom = ARight.Bottom) and (ALeft.Left = ARight.Left);
 end;
 
 function Padding(ATop, ARight, ABottom, ALeft: Integer): TPadding;
@@ -414,6 +423,28 @@ begin
 end;
 
 function Padding(ATopBottom, ARightLeft: Integer): TPadding;
+begin
+  with Result do
+  begin
+    Top := ATopBottom;
+    Right := ARightLeft;
+    Bottom := ATopBottom;
+    Left := ARightLeft;
+  end;
+end;
+
+function Margin(ATop, ARight, ABottom, ALeft: Integer): TMargin;
+begin
+  with Result do
+  begin
+    Top := ATop;
+    Right := ARight;
+    Bottom := ABottom;
+    Left := ALeft;
+  end;
+end;
+
+function Margin(ATopBottom, ARightLeft: Integer): TMargin;
 begin
   with Result do
   begin
@@ -517,7 +548,7 @@ procedure TiCustomTreeView.RenderControl;
   procedure DrawItem (ARect : TRect; AElement : TiTreeItem); {$IFNDEF DEBUG}
     inline;{$ENDIF}
   var
-    LabelTextSize, TextSize : TSize;
+    LabelTextSize : TSize;
   begin
     FBitmap.FontAntialias := FontAntialias;
     FBitmap.FontHeight := FElementHeight - FElementLabelPadding.Top -
@@ -536,7 +567,6 @@ procedure TiCustomTreeView.RenderControl;
 
     { Draw text }
     FBitmap.FontStyle := AElement.TextFont.Style;
-    TextSize := FBitmap.TextSize(AElement.Text);
     FBitmap.TextOut(ARect.Left + AElement.DrawOffset + ItemLabelPadding.Left +
       LabelTextSize.Width + ItemLabelPadding.Right + ItemTextPadding.Left,
       ARect.Top + ItemTextPadding.Top, AElement.Text,
@@ -599,7 +629,7 @@ procedure TiCustomTreeView.CalculateControl;
 
     for Item in AElement.Childrens do
     begin
-      CalcElement(Item, AElementLevel + 1, not AElement.IsCollapsed);
+      CalcElement(Item, AElementLevel + 1, not AElement.Collapsed);
     end;
   end;
 
@@ -704,6 +734,8 @@ begin
   if FElementLabel.Text <> AText then
   begin
     FElementLabel.Text := AText;
+    if Assigned(FUpdateEvent) then
+      FUpdateEvent(Self);
   end;
 end;
 
@@ -718,6 +750,8 @@ begin
   if FElementLabel.BackgroundColor <> AColor then
   begin
     FELementLabel.BackgroundColor := AColor;
+    if Assigned(FUpdateEvent) then
+      FUpdateEvent(Self);
   end;
 end;
 
@@ -731,6 +765,8 @@ begin
   if FElementLabel.Font.Font <> AFont then
   begin
     FElementLabel.Font.Font := AFont;
+    if Assigned(FUpdateEvent) then
+      FUpdateEvent(Self);
   end;
 end;
 
@@ -745,6 +781,8 @@ begin
   if FElementLabel.Font.FontColorOpacity <> AOpacity then
   begin
     FElementLabel.Font.FontColorOpacity := AOpacity;
+    if Assigned(FUpdateEvent) then
+      FUpdateEvent(Self);
   end;
 end;
 
@@ -759,6 +797,8 @@ begin
   if FElementLabel.Font.FontQuality <> AQuality then
   begin
     FElementLabel.Font.FontQuality := AQuality;
+    if Assigned(FUpdateEvent) then
+      FUpdateEvent(Self);
   end;
 end;
 
@@ -772,6 +812,8 @@ begin
   if FElementText.Text <> AText then
   begin
     FElementText.Text := AText;
+    if Assigned(FUpdateEvent) then
+      FUpdateEvent(Self);
   end;
 end;
 
@@ -785,6 +827,8 @@ begin
   if FElementText.Font.Font <> AFont then
   begin
     FElementText.Font.Font := AFont;
+    if Assigned(FUpdateEvent) then
+      FUpdateEvent(Self);
   end;
 end;
 
@@ -798,6 +842,8 @@ begin
   if FElementText.Font.FontColorOpacity <> AOpacity then
   begin
     FElementText.Font.FontColorOpacity := AOpacity;
+    if Assigned(FUpdateEvent) then
+      FUpdateEvent(Self);
   end;
 end;
 
@@ -812,6 +858,8 @@ begin
   if FElementText.Font.FontQuality <> AFontQuality then
   begin
     FElementText.Font.FontQuality := AFontQuality;
+    if Assigned(FUpdateEvent) then
+      FUpdateEvent(Self);
   end;
 end;
 
@@ -820,6 +868,8 @@ begin
   if FItemBackgroundColor <> AColor then
   begin
     FItemBackgroundColor := AColor;
+    if Assigned(FUpdateEvent) then
+      FUpdateEvent(Self);
   end;
 end;
 
@@ -836,6 +886,8 @@ begin
   if FItemDrawOffset <> AOffset then
   begin
     FItemDrawOffset := AOffset;
+    if Assigned(FUpdateEvent) then
+      FUpdateEvent(Self);
   end;
 end;
 
@@ -844,6 +896,8 @@ begin
   if FItemCollapsed <> ACollapsed then
   begin
     FItemCollapsed := ACollapsed;
+    if Assigned(FUpdateEvent) then
+      FUpdateEvent(Self);
   end;
 end;
 
