@@ -519,8 +519,8 @@ begin
   if AItem.IsRoot then
     AItem.FItemDrawOffset := FElementDrawOffset
   else
-    Inc(AItem.FItemDrawOffset, AItem.Parent.FItemDrawOffset +
-      FElementDrawOffset);
+    AItem.FItemDrawOffset := AItem.Parent.FItemDrawOffset +
+      FElementDrawOffset;
 end;
 
 procedure TiCustomTreeView.UpdateItemLineDrawWidth(AItem: TiTreeItem);
@@ -607,7 +607,6 @@ procedure TiCustomTreeView.DoOnResize;
 begin
   FDrawItems.Clear;
   RenderControl;
-  CalculateScrollRanges;
   Invalidate;
 end;
 
@@ -650,8 +649,11 @@ var
   Index : Integer;
 begin
   CalculateControl;
-  FBitmap.SetSize(FDrawElementMaxTextLength, Max(FDrawItems.Count *
-    FElementHeight, ClientHeight));
+
+  FBitmap.SetSize(Max(FDrawElementMaxTextLength, ClientWidth),
+    Max(FDrawItems.Count * FElementHeight, ClientHeight));
+
+  CalculateScrollRanges;
   FBitmap.Fill(BGRAWhite);
 
   for Index := 0 to FDrawItems.Count - 1 do
@@ -663,45 +665,19 @@ end;
 
 procedure TiCustomTreeView.CalculateControl;
 
-  function GetElementMaxTextLength (AElement : TiTreeItem; AElementLevel :
-    Cardinal) : Cardinal; {$IFNDEF DEBUG}inline;{$ENDIF}
-  begin
-    Result := AElement.DrawOffset + ItemLabelPadding.Left +
-      + ItemLabelPadding.Right + ItemTextPadding.Left + ItemTextPadding.Right;
-    FBitmap.FontHeight := ItemHeight - ItemLabelPadding.Top -
-      ItemLabelPadding.Bottom - 2;
-    FBitmap.FontStyle := AElement.LabelFont.Style;
-    Inc(Result, FBitmap.TextSize(AElement.LabelText).Width);
-    FBitmap.FontStyle := AElement.TextFont.Style;
-    Inc(Result, FBitmap.TextSize(AElement.Text).Width);
-  end;
-
-  procedure CalcTextLength (AElement : TiTreeItem; AElementLevel : Cardinal;
-    Drawable : Boolean); {$IFNDEF DEBUG}inline;{$ENDIF}
-  var
-    ElementLength : Cardinal;
-  begin
-    ElementLength := GetElementMaxTextLength(AElement, AElementLevel);
-    FElementMaxTextLength := Max(FElementMaxTextLength, ElementLength);
-    if Drawable then
-      FDrawElementMaxTextLength := Max(FDrawElementMaxTextLength,
-        ElementLength);
-  end;
-
-  procedure CalcElement (AElement : TiTreeItem; AElementLevel : Cardinal;
-    Drawable : Boolean); {$IFNDEF DEBUG}inline;{$ENDIF}
+  procedure CalcElement (AItem : TiTreeItem); {$IFNDEF DEBUG}inline;{$ENDIF}
   var
     Item : TiTreeItem;
   begin
-    AElement.DrawOffset := ItemDrawOffset * AElementLevel;
-    CalcTextLength(AElement, AElementLevel, Drawable);
+    UpdateItemDrawOffset(AItem);
+    UpdateItemLineDrawWidth(AItem);
 
-    if Drawable then
-      FDrawItems.Add(Pointer(AElement));
+    if IsItemDrawable(AItem) then
+      FDrawItems.Add(Pointer(AItem));
 
-    for Item in AElement.Childrens do
+    for Item in AItem.Childrens do
     begin
-      CalcElement(Item, AElementLevel + 1, not AElement.Collapsed);
+      CalcElement(Item);
     end;
   end;
 
@@ -712,10 +688,9 @@ begin
   FDrawElementMaxTextLength := 0;
 
   for Item in FItems do
-    CalcElement(Item, 1, True);
-
-  FElementMaxTextLength := Max(FElementMaxTextLength, ClientWidth);
-  FDrawElementMaxTextLength := Max(FDrawElementMaxTextLength, ClientWidth);
+  begin
+    CalcElement(Item);
+  end;
 end;
 
 procedure TiCustomTreeView.CalculateScrollRanges;
@@ -725,7 +700,7 @@ begin
   if FBitmap.Height > ClientHeight then
     VertScrollBar.Range := FBitmap.Height;
   if FBitmap.Width > ClientWidth then
-    HorzScrollBar.Range := FBitmap.Width;
+    HorzScrollBar.Range := FBitmap.Width - ClientWidth;
 end;
 
 constructor TiCustomTreeView.Create(AOwner: TComponent);
@@ -746,6 +721,7 @@ begin
   FElementTextPadding := Padding(1, 5);
   FElementTextMargin := Margin(0, 0);
   FElementDrawOffset := 20;
+  AutoScroll := False;
 end;
 
 destructor TiCustomTreeView.Destroy;
@@ -757,7 +733,7 @@ end;
 
 procedure TiCustomTreeView.Paint;
 begin
-  FBitmap.Draw(Canvas, 0, 0, False);
+  FBitmap.Draw(Canvas, 0, 0);
   inherited Paint;
 end;
 
@@ -770,8 +746,12 @@ end;
 function TiCustomTreeView.AddItem(AParent: TiTreeItem; AItem: TiTreeItem
   ): TiTreeItem;
 begin
-  AParent.FElementChildrens.Add(AItem);
-  Result := AParent.FElementChildrens[AParent.FElementChildrens.Count - 1];
+  if AParent <> nil then
+  begin
+    AParent.FElementChildrens.Add(AItem);
+    Result := AParent.FElementChildrens[AParent.FElementChildrens.Count - 1];
+    Result.FElementParent := AParent;
+  end;
 end;
 
 function TiCustomTreeView.AddItem(ALabelTitle, AText: string;
