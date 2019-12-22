@@ -238,7 +238,7 @@ type
     FBitmap : TBGRABitmap;
     { Control's element items }
     FItems : TiTreeItemList;
-    { List of controls draw items }
+    { List of controls visible draw items }
     FDrawItems : TiDrawTreeItemList;
     { Control element's font antialias }
     FElementFontAntialias : Boolean;
@@ -248,14 +248,25 @@ type
     FDrawElementMaxTextLength : Cardinal;
     { Contol element heigth size }
     FElementHeight : Cardinal;
-    { Control label padding }
+    { Control label inner padding }
     FElementLabelPadding : TPadding;
+    { Control label outer gap margin size }
+    FElementLabelMargin : TMargin;
     { Control label round rect corner radius }
     FElementLabelRoundRect : Cardinal;
-    { Control text padding }
+    { Control text inner padding }
     FElementTextPadding : TPadding;
+    { Control text outer gap margin }
+    FElementTextMargin : TMargin;
     { Control element's draw level offset }
     FElementDrawOffset : Integer;
+
+    function IsItemDrawable (AItem : TiTreeItem) : Boolean;
+      {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure UpdateItemDrawOffset (AItem : TiTreeItem);
+      {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure UpdateItemLineDrawWidth (AItem : TiTreeItem);
+      {$IFNDEF DEBUG}inline;{$ENDIF}
 
     { Set control item antialias font }
     procedure SetElementFontAntialias (AFontAntialias : Boolean);
@@ -278,7 +289,7 @@ type
   protected
     procedure DoOnResize; override;
     { Repaint control }
-    procedure RenderControl; virtual;
+    procedure RenderControl (AItem : TiTreeItem = nil); virtual;
     { Calculate control }
     procedure CalculateControl; virtual;
     { Recalc scroll bars }
@@ -494,10 +505,67 @@ end;
 
 { TiCustomTreeView }
 
+function TiCustomTreeView.IsItemDrawable(AItem: TiTreeItem): Boolean;
+begin
+  if AItem.IsRoot then
+    Result := True
+  else
+    Result := (not AItem.Parent.FItemCollapsed) and
+      (IsItemDrawable(AItem.Parent));
+end;
+
+procedure TiCustomTreeView.UpdateItemDrawOffset(AItem: TiTreeItem);
+begin
+  if AItem.IsRoot then
+    AItem.FItemDrawOffset := FElementDrawOffset
+  else
+    Inc(AItem.FItemDrawOffset, AItem.Parent.FItemDrawOffset +
+      FElementDrawOffset);
+end;
+
+procedure TiCustomTreeView.UpdateItemLineDrawWidth(AItem: TiTreeItem);
+
+  function GetLabelTextWidth (AItem : TiTreeItem) : Cardinal;
+    {$IFNDEF DEBUG}inline;{$ENDIF}
+  begin
+    FBitmap.FontHeight := FElementHeight - FElementLabelMargin.Top -
+      FElementLabelPadding.Top - FElementLabelPadding.Bottom -
+      FElementLabelMargin.Bottom;
+    FBitmap.FontStyle := AItem.FElementLabel.Font.Font.Style;
+    Result := FBitmap.TextSize(AItem.FElementLabel.Text).Width;
+  end;
+
+  function GetTextWidth (AItem : TiTreeItem) : Cardinal;
+    {$IFNDEF DEBUG}inline;{$ENDIF}
+  begin
+    FBitmap.FontHeight := FElementHeight - FElementTextMargin.Top -
+      FElementTextPadding.Top - FElementTextPadding.Bottom -
+      FElementTextMargin.Bottom;
+    FBitmap.FontStyle := AItem.FElementText.Font.Font.Style;
+    Result := FBitmap.TextSize(AItem.FElementText.Text).Width;
+  end;
+
+var
+  ItemWidth : Cardinal;
+begin
+  ItemWidth := AItem.FItemDrawOffset + FElementLabelMargin.Left +
+    FElementLabelPadding.Left + GetLabelTextWidth(AItem) +
+    FElementLabelPadding.Right + FElementLabelMargin.Right +
+    FElementTextMargin.Left + FElementTextPadding.Left + GetTextWidth(AItem) +
+    FElementTextPadding.Right + FElementTextMargin.Right;
+  FElementMaxTextLength := Max(FElementMaxTextLength, ItemWidth);
+
+  if IsItemDrawable(AItem) then
+    FDrawElementMaxTextLength := Max(FDrawElementMaxTextLength, ItemWidth);
+end;
+
 procedure TiCustomTreeView.SetElementFontAntialias(AFontAntialias: Boolean);
 begin
   if FElementFontAntialias <> AFontAntialias then
+  begin
     FElementFontAntialias := AFontAntialias;
+    FBitmap.FontAntialias := FElementFontAntialias;
+  end;
 end;
 
 procedure TiCustomTreeView.SetElementHeight(AHeight: Cardinal);
@@ -543,7 +611,12 @@ begin
   Invalidate;
 end;
 
-procedure TiCustomTreeView.RenderControl;
+procedure TiCustomTreeView.RenderControl(AItem: TiTreeItem);
+
+
+
+
+
 
   procedure DrawItem (ARect : TRect; AElement : TiTreeItem); {$IFNDEF DEBUG}
     inline;{$ENDIF}
@@ -577,7 +650,6 @@ var
   Index : Integer;
 begin
   CalculateControl;
-
   FBitmap.SetSize(FDrawElementMaxTextLength, Max(FDrawItems.Count *
     FElementHeight, ClientHeight));
   FBitmap.Fill(BGRAWhite);
@@ -669,8 +741,10 @@ begin
   FDrawElementMaxTextLength := 0;
   FElementHeight := 17;
   FElementLabelPadding := Padding(1, 10);
+  FElementLabelMargin := Margin(0, 0);
   FElementLabelRoundRect := 17;
   FElementTextPadding := Padding(1, 5);
+  FElementTextMargin := Margin(0, 0);
   FElementDrawOffset := 20;
 end;
 
@@ -697,7 +771,6 @@ function TiCustomTreeView.AddItem(AParent: TiTreeItem; AItem: TiTreeItem
   ): TiTreeItem;
 begin
   AParent.FElementChildrens.Add(AItem);
-  AParent.FItemCollapsed := False;
   Result := AParent.FElementChildrens[AParent.FElementChildrens.Count - 1];
 end;
 
@@ -786,7 +859,8 @@ begin
   end;
 end;
 
-function TiCustomTreeView.TiTreeItem.GetElementLabelFontQuality: TBGRAFontQuality;
+function TiCustomTreeView.TiTreeItem.GetElementLabelFontQuality:
+  TBGRAFontQuality;
 begin
   Result := FElementLabel.Font.FontQuality;
 end;
