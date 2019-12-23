@@ -612,11 +612,6 @@ end;
 
 procedure TiCustomTreeView.RenderControl(AItem: TiTreeItem);
 
-
-
-
-
-
   procedure DrawItem (ARect : TRect; AElement : TiTreeItem); {$IFNDEF DEBUG}
     inline;{$ENDIF}
   var
@@ -652,9 +647,9 @@ begin
 
   FBitmap.SetSize(Max(FDrawElementMaxTextLength, ClientWidth),
     Max(FDrawItems.Count * FElementHeight, ClientHeight));
+  FBitmap.Fill(BGRAWhite);
 
   CalculateScrollRanges;
-  FBitmap.Fill(BGRAWhite);
 
   for Index := 0 to FDrawItems.Count - 1 do
   begin
@@ -695,12 +690,11 @@ end;
 
 procedure TiCustomTreeView.CalculateScrollRanges;
 begin
-  VertScrollBar.Range := 0;
-  HorzScrollBar.Range := 0;
   if FBitmap.Height > ClientHeight then
     VertScrollBar.Range := FBitmap.Height;
+
   if FBitmap.Width > ClientWidth then
-    HorzScrollBar.Range := FBitmap.Width - ClientWidth;
+    HorzScrollBar.Range := FBitmap.Width;
 end;
 
 constructor TiCustomTreeView.Create(AOwner: TComponent);
@@ -721,7 +715,6 @@ begin
   FElementTextPadding := Padding(1, 5);
   FElementTextMargin := Margin(0, 0);
   FElementDrawOffset := 20;
-  AutoScroll := False;
 end;
 
 destructor TiCustomTreeView.Destroy;
