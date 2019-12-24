@@ -261,6 +261,10 @@ type
     { Control element's draw level offset }
     FElementDrawOffset : Integer;
 
+    function GetLabelTextWidth (AItem : TiTreeItem) : Cardinal;
+      {$IFNDEF DEBUG}inline;{$ENDIF}
+    function GetTextWidth (AItem : TiTreeItem) : Cardinal;
+      {$IFNDEF DEBUG}inline;{$ENDIF}
     function IsItemDrawable (AItem : TiTreeItem) : Boolean;
       {$IFNDEF DEBUG}inline;{$ENDIF}
     procedure UpdateItemDrawOffset (AItem : TiTreeItem);
@@ -289,7 +293,7 @@ type
   protected
     procedure DoOnResize; override;
     { Repaint control }
-    procedure RenderControl (AItem : TiTreeItem = nil); virtual;
+    procedure RenderControl; virtual;
     { Calculate control }
     procedure CalculateControl; virtual;
     { Recalc scroll bars }
@@ -505,6 +509,24 @@ end;
 
 { TiCustomTreeView }
 
+function TiCustomTreeView.GetLabelTextWidth(AItem: TiTreeItem): Cardinal;
+begin
+  FBitmap.FontHeight := FElementHeight - FElementLabelMargin.Top -
+    FElementLabelPadding.Top - FElementLabelPadding.Bottom -
+    FElementLabelMargin.Bottom;
+  FBitmap.FontStyle := AItem.FElementLabel.Font.Font.Style;
+  Result := FBitmap.TextSize(AItem.FElementLabel.Text).Width;
+end;
+
+function TiCustomTreeView.GetTextWidth(AItem: TiTreeItem): Cardinal;
+begin
+  FBitmap.FontHeight := FElementHeight - FElementTextMargin.Top -
+    FElementTextPadding.Top - FElementTextPadding.Bottom -
+    FElementTextMargin.Bottom;
+  FBitmap.FontStyle := AItem.FElementText.Font.Font.Style;
+  Result := FBitmap.TextSize(AItem.FElementText.Text).Width;
+end;
+
 function TiCustomTreeView.IsItemDrawable(AItem: TiTreeItem): Boolean;
 begin
   if AItem.IsRoot then
@@ -524,27 +546,6 @@ begin
 end;
 
 procedure TiCustomTreeView.UpdateItemLineDrawWidth(AItem: TiTreeItem);
-
-  function GetLabelTextWidth (AItem : TiTreeItem) : Cardinal;
-    {$IFNDEF DEBUG}inline;{$ENDIF}
-  begin
-    FBitmap.FontHeight := FElementHeight - FElementLabelMargin.Top -
-      FElementLabelPadding.Top - FElementLabelPadding.Bottom -
-      FElementLabelMargin.Bottom;
-    FBitmap.FontStyle := AItem.FElementLabel.Font.Font.Style;
-    Result := FBitmap.TextSize(AItem.FElementLabel.Text).Width;
-  end;
-
-  function GetTextWidth (AItem : TiTreeItem) : Cardinal;
-    {$IFNDEF DEBUG}inline;{$ENDIF}
-  begin
-    FBitmap.FontHeight := FElementHeight - FElementTextMargin.Top -
-      FElementTextPadding.Top - FElementTextPadding.Bottom -
-      FElementTextMargin.Bottom;
-    FBitmap.FontStyle := AItem.FElementText.Font.Font.Style;
-    Result := FBitmap.TextSize(AItem.FElementText.Text).Width;
-  end;
-
 var
   ItemWidth : Cardinal;
 begin
@@ -605,39 +606,46 @@ end;
 
 procedure TiCustomTreeView.DoOnResize;
 begin
-  FDrawItems.Clear;
   RenderControl;
   Invalidate;
 end;
 
-procedure TiCustomTreeView.RenderControl(AItem: TiTreeItem);
+procedure TiCustomTreeView.RenderControl;
 
   procedure DrawItem (ARect : TRect; AElement : TiTreeItem); {$IFNDEF DEBUG}
     inline;{$ENDIF}
   var
-    LabelTextSize : TSize;
+    LabelTextSize : Cardinal;
   begin
-    FBitmap.FontAntialias := FontAntialias;
-    FBitmap.FontHeight := FElementHeight - FElementLabelPadding.Top -
-      FElementLabelPadding.Bottom - 2;
+    FBitmap.FontHeight := FElementHeight - FElementLabelMargin.Top -
+      FElementLabelPadding.Top - FElementLabelPadding.Bottom -
+      FElementLabelMargin.Bottom;
 
     { Draw label }
-    FBitmap.FontStyle := AElement.LabelFont.Style;
-    LabelTextSize := FBitmap.TextSize(AElement.LabelText);
-    FBitmap.FillRoundRect(ARect.Left + AElement.DrawOffset, ARect.Top + 1,
-      LabelTextSize.Width + ItemLabelPadding.Left + ItemLabelPadding.Right +
-      AElement.DrawOffset, ARect.Bottom - 1, ItemLabelRoundRect,
-      ItemLabelRoundRect, AElement.LabelBackgroundColor);
-    FBitmap.TextOut(ARect.Left + AElement.DrawOffset + ItemLabelPadding.Left,
-      ARect.Top + ItemLabelPadding.Top, AElement.LabelText,
-      ColorToBGRA(AElement.LabelFont.Color, AElement.TextFontColorOpacity));
+    FBitmap.FontStyle := AElement.FElementLabel.Font.Font.Style;
+    LabelTextSize := FBitmap.TextSize(AElement.LabelText).Width;
+
+    FBitmap.FillRoundRect(ARect.Left + AElement.DrawOffset +
+      FElementLabelMargin.Left, ARect.Top + FElementLabelMargin.Top,
+      AElement.DrawOffset + FElementLabelMargin.Left +
+      FElementLabelPadding.Left + LabelTextSize + FElementLabelPadding.Right +
+      FElementLabelMargin.Right, ARect.Bottom - FElementLabelMargin.Bottom,
+      ItemLabelRoundRect, ItemLabelRoundRect, AElement.LabelBackgroundColor);
+    FBitmap.TextOut(ARect.Left + AElement.DrawOffset +
+      FElementLabelMargin.Left + FElementLabelPadding.Left,
+      ARect.Top + FElementLabelMargin.Top + FElementLabelPadding.Top,
+      AElement.LabelText, ColorToBGRA(AElement.LabelFont.Color,
+      AElement.TextFontColorOpacity));
 
     { Draw text }
-    FBitmap.FontStyle := AElement.TextFont.Style;
-    FBitmap.TextOut(ARect.Left + AElement.DrawOffset + ItemLabelPadding.Left +
-      LabelTextSize.Width + ItemLabelPadding.Right + ItemTextPadding.Left,
-      ARect.Top + ItemTextPadding.Top, AElement.Text,
-      ColorToBGRA(AElement.TextFont.Color, AElement.TextFontColorOpacity));
+    FBitmap.FontStyle := AElement.FElementText.Font.Font.Style;
+    FBitmap.TextOut(ARect.Left + AElement.DrawOffset +
+      FElementLabelMargin.Left + FElementLabelPadding.Left +
+      LabelTextSize + FElementLabelPadding.Right + FElementLabelMargin.Right +
+      FElementTextMargin.Left + FElementTextPadding.Left,
+      ARect.Top + FElementTextMargin.Top + FElementTextPadding.Top,
+      AElement.Text, ColorToBGRA(AElement.TextFont.Color,
+      AElement.TextFontColorOpacity));
   end;
 
 var
@@ -681,6 +689,7 @@ var
 begin
   FElementMaxTextLength := 0;
   FDrawElementMaxTextLength := 0;
+  FDrawItems.Clear;
 
   for Item in FItems do
   begin
@@ -709,8 +718,8 @@ begin
   FElementMaxTextLength := 0;
   FDrawElementMaxTextLength := 0;
   FElementHeight := 17;
-  FElementLabelPadding := Padding(1, 10);
-  FElementLabelMargin := Margin(0, 0);
+  FElementLabelPadding := Padding(1, 10, 2, 10);
+  FElementLabelMargin := Margin(0, 0, 1, 0);
   FElementLabelRoundRect := 17;
   FElementTextPadding := Padding(1, 5);
   FElementTextMargin := Margin(0, 0);
@@ -734,6 +743,7 @@ function TiCustomTreeView.AddItem(AItem: TiTreeItem): TiTreeItem;
 begin
   FItems.Add(AItem);
   Result := FItems[FItems.Count - 1];
+  RenderControl;
 end;
 
 function TiCustomTreeView.AddItem(AParent: TiTreeItem; AItem: TiTreeItem
@@ -744,6 +754,7 @@ begin
     AParent.FElementChildrens.Add(AItem);
     Result := AParent.FElementChildrens[AParent.FElementChildrens.Count - 1];
     Result.FElementParent := AParent;
+    RenderControl;
   end;
 end;
 
