@@ -116,6 +116,8 @@ type
         { Check if current element is root }
         function IsRootElement : Boolean;
           {$IFNDEF DEBUG}inline;{$ENDIF}
+        { Check if current element has childrens}
+        function HasChildrens : Boolean;
         { Return element label text value }
         function GetElementLabelText : string;
           {$IFNDEF DEBUG}inline;{$ENDIF}
@@ -248,6 +250,12 @@ type
     FDrawElementMaxTextLength : Cardinal;
     { Contol element heigth size }
     FElementHeight : Cardinal;
+    {}
+    FElementCollapseButtonMargin : TMargin;
+    {}
+    FElementCollapseButtonPadding : TPadding;
+    {}
+    FElementCollapseButtonRoundRect : Cardinal;
     { Control label inner padding }
     FElementLabelPadding : TPadding;
     { Control label outer gap margin size }
@@ -258,17 +266,24 @@ type
     FElementTextPadding : TPadding;
     { Control text outer gap margin }
     FElementTextMargin : TMargin;
+    {}
+    FRootElementDrawOffset : Integer;
     { Control element's draw level offset }
     FElementDrawOffset : Integer;
 
+    { Calculate label text width without gaps }
     function GetLabelTextWidth (AItem : TiTreeItem) : Cardinal;
       {$IFNDEF DEBUG}inline;{$ENDIF}
+    { Calculate item text width without gaps }
     function GetTextWidth (AItem : TiTreeItem) : Cardinal;
       {$IFNDEF DEBUG}inline;{$ENDIF}
+    { Return TRUE if AItem is drawable }
     function IsItemDrawable (AItem : TiTreeItem) : Boolean;
       {$IFNDEF DEBUG}inline;{$ENDIF}
+    { Calculate and update item draw offset }
     procedure UpdateItemDrawOffset (AItem : TiTreeItem);
       {$IFNDEF DEBUG}inline;{$ENDIF}
+    { Calculate item draw width }
     procedure UpdateItemLineDrawWidth (AItem : TiTreeItem);
       {$IFNDEF DEBUG}inline;{$ENDIF}
 
@@ -539,7 +554,7 @@ end;
 procedure TiCustomTreeView.UpdateItemDrawOffset(AItem: TiTreeItem);
 begin
   if AItem.IsRoot then
-    AItem.FItemDrawOffset := FElementDrawOffset
+    AItem.FItemDrawOffset := FRootElementDrawOffset
   else
     AItem.FItemDrawOffset := AItem.Parent.FItemDrawOffset +
       FElementDrawOffset;
@@ -616,10 +631,58 @@ procedure TiCustomTreeView.RenderControl;
     inline;{$ENDIF}
   var
     LabelTextSize : Cardinal;
+    CollapseButtonRect : TRect;
   begin
     FBitmap.FontHeight := FElementHeight - FElementLabelMargin.Top -
       FElementLabelPadding.Top - FElementLabelPadding.Bottom -
       FElementLabelMargin.Bottom;
+
+    { Draw collapsed label }
+    if AElement.HasChildrens then
+    begin
+      CollapseButtonRect := Rect(0, 0, FElementHeight -
+        FElementCollapseButtonMargin.Top - FElementCollapseButtonMargin.Bottom,
+        FElementHeight - FElementCollapseButtonMargin.Top -
+        FElementCollapseButtonMargin.Bottom);
+      FBitmap.RoundRect(ARect.Left + AElement.DrawOffset -
+        FElementCollapseButtonMargin.Right - CollapseButtonRect.Width,
+        ARect.Top + FElementCollapseButtonMargin.Top, ARect.Left +
+        AElement.DrawOffset - FElementCollapseButtonMargin.Right,
+        ARect.Top + FElementCollapseButtonMargin.Top + CollapseButtonRect.Height,
+        FElementCollapseButtonRoundRect, FElementCollapseButtonRoundRect,
+        ColorToBGRA(clLtGray), BGRAPixelTransparent);
+
+      if AElement.Collapsed then
+      begin
+        FBitmap.DrawLine(ARect.Left + AElement.DrawOffset -
+          FElementCollapseButtonMargin.Right - CollapseButtonRect.Width + 3,
+          ARect.Top + FElementCollapseButtonMargin.Top +
+          CollapseButtonRect.Height div 2,
+          ARect.Left + AElement.DrawOffset -
+          FElementCollapseButtonMargin.Right - 4, ARect.Top +
+          FElementCollapseButtonMargin.Top +
+          CollapseButtonRect.Height div 2,
+          BGRABlack, True);
+        FBitmap.DrawLine(ARect.Left + AElement.DrawOffset - 1 -
+          FElementCollapseButtonMargin.Right - CollapseButtonRect.Width div 2,
+          ARect.Top + FElementCollapseButtonMargin.Top + 3, ARect.Left +
+          AElement.DrawOffset - 1 - FElementCollapseButtonMargin.Right -
+          CollapseButtonRect.Width div 2, ARect.Top +
+          FElementCollapseButtonMargin.Top + CollapseButtonRect.Height - 4,
+          BGRABlack, True);
+      end else
+      begin
+        FBitmap.DrawLine(ARect.Left + AElement.DrawOffset -
+          FElementCollapseButtonMargin.Right - CollapseButtonRect.Width + 3,
+          ARect.Top + FElementCollapseButtonMargin.Top +
+          CollapseButtonRect.Height div 2,
+          ARect.Left + AElement.DrawOffset -
+          FElementCollapseButtonMargin.Right - 4, ARect.Top +
+          FElementCollapseButtonMargin.Top +
+          CollapseButtonRect.Height div 2,
+          BGRABlack, True);
+      end;
+    end;
 
     { Draw label }
     FBitmap.FontStyle := AElement.FElementLabel.Font.Font.Style;
@@ -718,12 +781,16 @@ begin
   FElementMaxTextLength := 0;
   FDrawElementMaxTextLength := 0;
   FElementHeight := 17;
+  FElementCollapseButtonMargin := Margin(3, 4, 3, 5);
+  FElementCollapseButtonPadding := Padding(4, 3);
+  FElementCollapseButtonRoundRect := 6;
   FElementLabelPadding := Padding(1, 10, 2, 10);
   FElementLabelMargin := Margin(0, 0, 1, 0);
   FElementLabelRoundRect := 17;
   FElementTextPadding := Padding(1, 5);
   FElementTextMargin := Margin(0, 0);
-  FElementDrawOffset := 20;
+  FRootElementDrawOffset := 20;
+  FElementDrawOffset := 12;
 end;
 
 destructor TiCustomTreeView.Destroy;
@@ -779,6 +846,11 @@ end;
 function TiCustomTreeView.TiTreeItem.IsRootElement: Boolean;
 begin
   Result := (FElementParent = nil);
+end;
+
+function TiCustomTreeView.TiTreeItem.HasChildrens: Boolean;
+begin
+  Result := FElementChildrens.Count > 0;
 end;
 
 function TiCustomTreeView.TiTreeItem.GetElementLabelText: string;
