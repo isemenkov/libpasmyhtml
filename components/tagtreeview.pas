@@ -286,6 +286,9 @@ type
     { Calculate item draw width }
     procedure UpdateItemLineDrawWidth (AItem : TiTreeItem);
       {$IFNDEF DEBUG}inline;{$ENDIF}
+    {}
+    function GetItem (AY : Integer) : TiTreeItem;
+      {$IFNDEF DEBUG}inline;{$ENDIF}
 
     { Set control item antialias font }
     procedure SetElementFontAntialias (AFontAntialias : Boolean);
@@ -305,6 +308,9 @@ type
     { Set control item draw level offset }
     procedure SetElementDrawOffset (AOffset : Integer);
       {$IFNDEF DEBUG}inline;{$ENDIF}
+
+    procedure ControlMouseUp (Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   protected
     procedure DoOnResize; override;
     { Repaint control }
@@ -575,6 +581,18 @@ begin
     FDrawElementMaxTextLength := Max(FDrawElementMaxTextLength, ItemWidth);
 end;
 
+function TiCustomTreeView.GetItem(AY: Integer): TiTreeItem;
+var
+  ItemIndex : Integer;
+begin
+  ItemIndex := AY div FElementHeight;
+  if FDrawItems.Count > ItemIndex then
+  begin
+    Result := TiTreeItem(FDrawItems[ItemIndex]);
+  end else
+    Result := nil;
+end;
+
 procedure TiCustomTreeView.SetElementFontAntialias(AFontAntialias: Boolean);
 begin
   if FElementFontAntialias <> AFontAntialias then
@@ -614,6 +632,53 @@ begin
     FElementDrawOffset := AOffset;
 end;
 
+procedure TiCustomTreeView.ControlMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+
+  function IsCollapseButtonClicked (AItem : TiTreeItem; AX, AY : Integer) :
+    Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
+  var
+    CollapseButtonRect : TRect;
+  begin
+    CollapseButtonRect := Rect(
+      { Left }
+      AItem.DrawOffset - FElementCollapseButtonMargin.Right -
+      { The collapse button must be a square, so for width size we can use it's
+        height size, because it is more easy for calculation }
+      (FElementHeight - FElementCollapseButtonMargin.Top -
+      FElementCollapseButtonMargin.Bottom),
+      { Top }
+      FElementCollapseButtonMargin.Top,
+      { Right }
+      AItem.DrawOffset - FElementCollapseButtonMargin.Right,
+      { Bottom }
+      FElementHeight - FElementCollapseButtonMargin.Bottom
+    );
+
+    Result := ((AX >= CollapseButtonRect.Left) and
+      (AX <= CollapseButtonRect.Right)) and ((AY >= CollapseButtonRect.Top) and
+      (AY <= CollapseButtonRect.Bottom));
+  end;
+
+var
+  Item : TiTreeItem;
+begin
+  with Sender as TiCustomTreeView do
+  begin
+    if Button = mbLeft then
+    begin
+      Item := GetItem(Y);
+      if (Item <> nil) and (IsCollapseButtonClicked(Item, X, Y -
+        ((Y div FElementHeight) * FElementHeight))) then
+      begin
+        Item.Collapsed := not Item.Collapsed;
+        RenderControl;
+        Invalidate;
+      end;
+    end;
+  end;
+end;
+
 class function TiCustomTreeView.GetControlClassDefaultSize: TSize;
 begin
   Result := inherited GetControlClassDefaultSize;
@@ -640,6 +705,8 @@ procedure TiCustomTreeView.RenderControl;
     { Draw collapsed label }
     if AElement.HasChildrens then
     begin
+      { The collapse button must be a square, so for width size we can use it's
+        height size, because it is more easy for calculation }
       CollapseButtonRect := Rect(0, 0, FElementHeight -
         FElementCollapseButtonMargin.Top - FElementCollapseButtonMargin.Bottom,
         FElementHeight - FElementCollapseButtonMargin.Top -
@@ -648,12 +715,14 @@ procedure TiCustomTreeView.RenderControl;
         FElementCollapseButtonMargin.Right - CollapseButtonRect.Width,
         ARect.Top + FElementCollapseButtonMargin.Top, ARect.Left +
         AElement.DrawOffset - FElementCollapseButtonMargin.Right,
-        ARect.Top + FElementCollapseButtonMargin.Top + CollapseButtonRect.Height,
-        FElementCollapseButtonRoundRect, FElementCollapseButtonRoundRect,
-        ColorToBGRA(clLtGray), BGRAPixelTransparent);
+        ARect.Top + FElementCollapseButtonMargin.Top +
+        CollapseButtonRect.Height, FElementCollapseButtonRoundRect,
+        FElementCollapseButtonRoundRect, ColorToBGRA(clLtGray),
+        BGRAPixelTransparent);
 
       if AElement.Collapsed then
       begin
+        { Draw + sumbol }
         FBitmap.DrawLine(ARect.Left + AElement.DrawOffset -
           FElementCollapseButtonMargin.Right - CollapseButtonRect.Width + 3,
           ARect.Top + FElementCollapseButtonMargin.Top +
@@ -672,6 +741,7 @@ procedure TiCustomTreeView.RenderControl;
           BGRABlack, True);
       end else
       begin
+        { Draw - sumbol }
         FBitmap.DrawLine(ARect.Left + AElement.DrawOffset -
           FElementCollapseButtonMargin.Right - CollapseButtonRect.Width + 3,
           ARect.Top + FElementCollapseButtonMargin.Top +
@@ -763,10 +833,14 @@ end;
 procedure TiCustomTreeView.CalculateScrollRanges;
 begin
   if FBitmap.Height > ClientHeight then
-    VertScrollBar.Range := FBitmap.Height;
+    VertScrollBar.Range := FBitmap.Height
+  else
+    VertScrollBar.Range := 0;
 
   if FBitmap.Width > ClientWidth then
-    HorzScrollBar.Range := FBitmap.Width;
+    HorzScrollBar.Range := FBitmap.Width
+  else
+    HorzScrollBar.Range := 0;
 end;
 
 constructor TiCustomTreeView.Create(AOwner: TComponent);
@@ -782,7 +856,6 @@ begin
   FDrawElementMaxTextLength := 0;
   FElementHeight := 17;
   FElementCollapseButtonMargin := Margin(3, 4, 3, 5);
-  FElementCollapseButtonPadding := Padding(4, 3);
   FElementCollapseButtonRoundRect := 6;
   FElementLabelPadding := Padding(1, 10, 2, 10);
   FElementLabelMargin := Margin(0, 0, 1, 0);
@@ -791,6 +864,7 @@ begin
   FElementTextMargin := Margin(0, 0);
   FRootElementDrawOffset := 20;
   FElementDrawOffset := 12;
+  OnMouseUp := @ControlMouseUp;
 end;
 
 destructor TiCustomTreeView.Destroy;
