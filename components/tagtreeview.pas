@@ -79,6 +79,23 @@ type
       { TiTreeItem }
       { Tree view item element }
       TiTreeItem = class
+      public
+        type
+          TElementLinkLineType = (ltStart, ltPass, ltEnd);
+
+          { TElementLinkLine }
+
+          TElementLinkLine = class
+          public
+            LinkLine : TElementLinkLineType;
+            Position : Cardinal;
+
+            constructor Create (ALineType : TElementLinkLineType; APos :
+              Cardinal);
+            destructor Destroy; override;
+          end;
+
+          TElementLinkLines = specialize TFPGObjectList<TElementLinkLine>;
       private
         type
           { Element label data }
@@ -110,6 +127,8 @@ type
         FItemData : Pointer;
         { Current element start draw offset }
         FItemDrawOffset : Integer;
+        {}
+        FItemLinkLines : TElementLinkLines;
         { OnUpdate event }
         FUpdateEvent : TNotifyEvent;
 
@@ -234,7 +253,13 @@ type
         constructor Create (ALabelTitle, AText : string; AColor : TColor);
         destructor Destroy; override;
       end;
-
+  private
+    type
+      TSelectedElement = record
+        Element : PiTreeItem;
+        ElementLabelColor : TBGRAPixel;
+        ElementLabelPrevColor : TBGRAPixel;
+      end;
   private
     { Control canvas }
     FBitmap : TBGRABitmap;
@@ -270,6 +295,8 @@ type
     FRootElementDrawOffset : Integer;
     { Control element's draw level offset }
     FElementDrawOffset : Integer;
+    {}
+    FSelectedElement : TSelectedElement;
 
     { Calculate label text width without gaps }
     function GetLabelTextWidth (AItem : TiTreeItem) : Cardinal;
@@ -288,6 +315,9 @@ type
       {$IFNDEF DEBUG}inline;{$ENDIF}
     { Find draw item for Y coordinate }
     function GetItem (AY : Integer) : TiTreeItem;
+      {$IFNDEF DEBUG}inline;{$ENDIF}
+    {}
+    function GetCollapseButtonRect (AItem : TiTreeItem) : TRect;
       {$IFNDEF DEBUG}inline;{$ENDIF}
 
     { Set control item antialias font }
@@ -501,6 +531,20 @@ begin
   RegisterComponents('libPasMyHTML',[TiCustomTreeView]);
 end;
 
+{ TiCustomTreeView.TiTreeItem.TElementLinkLine }
+
+constructor TiCustomTreeView.TiTreeItem.TElementLinkLine.Create(
+  ALineType: TElementLinkLineType; APos: Cardinal);
+begin
+  LinkLine := ALineType;
+  Position := APos;
+end;
+
+destructor TiCustomTreeView.TiTreeItem.TElementLinkLine.Destroy;
+begin
+  inherited Destroy;
+end;
+
 { TiCustomHTMLTreeView }
 
 constructor TiCustomHTMLTreeView.Create(ANode: TParser.TTagNode; AColor: TColor
@@ -598,6 +642,24 @@ begin
     Result := nil;
 end;
 
+function TiCustomTreeView.GetCollapseButtonRect(AItem: TiTreeItem): TRect;
+begin
+  Result := Rect(
+    { Left }
+    AItem.DrawOffset - FElementCollapseButtonMargin.Right -
+    { The collapse button must be a square, so for width size we can use it's
+      height size, because it is more easy for calculation }
+    (FElementHeight - FElementCollapseButtonMargin.Top -
+    FElementCollapseButtonMargin.Bottom),
+    { Top }
+    FElementCollapseButtonMargin.Top,
+    { Right }
+    AItem.DrawOffset - FElementCollapseButtonMargin.Right,
+    { Bottom }
+    FElementHeight - FElementCollapseButtonMargin.Bottom
+  );
+end;
+
 procedure TiCustomTreeView.SetElementFontAntialias(AFontAntialias: Boolean);
 begin
   if FElementFontAntialias <> AFontAntialias then
@@ -655,20 +717,7 @@ procedure TiCustomTreeView.ControlMouseUp(Sender: TObject;
   var
     CollapseButtonRect : TRect;
   begin
-    CollapseButtonRect := Rect(
-      { Left }
-      AItem.DrawOffset - FElementCollapseButtonMargin.Right -
-      { The collapse button must be a square, so for width size we can use it's
-        height size, because it is more easy for calculation }
-      (FElementHeight - FElementCollapseButtonMargin.Top -
-      FElementCollapseButtonMargin.Bottom),
-      { Top }
-      FElementCollapseButtonMargin.Top,
-      { Right }
-      AItem.DrawOffset - FElementCollapseButtonMargin.Right,
-      { Bottom }
-      FElementHeight - FElementCollapseButtonMargin.Bottom
-    );
+    CollapseButtonRect := GetCollapseButtonRect(AItem);
 
     Result := ((AX >= CollapseButtonRect.Left) and
       (AX <= CollapseButtonRect.Right)) and ((AY >= CollapseButtonRect.Top) and
@@ -683,14 +732,34 @@ begin
     if (Button = mbLeft) and FElementCollapseButtonShow then
     begin
       Item := GetItem(Y);
-      if (Item <> nil) and (IsCollapseButtonClicked(Item, X +
-        HorzScrollBar.Position, Y + VertScrollBar.Position -
-        ((Y div FElementHeight) * FElementHeight))) then
+      if (Item <> nil) then
       begin
-        Item.Collapsed := not Item.Collapsed;
-        RenderControl;
-        Invalidate;
+        if (IsCollapseButtonClicked(Item, X + HorzScrollBar.Position,
+          Y + VertScrollBar.Position - ((Y div FElementHeight) *
+          FElementHeight))) then
+        begin
+          Item.Collapsed := not Item.Collapsed;
+        end;
+
+        if FSelectedElement.Element <> nil then
+          TiTreeItem(FSelectedElement.Element).FElementLabel.BackgroundColor :=
+            FSelectedElement.ElementLabelPrevColor;
+
+        FSelectedElement.Element := Pointer(Item);
+        FSelectedElement.ElementLabelPrevColor :=
+          Item.FElementLabel.BackgroundColor;
+        Item.FElementLabel.BackgroundColor :=
+          FSelectedElement.ElementLabelColor;
+      end else
+      begin
+        if FSelectedElement.Element <> nil then
+          TiTreeItem(FSelectedElement.Element).FElementLabel.BackgroundColor :=
+            FSelectedElement.ElementLabelPrevColor;
+        FSelectedElement.Element := nil;
       end;
+
+      RenderControl;
+      Invalidate;
     end;
   end;
 end;
@@ -713,6 +782,7 @@ procedure TiCustomTreeView.RenderControl;
   var
     LabelTextSize : Cardinal;
     CollapseButtonRect : TRect;
+    {LinkLine : TiTreeItem.TElementLinkLine;}
   begin
     FBitmap.FontHeight := FElementHeight - FElementLabelMargin.Top -
       FElementLabelPadding.Top - FElementLabelPadding.Bottom -
@@ -721,55 +791,49 @@ procedure TiCustomTreeView.RenderControl;
     { Draw collapsed label }
     if AElement.HasChildrens and FElementCollapseButtonShow then
     begin
-      { The collapse button must be a square, so for width size we can use it's
-        height size, because it is more easy for calculation }
-      CollapseButtonRect := Rect(0, 0, FElementHeight -
-        FElementCollapseButtonMargin.Top - FElementCollapseButtonMargin.Bottom,
-        FElementHeight - FElementCollapseButtonMargin.Top -
-        FElementCollapseButtonMargin.Bottom);
-      FBitmap.RoundRect(ARect.Left + AElement.DrawOffset -
-        FElementCollapseButtonMargin.Right - CollapseButtonRect.Width,
-        ARect.Top + FElementCollapseButtonMargin.Top, ARect.Left +
-        AElement.DrawOffset - FElementCollapseButtonMargin.Right,
-        ARect.Top + FElementCollapseButtonMargin.Top +
-        CollapseButtonRect.Height, FElementCollapseButtonRoundRect,
-        FElementCollapseButtonRoundRect, ColorToBGRA(clLtGray),
-        BGRAPixelTransparent);
+      CollapseButtonRect := GetCollapseButtonRect(AElement);
+      FBitmap.RoundRect(ARect.Left + CollapseButtonRect.Left,
+        ARect.Top + CollapseButtonRect.Top, ARect.Left +
+        CollapseButtonRect.Right, ARect.Top + CollapseButtonRect.Bottom,
+        FElementCollapseButtonRoundRect, FElementCollapseButtonRoundRect,
+        ColorToBGRA(clLtGray), BGRAPixelTransparent);
 
       if AElement.Collapsed then
       begin
         { Draw + sumbol }
-        FBitmap.DrawLine(ARect.Left + AElement.DrawOffset -
-          FElementCollapseButtonMargin.Right - CollapseButtonRect.Width + 3,
-          ARect.Top + FElementCollapseButtonMargin.Top +
-          CollapseButtonRect.Height div 2,
-          ARect.Left + AElement.DrawOffset -
-          FElementCollapseButtonMargin.Right - 4, ARect.Top +
-          FElementCollapseButtonMargin.Top +
-          CollapseButtonRect.Height div 2,
-          BGRABlack, True);
-        FBitmap.DrawLine(ARect.Left + AElement.DrawOffset -
-          FElementCollapseButtonMargin.Right - CollapseButtonRect.Width div 2 -
-          CollapseButtonRect.Width mod 2, ARect.Top +
-          FElementCollapseButtonMargin.Top + 3, ARect.Left +
-          AElement.DrawOffset - FElementCollapseButtonMargin.Right -
-          CollapseButtonRect.Width div 2 - CollapseButtonRect.Width mod 2,
-          ARect.Top + FElementCollapseButtonMargin.Top +
-          CollapseButtonRect.Height - 4, BGRABlack, True);
+        FBitmap.DrawLine(ARect.Left + CollapseButtonRect.Left + 3,
+          ARect.Top + CollapseButtonRect.Top + CollapseButtonRect.Height div 2,
+          ARect.Left + CollapseButtonRect.Right - 4, ARect.Top +
+          CollapseButtonRect.Top + CollapseButtonRect.Height div 2, BGRABlack,
+          True);
+        FBitmap.DrawLine(ARect.Left + CollapseButtonRect.Left +
+          CollapseButtonRect.Width div 2, ARect.Top +
+          CollapseButtonRect.Top + 3, ARect.Left + CollapseButtonRect.Left +
+          CollapseButtonRect.Width div 2, ARect.Top +
+          CollapseButtonRect.Bottom - 4, BGRABlack, True);
       end else
       begin
         { Draw - sumbol }
-        FBitmap.DrawLine(ARect.Left + AElement.DrawOffset -
-          FElementCollapseButtonMargin.Right - CollapseButtonRect.Width + 3,
-          ARect.Top + FElementCollapseButtonMargin.Top +
-          CollapseButtonRect.Height div 2,
-          ARect.Left + AElement.DrawOffset -
-          FElementCollapseButtonMargin.Right - 4, ARect.Top +
-          FElementCollapseButtonMargin.Top +
-          CollapseButtonRect.Height div 2,
-          BGRABlack, True);
+        FBitmap.DrawLine(ARect.Left + CollapseButtonRect.Left + 3,
+          ARect.Top + CollapseButtonRect.Top + CollapseButtonRect.Height div 2,
+          ARect.Left + CollapseButtonRect.Right - 4, ARect.Top +
+          CollapseButtonRect.Top + CollapseButtonRect.Height div 2, BGRABlack,
+          True);
       end;
     end;
+
+    { Draw link lines }
+    {for LinkLine in AElement.FItemLinkLines do
+    begin
+      case LinkLine.LinkLine of
+        ltPass : begin
+          FBitmap.JoinStyle := pjsRound;
+          FBitmap.PenStyle := psDot;
+          FBitmap.DrawPolyLineAntialias([PointF(LinkLine.Position, ARect.Top),
+            PointF(LinkLine.Position, ARect.Bottom)], ColorToBGRA(clLtGray), 1);
+        end;
+      end;
+    end;}
 
     { Draw label }
     FBitmap.FontStyle := AElement.FElementLabel.Font.Font.Style;
@@ -821,12 +885,36 @@ procedure TiCustomTreeView.CalculateControl;
   procedure CalcElement (AItem : TiTreeItem); {$IFNDEF DEBUG}inline;{$ENDIF}
   var
     Item : TiTreeItem;
+    {ItemRect : TRect;
+    LinkLine : TiTreeItem.TElementLinkLine;}
   begin
     UpdateItemDrawOffset(AItem);
     UpdateItemLineDrawWidth(AItem);
 
     if IsItemDrawable(AItem) then
+    begin
       FDrawItems.Add(Pointer(AItem));
+
+      {ItemRect := GetCollapseButtonRect(AItem);
+      if AItem.HasChildrens then
+      begin
+        if not AItem.IsRoot then
+          for LinkLine in AItem.Parent.FItemLinkLines do
+            AItem.FItemLinkLines.Add(TiTreeItem.TElementLinkLine.Create(ltPass,
+              LinkLine.Position));
+
+        AItem.FItemLinkLines.Add(TiTreeItem.TElementLinkLine.Create(ltStart,
+          ItemRect.Left + ItemRect.Width div 2));
+      end else if not AItem.IsRoot then
+      begin
+        for LinkLine in AItem.Parent.FItemLinkLines do
+          AItem.FItemLinkLines.Add(TiTreeItem.TElementLinkLine.Create(ltPass,
+            LinkLine.Position));
+
+        AItem.FItemLinkLines.Add(TiTreeItem.TElementLinkLine.Create(ltEnd,
+          ItemRect.Left + ItemRect.Width div 2));
+      end;}
+    end;
 
     for Item in AItem.Childrens do
     begin
@@ -882,6 +970,8 @@ begin
   FElementTextMargin := Margin(0, 0);
   FRootElementDrawOffset := 20;
   FElementDrawOffset := 12;
+  FSelectedElement.Element := nil;
+  FSelectedElement.ElementLabelColor := ColorToBGRA(clYellow);
   OnMouseUp := @ControlMouseUp;
 end;
 
@@ -1135,6 +1225,7 @@ begin
   FItemCollapsed := False;
   FItemData := nil;
   FItemDrawOffset := 0;
+  FItemLinkLines := TElementLinkLines.Create;
   with FElementLabel.Font do
   begin
     Font := TFont.Create;
@@ -1162,6 +1253,7 @@ begin
   FreeAndNil(FElementChildrens);
   FreeAndNil(FElementLabel.Font.Font);
   FreeAndNil(FElementText.Font.Font);
+  FreeAndNil(FItemLinkLines);
   inherited Destroy;
 end;
 
