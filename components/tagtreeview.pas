@@ -250,11 +250,11 @@ type
     FDrawElementMaxTextLength : Cardinal;
     { Contol element heigth size }
     FElementHeight : Cardinal;
-    {}
+    { Show element collapse button }
+    FElementCollapseButtonShow : Boolean;
+    { Element collapse button margin }
     FElementCollapseButtonMargin : TMargin;
-    {}
-    FElementCollapseButtonPadding : TPadding;
-    {}
+    { Element collapse button round rect corner radius }
     FElementCollapseButtonRoundRect : Cardinal;
     { Control label inner padding }
     FElementLabelPadding : TPadding;
@@ -266,7 +266,7 @@ type
     FElementTextPadding : TPadding;
     { Control text outer gap margin }
     FElementTextMargin : TMargin;
-    {}
+    { Control root element draw offset }
     FRootElementDrawOffset : Integer;
     { Control element's draw level offset }
     FElementDrawOffset : Integer;
@@ -286,7 +286,7 @@ type
     { Calculate item draw width }
     procedure UpdateItemLineDrawWidth (AItem : TiTreeItem);
       {$IFNDEF DEBUG}inline;{$ENDIF}
-    {}
+    { Find draw item for Y coordinate }
     function GetItem (AY : Integer) : TiTreeItem;
       {$IFNDEF DEBUG}inline;{$ENDIF}
 
@@ -308,6 +308,8 @@ type
     { Set control item draw level offset }
     procedure SetElementDrawOffset (AOffset : Integer);
       {$IFNDEF DEBUG}inline;{$ENDIF}
+    { Set control item show collapse button }
+    procedure SetElementCollapseButtonShow (AShow : Boolean);
 
     procedure ControlMouseUp (Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -373,6 +375,9 @@ type
     { Element draw level offset }
     property ItemDrawOffset : Integer read FElementDrawOffset write
       SetElementDrawOffset;
+    { Show/hide element collapse button }
+    property ItemShowCollapseButton : Boolean read FElementCollapseButtonShow
+      write SetElementCollapseButtonShow;
   end;
 
   { TiCustomHTMLTreeView }
@@ -632,6 +637,16 @@ begin
     FElementDrawOffset := AOffset;
 end;
 
+procedure TiCustomTreeView.SetElementCollapseButtonShow(AShow: Boolean);
+begin
+  if FElementCollapseButtonShow <> AShow then
+  begin
+    FElementCollapseButtonShow := AShow;
+    RenderControl;
+    Invalidate;
+  end;
+end;
+
 procedure TiCustomTreeView.ControlMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 
@@ -665,10 +680,11 @@ var
 begin
   with Sender as TiCustomTreeView do
   begin
-    if Button = mbLeft then
+    if (Button = mbLeft) and FElementCollapseButtonShow then
     begin
       Item := GetItem(Y);
-      if (Item <> nil) and (IsCollapseButtonClicked(Item, X, Y -
+      if (Item <> nil) and (IsCollapseButtonClicked(Item, X +
+        HorzScrollBar.Position, Y + VertScrollBar.Position -
         ((Y div FElementHeight) * FElementHeight))) then
       begin
         Item.Collapsed := not Item.Collapsed;
@@ -703,7 +719,7 @@ procedure TiCustomTreeView.RenderControl;
       FElementLabelMargin.Bottom;
 
     { Draw collapsed label }
-    if AElement.HasChildrens then
+    if AElement.HasChildrens and FElementCollapseButtonShow then
     begin
       { The collapse button must be a square, so for width size we can use it's
         height size, because it is more easy for calculation }
@@ -732,13 +748,14 @@ procedure TiCustomTreeView.RenderControl;
           FElementCollapseButtonMargin.Top +
           CollapseButtonRect.Height div 2,
           BGRABlack, True);
-        FBitmap.DrawLine(ARect.Left + AElement.DrawOffset - 1 -
-          FElementCollapseButtonMargin.Right - CollapseButtonRect.Width div 2,
-          ARect.Top + FElementCollapseButtonMargin.Top + 3, ARect.Left +
-          AElement.DrawOffset - 1 - FElementCollapseButtonMargin.Right -
-          CollapseButtonRect.Width div 2, ARect.Top +
-          FElementCollapseButtonMargin.Top + CollapseButtonRect.Height - 4,
-          BGRABlack, True);
+        FBitmap.DrawLine(ARect.Left + AElement.DrawOffset -
+          FElementCollapseButtonMargin.Right - CollapseButtonRect.Width div 2 -
+          CollapseButtonRect.Width mod 2, ARect.Top +
+          FElementCollapseButtonMargin.Top + 3, ARect.Left +
+          AElement.DrawOffset - FElementCollapseButtonMargin.Right -
+          CollapseButtonRect.Width div 2 - CollapseButtonRect.Width mod 2,
+          ARect.Top + FElementCollapseButtonMargin.Top +
+          CollapseButtonRect.Height - 4, BGRABlack, True);
       end else
       begin
         { Draw - sumbol }
@@ -855,6 +872,7 @@ begin
   FElementMaxTextLength := 0;
   FDrawElementMaxTextLength := 0;
   FElementHeight := 17;
+  FElementCollapseButtonShow := True;
   FElementCollapseButtonMargin := Margin(3, 4, 3, 5);
   FElementCollapseButtonRoundRect := 6;
   FElementLabelPadding := Padding(1, 10, 2, 10);
