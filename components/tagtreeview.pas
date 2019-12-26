@@ -76,6 +76,13 @@ type
       { Pointer list for tree view items }
       TiDrawTreeItemList = specialize TFPGList<PiTreeItem>;
 
+      { TiCustomTreeView options }
+      TOption = (
+        opClickSelection, { left mouse click is selected item }
+        opClickClearEmptySelection { clear selection if selected item is empty }
+      );
+      TOptions = set of TOption;
+
       { TiTreeItem }
       { Tree view item element }
       TiTreeItem = class
@@ -297,6 +304,8 @@ type
     FElementDrawOffset : Integer;
     {}
     FSelectedElement : TSelectedElement;
+    {}
+    FOptions : TOptions;
 
     { Calculate label text width without gaps }
     function GetLabelTextWidth (AItem : TiTreeItem) : Cardinal;
@@ -316,7 +325,7 @@ type
     { Find draw item for Y coordinate }
     function GetItem (AY : Integer) : TiTreeItem;
       {$IFNDEF DEBUG}inline;{$ENDIF}
-    {}
+    { Calculate collapse button rect }
     function GetCollapseButtonRect (AItem : TiTreeItem) : TRect;
       {$IFNDEF DEBUG}inline;{$ENDIF}
 
@@ -340,10 +349,11 @@ type
       {$IFNDEF DEBUG}inline;{$ENDIF}
     { Set control item show collapse button }
     procedure SetElementCollapseButtonShow (AShow : Boolean);
-
+    { Set control OnMouseUp callback }
     procedure ControlMouseUp (Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
   protected
+    { Control's resize }
     procedure DoOnResize; override;
     { Repaint control }
     procedure RenderControl; virtual;
@@ -719,9 +729,9 @@ procedure TiCustomTreeView.ControlMouseUp(Sender: TObject;
   begin
     CollapseButtonRect := GetCollapseButtonRect(AItem);
 
-    Result := ((AX >= CollapseButtonRect.Left) and
-      (AX <= CollapseButtonRect.Right)) and ((AY >= CollapseButtonRect.Top) and
-      (AY <= CollapseButtonRect.Bottom));
+    Result := (AX >= CollapseButtonRect.Left) and
+      (AX <= CollapseButtonRect.Right) and (AY >= CollapseButtonRect.Top) and
+      (AY <= CollapseButtonRect.Bottom);
   end;
 
 var
@@ -741,21 +751,27 @@ begin
           Item.Collapsed := not Item.Collapsed;
         end;
 
-        if FSelectedElement.Element <> nil then
-          TiTreeItem(FSelectedElement.Element).FElementLabel.BackgroundColor :=
-            FSelectedElement.ElementLabelPrevColor;
+        if opClickSelection in FOptions then
+        begin
+          if FSelectedElement.Element <> nil then
+            TiTreeItem(FSelectedElement.Element).FElementLabel.BackgroundColor:=
+              FSelectedElement.ElementLabelPrevColor;
 
-        FSelectedElement.Element := Pointer(Item);
-        FSelectedElement.ElementLabelPrevColor :=
-          Item.FElementLabel.BackgroundColor;
-        Item.FElementLabel.BackgroundColor :=
-          FSelectedElement.ElementLabelColor;
+          FSelectedElement.Element := Pointer(Item);
+          FSelectedElement.ElementLabelPrevColor :=
+            Item.FElementLabel.BackgroundColor;
+          Item.FElementLabel.BackgroundColor :=
+            FSelectedElement.ElementLabelColor;
+        end;
       end else
       begin
-        if FSelectedElement.Element <> nil then
-          TiTreeItem(FSelectedElement.Element).FElementLabel.BackgroundColor :=
-            FSelectedElement.ElementLabelPrevColor;
-        FSelectedElement.Element := nil;
+        if opClickClearEmptySelection in FOptions then
+        begin
+          if FSelectedElement.Element <> nil then
+            TiTreeItem(FSelectedElement.Element).FElementLabel.BackgroundColor:=
+              FSelectedElement.ElementLabelPrevColor;
+          FSelectedElement.Element := nil;
+        end;
       end;
 
       RenderControl;
@@ -788,7 +804,7 @@ procedure TiCustomTreeView.RenderControl;
       FElementLabelPadding.Top - FElementLabelPadding.Bottom -
       FElementLabelMargin.Bottom;
 
-    { Draw collapsed label }
+    { Draw collapse button }
     if AElement.HasChildrens and FElementCollapseButtonShow then
     begin
       CollapseButtonRect := GetCollapseButtonRect(AElement);
@@ -800,7 +816,7 @@ procedure TiCustomTreeView.RenderControl;
 
       if AElement.Collapsed then
       begin
-        { Draw + sumbol }
+        { Draw + symbol }
         FBitmap.DrawLine(ARect.Left + CollapseButtonRect.Left + 3,
           ARect.Top + CollapseButtonRect.Top + CollapseButtonRect.Height div 2,
           ARect.Left + CollapseButtonRect.Right - 4, ARect.Top +
@@ -813,7 +829,7 @@ procedure TiCustomTreeView.RenderControl;
           CollapseButtonRect.Bottom - 4, BGRABlack, True);
       end else
       begin
-        { Draw - sumbol }
+        { Draw - symbol }
         FBitmap.DrawLine(ARect.Left + CollapseButtonRect.Left + 3,
           ARect.Top + CollapseButtonRect.Top + CollapseButtonRect.Height div 2,
           ARect.Left + CollapseButtonRect.Right - 4, ARect.Top +
@@ -972,6 +988,7 @@ begin
   FElementDrawOffset := 12;
   FSelectedElement.Element := nil;
   FSelectedElement.ElementLabelColor := ColorToBGRA(clYellow);
+  FOptions := [opClickSelection];
   OnMouseUp := @ControlMouseUp;
 end;
 
