@@ -78,7 +78,7 @@ type
 
       { TiCustomTreeView options }
       TOption = (
-        opClickSelection, { left mouse click is selected item }
+        opClickSelection,          { left mouse click is selected item }
         opClickClearEmptySelection { clear selection if selected item is empty }
       );
       TOptions = set of TOption;
@@ -676,37 +676,59 @@ begin
   begin
     FElementFontAntialias := AFontAntialias;
     FBitmap.FontAntialias := FElementFontAntialias;
+    RenderControl;
+    Invalidate;
   end;
 end;
 
 procedure TiCustomTreeView.SetElementHeight(AHeight: Cardinal);
 begin
   if FElementHeight <> AHeight then
+  begin
     FElementHeight := AHeight;
+    RenderControl;
+    Invalidate;
+  end;
 end;
 
 procedure TiCustomTreeView.SetElementLabelPadding(APadding: TPadding);
 begin
   if FElementLabelPadding <> APadding then
+  begin
     FElementLabelPadding := APadding;
+    RenderControl;
+    Invalidate;
+  end;
 end;
 
 procedure TiCustomTreeView.SetElementLabelRoundRect(ARound: Cardinal);
 begin
   if FElementLabelRoundRect <> ARound then
+  begin
     FElementLabelRoundRect := ARound;
+    RenderControl;
+    Invalidate;
+  end;
 end;
 
 procedure TiCustomTreeView.SetElementTextPadding(APadding: TPadding);
 begin
   if FElementTextPadding <> APadding then
+  begin
     FElementTextPadding := APadding;
+    RenderControl;
+    Invalidate;
+  end;
 end;
 
 procedure TiCustomTreeView.SetElementDrawOffset(AOffset: Integer);
 begin
   if FElementDrawOffset <> AOffset then
+  begin
     FElementDrawOffset := AOffset;
+    RenderControl;
+    Invalidate;
+  end;
 end;
 
 procedure TiCustomTreeView.SetElementCollapseButtonShow(AShow: Boolean);
