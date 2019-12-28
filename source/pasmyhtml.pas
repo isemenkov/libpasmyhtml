@@ -1471,7 +1471,8 @@ function TParser.TTagNode.PrevNode(AFilter: TFilter): TTagNode;
 begin
   if IsOk then
   begin
-    Result := TTagNode.Create(FilterNode(myhtml_node_prev(FNode), AFilter));
+    Result := TTagNode.Create(ReverseFilterNode(myhtml_node_prev(FNode),
+      AFilter));
   end else
     Result := TTagNode.Create(nil);
 end;

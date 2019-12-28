@@ -124,6 +124,7 @@ type
   published
     procedure TestH1Tag;
     procedure TestEachHeadingNodes;
+    procedure TestLastChildrenNode;
   end;
 
 {$I htmldocuments/SimpleHTMLDocument.inc}
@@ -265,6 +266,140 @@ begin
   end;
 
   AssertTrue('Error index is must be 6', Index = 6);
+end;
+
+{ Last children node, PrevNode filtering }
+procedure TParserHtml5TestCase.TestLastChildrenNode;
+var
+  Node, InnerNode : TParser.TTagNode;
+  Value : string;
+begin
+  Node := FParser.Parse(Html5TestPage, DOCUMENT_BODY);
+  AssertTrue('Error body node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_BODY);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_DIV).ContainsIdOnly('top'));
+  AssertTrue('Error div node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_NAV));
+  AssertTrue('Error nav node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_NAV);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_UL));
+  AssertTrue('Error ul node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_UL);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_LI));
+  AssertTrue('Error li node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_LI);
+
+  Node := Node.FirstChildrenNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_UL));
+  AssertTrue('Error ul node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_UL);
+
+  Node := Node.LastChildrenNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_LI));
+  AssertTrue('Error li node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_LI);
+
+  InnerNode := Node.FirstChildrenNode;
+  AssertTrue('Error "a" node is nil', InnerNode.IsOk);
+  AssertTrue('Error not correct tag id', InnerNode.Tag = MyHTML_TAG_A);
+  AssertTrue('Error not correct "a" node value', InnerNode.Value = 'HTML '+
+    'Comments');
+
+  Node := Node.PrevNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_LI));
+  AssertTrue('Error li node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_LI);
+
+  InnerNode := Node.FirstChildrenNode;
+  AssertTrue('Error "a" node is nil', InnerNode.IsOk);
+  AssertTrue('Error not correct tag id', InnerNode.Tag = MyHTML_TAG_A);
+  AssertTrue('Error not correct "a" node value', InnerNode.Value =
+    'Inline elements');
+
+  Node := Node.PrevNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_LI));
+  AssertTrue('Error li node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_LI);
+
+  InnerNode := Node.FirstChildrenNode;
+  AssertTrue('Error "a" node is nil', InnerNode.IsOk);
+  AssertTrue('Error not correct tag id', InnerNode.Tag = MyHTML_TAG_A);
+  AssertTrue('Error not correct "a" node value', InnerNode.Value = 'Code');
+
+  Node := Node.PrevNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_LI));
+  AssertTrue('Error li node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_LI);
+
+  InnerNode := Node.FirstChildrenNode;
+  AssertTrue('Error "a" node is nil', InnerNode.IsOk);
+  AssertTrue('Error not correct tag id', InnerNode.Tag = MyHTML_TAG_A);
+  AssertTrue('Error not correct "a" node value', InnerNode.Value = 'Tabular '+
+    'data');
+
+  Node := Node.PrevNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_LI));
+  AssertTrue('Error li node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_LI);
+
+  InnerNode := Node.FirstChildrenNode;
+  AssertTrue('Error "a" node is nil', InnerNode.IsOk);
+  AssertTrue('Error not correct tag id', InnerNode.Tag = MyHTML_TAG_A);
+  AssertTrue('Error not correct "a" node value', InnerNode.Value =
+    'Horizontal rules');
+
+  Node := Node.PrevNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_LI));
+  AssertTrue('Error li node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_LI);
+
+  InnerNode := Node.FirstChildrenNode;
+  AssertTrue('Error "a" node is nil', InnerNode.IsOk);
+  AssertTrue('Error not correct tag id', InnerNode.Tag = MyHTML_TAG_A);
+  AssertTrue('Error not correct "a" node value', InnerNode.Value =
+    'Lists');
+
+  Node := Node.PrevNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_LI));
+  AssertTrue('Error li node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_LI);
+
+  InnerNode := Node.FirstChildrenNode;
+  AssertTrue('Error "a" node is nil', InnerNode.IsOk);
+  AssertTrue('Error not correct tag id', InnerNode.Tag = MyHTML_TAG_A);
+  AssertTrue('Error not correct "a" node value', InnerNode.Value =
+    'Blockquotes');
+
+  Node := Node.PrevNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_LI));
+  AssertTrue('Error li node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_LI);
+
+  InnerNode := Node.FirstChildrenNode;
+  AssertTrue('Error "a" node is nil', InnerNode.IsOk);
+  AssertTrue('Error not correct tag id', InnerNode.Tag = MyHTML_TAG_A);
+  AssertTrue('Error not correct "a" node value', InnerNode.Value =
+    'Paragraphs');
+
+  Node := Node.PrevNode(TParser.TFilter.Create.Tag(
+    TParser.TTag.MyHTML_TAG_LI));
+  AssertTrue('Error li node is nil', Node.IsOk);
+  AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_LI);
+
+  InnerNode := Node.FirstChildrenNode;
+  AssertTrue('Error "a" node is nil', InnerNode.IsOk);
+  AssertTrue('Error not correct tag id', InnerNode.Tag = MyHTML_TAG_A);
+  AssertTrue('Error not correct "a" node value', InnerNode.Value =
+    'Headings');
 end;
 
 { TMyHTMLParserIanaTestCase }
