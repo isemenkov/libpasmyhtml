@@ -53,11 +53,12 @@ type
 
   { TFontProperty }
   TFontProperty = record
-    Font : TFont;
-    FontColorOpacity : Byte;
+    FontName : string;
+    FontStyle : TFontStyles;
+    FontSize : Cardinal;
+    FontColor : TBGRAPixel;
     FontQuality : TBGRAFontQuality;
     FontOrientation : Integer;
-    FontAntialias : Boolean;
     FontRenderer : TBGRACustomFontRenderer;
   end;
 
@@ -86,23 +87,6 @@ type
       { TiTreeItem }
       { Tree view item element }
       TiTreeItem = class
-      public
-        type
-          TElementLinkLineType = (ltStart, ltPass, ltEnd);
-
-          { TElementLinkLine }
-
-          TElementLinkLine = class
-          public
-            LinkLine : TElementLinkLineType;
-            Position : Cardinal;
-
-            constructor Create (ALineType : TElementLinkLineType; APos :
-              Cardinal);
-            destructor Destroy; override;
-          end;
-
-          TElementLinkLines = specialize TFPGObjectList<TElementLinkLine>;
       private
         type
           { Element label data }
@@ -126,95 +110,60 @@ type
         FElementLabel : TElementLabel;
         { Current element text data }
         FElementText : TElementText;
-        { Curent element background color }
-        FItemBackgroundColor : TColor;
         { Current element collapsed state }
-        FItemCollapsed : Boolean;
+        FElementCollapsed : Boolean;
         { Item additional user controlled data pointer }
-        FItemData : Pointer;
+        FElementData : Pointer;
         { Current element start draw offset }
-        FItemDrawOffset : Integer;
-        {}
-        FItemLinkLines : TElementLinkLines;
-        { OnUpdate event }
-        FUpdateEvent : TNotifyEvent;
+        FElementDrawOffset : Integer;
 
         { Check if current element is root }
-        function IsRootElement : Boolean;
-          {$IFNDEF DEBUG}inline;{$ENDIF}
+        function IsRootElement : Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
         { Check if current element has childrens}
-        function HasChildrens : Boolean;
+        function HasElementChildrens : Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
         { Return element label text value }
-        function GetElementLabelText : string;
-          {$IFNDEF DEBUG}inline;{$ENDIF}
+        function GetElementLabelText : string; {$IFNDEF DEBUG}inline;{$ENDIF}
         { Set current element label title text }
-        procedure SetElementLabelText (AText : string);
-          {$IFNDEF DEBUG}inline;{$ENDIF}
+        procedure SetElementLabelText (AText : string); {$IFNDEF DEBUG}inline;
+          {$ENDIF}
         { Return current element label background color }
-        function GetElementLabelBackgroundColor : TBGRAPixel;
-          {$IFNDEF DEBUG}inline;{$ENDIF}
+        function GetElementLabelBackgroundColor : TBGRAPixel; {$IFNDEF DEBUG}
+          inline;{$ENDIF}
         { Set element label background color }
-        procedure SetElementLabelBackgroundColor (AColor : TBGRAPixel);
-          {$IFNDEF DEBUG}inline;{$ENDIF}
+        procedure SetElementLabelBackgroundColor (AColor : TBGRAPixel); {$IFNDEF
+          DEBUG}inline;{$ENDIF}
         { Return element label font }
-        function GetElementLabelFont : TFont;
-          {$IFNDEF DEBUG}inline;{$ENDIF}
+        function GetElementLabelFont : TFontProperty; {$IFNDEF DEBUG}inline;
+          {$ENDIF}
         { Set element label font parameters }
-        procedure SetElementLabelFont (AFont : TFont);
-          {$IFNDEF DEBUG}inline;{$ENDIF}
-        { Return element label font opacity value }
-        function GetElementLabelFontOpacity : Byte;
-          {$IFNDEF DEBUG}inline;{$ENDIF}
-        { Set element label font opacity }
-        procedure SetElementLabelFontOpacity (AOpacity : Byte);
-          {$IFNDEF DEBUG}inline;{$ENDIF}
-        { Return element label font quality }
-        function GetElementLabelFontQuality : TBGRAFontQuality;
-          {$IFNDEF DEBUG}inline;{$ENDIF}
-        { Set element label font quality }
-        procedure SetElementLabelFontQuality (AQuality : TBGRAFontQuality);
-          {$IFNDEF DEBUG}inline;{$ENDIF}
+        procedure SetElementLabelFont (AFont : TFontProperty); {$IFNDEF DEBUG}
+          inline;{$ENDIF}
         { Return element text value }
-        function GetElementText : string;
-          {$IFNDEF DEBUG}inline;{$ENDIF}
+        function GetElementText : string; {$IFNDEF DEBUG}inline;{$ENDIF}
         { Set current element text }
-        procedure SetElementText (AText : string);
-          {$IFNDEF DEBUG}inline;{$ENDIF}
+        procedure SetElementText (AText : string); {$IFNDEF DEBUG}inline;
+          {$ENDIF}
         { Return current element text font }
-        function GetElementTextFont : TFont;
-          {$IFNDEF DEBUG}inline;{$ENDIF}
+        function GetElementTextFont : TFontProperty; {$IFNDEF DEBUG}inline;
+          {$ENDIF}
         { Set current element font value }
-        procedure SetElementTextFont (AFont : TFont);
-          {$IFNDEF DEBUG}inline;{$ENDIF}
-        { Return current element font color opacity }
-        function GetTextFontColorOpacity : Byte;
-          {$IFNDEF DEBUG}inline;{$ENDIF}
-        { Set current element font color opacity }
-        procedure SetTextFontColorOpacity (AOpacity : Byte);
-          {$IFNDEF DEBUG}inline;{$ENDIF}
-        { Return current element font quality }
-        function GetTextFontQuality : TBGRAFontQuality;
-          {$IFNDEF DEBUG}inline;{$ENDIF}
-        { Set current element font quality }
-        procedure SetTextFontQuality (AFontQuality : TBGRAFontQuality);
-          {$IFNDEF DEBUG}inline;{$ENDIF}
-        { Set current element background color }
-        procedure SetElementBackgroundColor (AColor : TColor);
-          {$IFNDEF DEBUG}inline;{$ENDIF}
+        procedure SetElementTextFont (AFont : TFontProperty); {$IFNDEF DEBUG}
+          inline;{$ENDIF}
         { Set current element user data pointer }
-        procedure SetData (AData : Pointer);
-          {$IFNDEF DEBUG}inline;{$ENDIF}
+        procedure SetData (AData : Pointer); {$IFNDEF DEBUG}inline;{$ENDIF}
         { Set current element start draw offset data }
-        procedure SetDrawElementOffset (AOffset : Integer);
-          {$IFNDEF DEBUG}inline;{$ENDIF}
+        procedure SetDrawElementOffset (AOffset : Integer); {$IFNDEF DEBUG}
+          inline;{$ENDIF}
         { Set current element collapse state }
-        procedure SetCollapsed (ACollapsed : Boolean);
-          {$IFNDEF DEBUG}inline;{$ENDIF}
+        procedure SetCollapsed (ACollapsed : Boolean); {$IFNDEF DEBUG}inline;
+          {$ENDIF}
       protected
         { Is current item element is root }
         property IsRoot : Boolean read IsRootElement;
         { Item element parent item if exists }
         property Parent : TiTreeItem read FElementParent;
+        { Return TRUE if element has childrens }
+        property HasChildrens : Boolean read HasElementChildrens;
         { Item element children's elements }
         property Childrens : TiTreeItemList read FElementChildrens;
         { Item element label title text }
@@ -223,39 +172,22 @@ type
         { Item element label background color }
         property LabelBackgroundColor : TBGRAPixel read
           GetElementLabelBackgroundColor write SetElementLabelBackgroundColor;
-        { Item element label font }
-        property LabelFont : TFont read GetElementLabelFont write
+        { Item element label font options }
+        property LabelFont : TFontProperty read GetElementLabelFont write
           SetElementLabelFont;
-        { Item element label font color opacity }
-        property LabelFontColorOpacity : Byte read GetElementLabelFontOpacity
-          write SetElementLabelFontOpacity;
-        { Item element label font quality }
-        property LabelFontQuality : TBGRAFontQuality read
-          GetElementLabelFontQuality write SetElementLabelFontQuality;
         { Item element text string }
         property Text : string read GetElementText write SetElementText;
         { Item element text font }
-        property TextFont : TFont read GetElementTextFont write
+        property TextFont : TFontProperty read GetElementTextFont write
           SetElementTextFont;
-        { Item element text font color opacity }
-        property TextFontColorOpacity : Byte read GetTextFontColorOpacity
-          write SetTextFontColorOpacity;
-        { Item element text font quality }
-        property TextFontQuality : TBGRAFontQuality read GetTextFontQuality
-          write SetTextFontQuality;
-        { Item element background color }
-        property BackgroundColor : TColor read FItemBackgroundColor write
-          SetElementBackgroundColor;
         { Element collapse state }
-        property Collapsed : Boolean read FItemCollapsed write
+        property Collapsed : Boolean read FElementCollapsed write
           SetCollapsed;
         { Element user pointer data }
-        property Data : Pointer read FItemData write SetData;
+        property Data : Pointer read FElementData write SetData;
         { Element start draw offset data }
-        property DrawOffset : Integer read FItemDrawOffset
+        property DrawOffset : Integer read FElementDrawOffset
           write SetDrawElementOffset;
-        { TiTreeItem update property event }
-        property OnUpdate : TNotifyEvent read FUpdateEvent write FUpdateEvent;
       public
         constructor Create (ALabelTitle, AText : string; AColor : TColor);
         destructor Destroy; override;
@@ -302,9 +234,9 @@ type
     FRootElementDrawOffset : Integer;
     { Control element's draw level offset }
     FElementDrawOffset : Integer;
-    {}
+    { Control selected element }
     FSelectedElement : TSelectedElement;
-    {}
+    { Control's global options set }
     FOptions : TOptions;
 
     { Calculate label text width without gaps }
@@ -368,6 +300,7 @@ type
     destructor Destroy; override;
     procedure Paint; override;
 
+    { Add element item }
     function AddItem (AItem : TiTreeItem) : TiTreeItem; overload;
     function AddItem (AParent : TiTreeItem; AItem : TiTreeItem) : TiTreeItem;
       overload;
@@ -471,11 +404,16 @@ type
 
 operator= (ALeft, ARight : TPadding) : Boolean;
 operator= (ALeft, ARight : TMargin) : Boolean;
+operator= (ALeft, ARight : TFontProperty) : Boolean;
 
+{ Return Pading struct with setup values }
 function Padding (ATop, ARight, ABottom, ALeft : Integer) : TPadding; overload;
 function Padding (ATopBottom, ARightLeft : Integer) : TPadding; overload;
+
+{ Return Margin struct with setup values }
 function Margin (ATop, ARight, ABottom, ALeft : Integer) : TMargin; overload;
 function Margin (ATopBottom, ARightLeft : Integer) : TMargin; overload;
+
 procedure Register;
 
 implementation
@@ -490,6 +428,14 @@ operator=(ALeft, ARight: TMargin): Boolean;
 begin
   Result := (ALeft.Top = ARight.Top) and (ALeft.Right = ARight.Right) and
     (ALeft.Bottom = ARight.Bottom) and (ALeft.Left = ARight.Left);
+end;
+
+operator=(ALeft, ARight: TFontProperty): Boolean;
+begin
+  Result := (ALeft.FontName = ARight.FontName) and (ALeft.FontStyle =
+    ARight.FontStyle) and (ALeft.FontSize = ARight.FontSize) and
+    (ALeft.FontColor = ARight.FontColor) and (ALeft.FontQuality =
+    ARight.FontQuality) and (ALeft.FontOrientation = ARight.FontOrientation);
 end;
 
 function Padding(ATop, ARight, ABottom, ALeft: Integer): TPadding;
@@ -541,20 +487,6 @@ begin
   RegisterComponents('libPasMyHTML',[TiCustomTreeView]);
 end;
 
-{ TiCustomTreeView.TiTreeItem.TElementLinkLine }
-
-constructor TiCustomTreeView.TiTreeItem.TElementLinkLine.Create(
-  ALineType: TElementLinkLineType; APos: Cardinal);
-begin
-  LinkLine := ALineType;
-  Position := APos;
-end;
-
-destructor TiCustomTreeView.TiTreeItem.TElementLinkLine.Destroy;
-begin
-  inherited Destroy;
-end;
-
 { TiCustomHTMLTreeView }
 
 constructor TiCustomHTMLTreeView.Create(ANode: TParser.TTagNode; AColor: TColor
@@ -594,7 +526,7 @@ begin
   FBitmap.FontHeight := FElementHeight - FElementLabelMargin.Top -
     FElementLabelPadding.Top - FElementLabelPadding.Bottom -
     FElementLabelMargin.Bottom;
-  FBitmap.FontStyle := AItem.FElementLabel.Font.Font.Style;
+  FBitmap.FontStyle := AItem.FElementLabel.Font.FontStyle;
   Result := FBitmap.TextSize(AItem.FElementLabel.Text).Width;
 end;
 
@@ -603,7 +535,7 @@ begin
   FBitmap.FontHeight := FElementHeight - FElementTextMargin.Top -
     FElementTextPadding.Top - FElementTextPadding.Bottom -
     FElementTextMargin.Bottom;
-  FBitmap.FontStyle := AItem.FElementText.Font.Font.Style;
+  FBitmap.FontStyle := AItem.FElementText.Font.FontStyle;
   Result := FBitmap.TextSize(AItem.FElementText.Text).Width;
 end;
 
@@ -612,16 +544,16 @@ begin
   if AItem.IsRoot then
     Result := True
   else
-    Result := (not AItem.Parent.FItemCollapsed) and
+    Result := (not AItem.Parent.FElementCollapsed) and
       (IsItemDrawable(AItem.Parent));
 end;
 
 procedure TiCustomTreeView.UpdateItemDrawOffset(AItem: TiTreeItem);
 begin
   if AItem.IsRoot then
-    AItem.FItemDrawOffset := FRootElementDrawOffset
+    AItem.FElementDrawOffset := FRootElementDrawOffset
   else
-    AItem.FItemDrawOffset := AItem.Parent.FItemDrawOffset +
+    AItem.FElementDrawOffset := AItem.Parent.FElementDrawOffset +
       FElementDrawOffset;
 end;
 
@@ -629,7 +561,7 @@ procedure TiCustomTreeView.UpdateItemLineDrawWidth(AItem: TiTreeItem);
 var
   ItemWidth : Cardinal;
 begin
-  ItemWidth := AItem.FItemDrawOffset + FElementLabelMargin.Left +
+  ItemWidth := AItem.FElementDrawOffset + FElementLabelMargin.Left +
     FElementLabelPadding.Left + GetLabelTextWidth(AItem) +
     FElementLabelPadding.Right + FElementLabelMargin.Right +
     FElementTextMargin.Left + FElementTextPadding.Left + GetTextWidth(AItem) +
@@ -860,21 +792,8 @@ procedure TiCustomTreeView.RenderControl;
       end;
     end;
 
-    { Draw link lines }
-    {for LinkLine in AElement.FItemLinkLines do
-    begin
-      case LinkLine.LinkLine of
-        ltPass : begin
-          FBitmap.JoinStyle := pjsRound;
-          FBitmap.PenStyle := psDot;
-          FBitmap.DrawPolyLineAntialias([PointF(LinkLine.Position, ARect.Top),
-            PointF(LinkLine.Position, ARect.Bottom)], ColorToBGRA(clLtGray), 1);
-        end;
-      end;
-    end;}
-
     { Draw label }
-    FBitmap.FontStyle := AElement.FElementLabel.Font.Font.Style;
+    FBitmap.FontStyle := AElement.FElementLabel.Font.FontStyle;
     LabelTextSize := FBitmap.TextSize(AElement.LabelText).Width;
 
     FBitmap.FillRoundRect(ARect.Left + AElement.DrawOffset +
@@ -886,18 +805,16 @@ procedure TiCustomTreeView.RenderControl;
     FBitmap.TextOut(ARect.Left + AElement.DrawOffset +
       FElementLabelMargin.Left + FElementLabelPadding.Left,
       ARect.Top + FElementLabelMargin.Top + FElementLabelPadding.Top,
-      AElement.LabelText, ColorToBGRA(AElement.LabelFont.Color,
-      AElement.TextFontColorOpacity));
+      AElement.LabelText, AElement.LabelFont.FontColor);
 
     { Draw text }
-    FBitmap.FontStyle := AElement.FElementText.Font.Font.Style;
+    FBitmap.FontStyle := AElement.FElementText.Font.FontStyle;
     FBitmap.TextOut(ARect.Left + AElement.DrawOffset +
       FElementLabelMargin.Left + FElementLabelPadding.Left +
       LabelTextSize + FElementLabelPadding.Right + FElementLabelMargin.Right +
       FElementTextMargin.Left + FElementTextPadding.Left,
       ARect.Top + FElementTextMargin.Top + FElementTextPadding.Top,
-      AElement.Text, ColorToBGRA(AElement.TextFont.Color,
-      AElement.TextFontColorOpacity));
+      AElement.Text, AElement.TextFont.FontColor);
   end;
 
 var
@@ -1069,7 +986,7 @@ begin
   Result := (FElementParent = nil);
 end;
 
-function TiCustomTreeView.TiTreeItem.HasChildrens: Boolean;
+function TiCustomTreeView.TiTreeItem.HasElementChildrens: Boolean;
 begin
   Result := FElementChildrens.Count > 0;
 end;
@@ -1082,11 +999,7 @@ end;
 procedure TiCustomTreeView.TiTreeItem.SetElementLabelText(AText: string);
 begin
   if FElementLabel.Text <> AText then
-  begin
     FElementLabel.Text := AText;
-    if Assigned(FUpdateEvent) then
-      FUpdateEvent(Self);
-  end;
 end;
 
 function TiCustomTreeView.TiTreeItem.GetElementLabelBackgroundColor: TBGRAPixel;
@@ -1098,59 +1011,18 @@ procedure TiCustomTreeView.TiTreeItem.SetElementLabelBackgroundColor(
   AColor: TBGRAPixel);
 begin
   if FElementLabel.BackgroundColor <> AColor then
-  begin
     FELementLabel.BackgroundColor := AColor;
-    if Assigned(FUpdateEvent) then
-      FUpdateEvent(Self);
-  end;
 end;
 
-function TiCustomTreeView.TiTreeItem.GetElementLabelFont: TFont;
+function TiCustomTreeView.TiTreeItem.GetElementLabelFont: TFontProperty;
 begin
-  Result := FElementLabel.Font.Font;
+  Result := FElementLabel.Font;
 end;
 
-procedure TiCustomTreeView.TiTreeItem.SetElementLabelFont(AFont: TFont);
+procedure TiCustomTreeView.TiTreeItem.SetElementLabelFont(AFont: TFontProperty);
 begin
-  if FElementLabel.Font.Font <> AFont then
-  begin
-    FElementLabel.Font.Font := AFont;
-    if Assigned(FUpdateEvent) then
-      FUpdateEvent(Self);
-  end;
-end;
-
-function TiCustomTreeView.TiTreeItem.GetElementLabelFontOpacity: Byte;
-begin
-  Result := FElementLabel.Font.FontColorOpacity;
-end;
-
-procedure TiCustomTreeView.TiTreeItem.SetElementLabelFontOpacity(AOpacity: Byte
-  );
-begin
-  if FElementLabel.Font.FontColorOpacity <> AOpacity then
-  begin
-    FElementLabel.Font.FontColorOpacity := AOpacity;
-    if Assigned(FUpdateEvent) then
-      FUpdateEvent(Self);
-  end;
-end;
-
-function TiCustomTreeView.TiTreeItem.GetElementLabelFontQuality:
-  TBGRAFontQuality;
-begin
-  Result := FElementLabel.Font.FontQuality;
-end;
-
-procedure TiCustomTreeView.TiTreeItem.SetElementLabelFontQuality(
-  AQuality: TBGRAFontQuality);
-begin
-  if FElementLabel.Font.FontQuality <> AQuality then
-  begin
-    FElementLabel.Font.FontQuality := AQuality;
-    if Assigned(FUpdateEvent) then
-      FUpdateEvent(Self);
-  end;
+  if FElementLabel.Font <> AFont then
+    FElementLabel.Font := AFont;
 end;
 
 function TiCustomTreeView.TiTreeItem.GetElementText: string;
@@ -1161,95 +1033,36 @@ end;
 procedure TiCustomTreeView.TiTreeItem.SetElementText(AText: string);
 begin
   if FElementText.Text <> AText then
-  begin
     FElementText.Text := AText;
-    if Assigned(FUpdateEvent) then
-      FUpdateEvent(Self);
-  end;
 end;
 
-function TiCustomTreeView.TiTreeItem.GetElementTextFont: TFont;
+function TiCustomTreeView.TiTreeItem.GetElementTextFont: TFontProperty;
 begin
-  Result := FElementText.Font.Font;
+  Result := FElementText.Font;
 end;
 
-procedure TiCustomTreeView.TiTreeItem.SetElementTextFont(AFont: TFont);
+procedure TiCustomTreeView.TiTreeItem.SetElementTextFont(AFont: TFontProperty);
 begin
-  if FElementText.Font.Font <> AFont then
-  begin
-    FElementText.Font.Font := AFont;
-    if Assigned(FUpdateEvent) then
-      FUpdateEvent(Self);
-  end;
-end;
-
-function TiCustomTreeView.TiTreeItem.GetTextFontColorOpacity: Byte;
-begin
-  Result := FElementText.Font.FontColorOpacity;
-end;
-
-procedure TiCustomTreeView.TiTreeItem.SetTextFontColorOpacity(AOpacity: Byte);
-begin
-  if FElementText.Font.FontColorOpacity <> AOpacity then
-  begin
-    FElementText.Font.FontColorOpacity := AOpacity;
-    if Assigned(FUpdateEvent) then
-      FUpdateEvent(Self);
-  end;
-end;
-
-function TiCustomTreeView.TiTreeItem.GetTextFontQuality: TBGRAFontQuality;
-begin
-  Result := FElementText.Font.FontQuality;
-end;
-
-procedure TiCustomTreeView.TiTreeItem.SetTextFontQuality(
-  AFontQuality: TBGRAFontQuality);
-begin
-  if FElementText.Font.FontQuality <> AFontQuality then
-  begin
-    FElementText.Font.FontQuality := AFontQuality;
-    if Assigned(FUpdateEvent) then
-      FUpdateEvent(Self);
-  end;
-end;
-
-procedure TiCustomTreeView.TiTreeItem.SetElementBackgroundColor(AColor: TColor);
-begin
-  if FItemBackgroundColor <> AColor then
-  begin
-    FItemBackgroundColor := AColor;
-    if Assigned(FUpdateEvent) then
-      FUpdateEvent(Self);
-  end;
+  if FElementText.Font <> AFont then
+    FElementText.Font := AFont;
 end;
 
 procedure TiCustomTreeView.TiTreeItem.SetData(AData: Pointer);
 begin
-  if FItemData <> AData then
-  begin
-    FItemData := AData;
-  end;
+  if FElementData <> AData then
+    FElementData := AData;
 end;
 
 procedure TiCustomTreeView.TiTreeItem.SetDrawElementOffset(AOffset: Integer);
 begin
-  if FItemDrawOffset <> AOffset then
-  begin
-    FItemDrawOffset := AOffset;
-    if Assigned(FUpdateEvent) then
-      FUpdateEvent(Self);
-  end;
+  if FElementDrawOffset <> AOffset then
+    FElementDrawOffset := AOffset;
 end;
 
 procedure TiCustomTreeView.TiTreeItem.SetCollapsed(ACollapsed: Boolean);
 begin
-  if FItemCollapsed <> ACollapsed then
-  begin
-    FItemCollapsed := ACollapsed;
-    if Assigned(FUpdateEvent) then
-      FUpdateEvent(Self);
-  end;
+  if FElementCollapsed <> ACollapsed then
+    FElementCollapsed := ACollapsed;
 end;
 
 constructor TiCustomTreeView.TiTreeItem.Create(ALabelTitle, AText: string;
@@ -1260,39 +1073,30 @@ begin
   FElementLabel.Text := ALabelTitle;
   FElementText.Text := AText;
   FElementLabel.BackgroundColor := AColor;
-  FItemBackgroundColor := clWhite;
-  FItemCollapsed := False;
-  FItemData := nil;
-  FItemDrawOffset := 0;
-  FItemLinkLines := TElementLinkLines.Create;
+  FElementCollapsed := False;
+  FElementData := nil;
+  FElementDrawOffset := 0;
   with FElementLabel.Font do
   begin
-    Font := TFont.Create;
-    Font.Color := clBlack;
-    Font.Style := [fsBold];
-    FontColorOpacity := 255;
+    FontName := 'Default';
+    FontStyle := [fsBold];
+    FontColor := BGRABlack;
     FontQuality := fqSystem;
     FontOrientation := 0;
-    FontAntialias := True;
   end;
   with FElementText.Font do
   begin
-    Font := TFont.Create;
-    Font.Color := clBlack;
-    Font.Style := [];
-    FontColorOpacity := 255;
+    FontName := 'Default';
+    FontStyle := [];
+    FontColor := BGRABlack;
     FontQuality := fqSystem;
     FontOrientation := 0;
-    FontAntialias := True;
   end;
 end;
 
 destructor TiCustomTreeView.TiTreeItem.Destroy;
 begin
   FreeAndNil(FElementChildrens);
-  FreeAndNil(FElementLabel.Font.Font);
-  FreeAndNil(FElementText.Font.Font);
-  FreeAndNil(FItemLinkLines);
   inherited Destroy;
 end;
 
