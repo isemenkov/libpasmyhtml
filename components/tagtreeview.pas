@@ -80,7 +80,8 @@ type
       { TiCustomTreeView options }
       TOption = (
         opClickSelection,          { left mouse click is selected item }
-        opClickClearEmptySelection { clear selection if selected item is empty }
+        opClickClearEmptySelection, { clear selection if selected item is empty }
+        opShowCollapseButton       { show collapse button }
       );
       TOptions = set of TOption;
 
@@ -194,48 +195,55 @@ type
       end;
   private
     type
+      { TiCustomTreeView selected element item }
       TSelectedElement = record
         Element : PiTreeItem;
         ElementLabelColor : TBGRAPixel;
         ElementLabelPrevColor : TBGRAPixel;
       end;
+
+      TElementCollapseButton = record
+        Margin : TMargin;
+        DrawRoundRectRadius : Cardinal;
+      end;
+
+      TElementLabel = record
+        Padding : TPadding;
+        Margin : TMargin;
+        DrawRoundRectRadius : Cardinal;
+      end;
+
+      TElementText = record
+        Padding : TPadding;
+        Margin : TMargin;
+      end;
   private
     { Control canvas }
-    FBitmap : TBGRABitmap;
-    { Control's element items }
+    FBitmapCanvas : TBGRABitmap;
+    { All control item elements }
     FItems : TiTreeItemList;
-    { List of controls visible draw items }
+    { Visible control item elements, exclude collapsed elements }
     FDrawItems : TiDrawTreeItemList;
     { Control element's font antialias }
-    FElementFontAntialias : Boolean;
+    FItemFontAntialias : Boolean;
     { Elements max text length }
-    FElementMaxTextLength : Cardinal;
+    FItemMaxTextLength : Cardinal;
     { Draw elements max text length }
-    FDrawElementMaxTextLength : Cardinal;
-    { Contol element heigth size }
-    FElementHeight : Cardinal;
-    { Show element collapse button }
-    FElementCollapseButtonShow : Boolean;
-    { Element collapse button margin }
-    FElementCollapseButtonMargin : TMargin;
-    { Element collapse button round rect corner radius }
-    FElementCollapseButtonRoundRect : Cardinal;
-    { Control label inner padding }
-    FElementLabelPadding : TPadding;
-    { Control label outer gap margin size }
-    FElementLabelMargin : TMargin;
-    { Control label round rect corner radius }
-    FElementLabelRoundRect : Cardinal;
-    { Control text inner padding }
-    FElementTextPadding : TPadding;
-    { Control text outer gap margin }
-    FElementTextMargin : TMargin;
+    FDrawItemMaxTextLength : Cardinal;
+    { Control element heigth size }
+    FItemHeight : Cardinal;
+    { Control element collapse button }
+    FCollapseButton : TElementCollapseButton;
+    { Control item label properties }
+    FItemLabel : TElementLabel;
+    { Control item text properties }
+    FItemText : TElementText;
     { Control root element draw offset }
-    FRootElementDrawOffset : Integer;
+    FRootItemDrawOffset : Integer;
     { Control element's draw level offset }
-    FElementDrawOffset : Integer;
+    FItemDrawOffset : Integer;
     { Control selected element }
-    FSelectedElement : TSelectedElement;
+    FSelectedItem : TSelectedElement;
     { Control's global options set }
     FOptions : TOptions;
 
@@ -279,8 +287,6 @@ type
     { Set control item draw level offset }
     procedure SetElementDrawOffset (AOffset : Integer);
       {$IFNDEF DEBUG}inline;{$ENDIF}
-    { Set control item show collapse button }
-    procedure SetElementCollapseButtonShow (AShow : Boolean);
     { Set control OnMouseUp callback }
     procedure ControlMouseUp (Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -329,28 +335,25 @@ type
     property Top;
     property Width;
     { Elements draw text font antialias }
-    property FontAntialias : Boolean read FElementFontAntialias write
+    property FontAntialias : Boolean read FItemFontAntialias write
       SetElementFontAntialias default True;
     { Control elements }
     property Items : TiTreeItemList read FItems;
     { Element item height }
-    property ItemHeight : Cardinal read FElementHeight write SetElementHeight
+    property ItemHeight : Cardinal read FItemHeight write SetElementHeight
       default 17;
     { Element label padding }
-    property ItemLabelPadding : TPadding read FElementLabelPadding write
+    property ItemLabelPadding : TPadding read FItemLabel.Padding write
       SetElementLabelPadding;
     { Element label round rect radius }
-    property ItemLabelRoundRect : Cardinal read FElementLabelRoundRect write
-      SetElementLabelRoundRect default 17;
+    property ItemLabelRoundRect : Cardinal read FItemLabel.DrawRoundRectRadius
+      write SetElementLabelRoundRect default 17;
     { Element text padding }
-    property ItemTextPadding : TPadding read FElementTextPadding write
+    property ItemTextPadding : TPadding read FItemText.Padding write
       SetElementTextPadding;
     { Element draw level offset }
-    property ItemDrawOffset : Integer read FElementDrawOffset write
+    property ItemDrawOffset : Integer read FItemDrawOffset write
       SetElementDrawOffset;
-    { Show/hide element collapse button }
-    property ItemShowCollapseButton : Boolean read FElementCollapseButtonShow
-      write SetElementCollapseButtonShow;
   end;
 
   { TiCustomHTMLTreeView }
@@ -523,20 +526,20 @@ end;
 
 function TiCustomTreeView.GetLabelTextWidth(AItem: TiTreeItem): Cardinal;
 begin
-  FBitmap.FontHeight := FElementHeight - FElementLabelMargin.Top -
-    FElementLabelPadding.Top - FElementLabelPadding.Bottom -
-    FElementLabelMargin.Bottom;
-  FBitmap.FontStyle := AItem.FElementLabel.Font.FontStyle;
-  Result := FBitmap.TextSize(AItem.FElementLabel.Text).Width;
+  FBitmapCanvas.FontHeight := FItemHeight - FItemLabel.Margin.Top -
+    FItemLabel.Padding.Top - FItemLabel.Padding.Bottom -
+    FItemLabel.Margin.Bottom;
+  FBitmapCanvas.FontStyle := AItem.FElementLabel.Font.FontStyle;
+  Result := FBitmapCanvas.TextSize(AItem.FElementLabel.Text).Width;
 end;
 
 function TiCustomTreeView.GetTextWidth(AItem: TiTreeItem): Cardinal;
 begin
-  FBitmap.FontHeight := FElementHeight - FElementTextMargin.Top -
-    FElementTextPadding.Top - FElementTextPadding.Bottom -
-    FElementTextMargin.Bottom;
-  FBitmap.FontStyle := AItem.FElementText.Font.FontStyle;
-  Result := FBitmap.TextSize(AItem.FElementText.Text).Width;
+  FBitmapCanvas.FontHeight := FItemHeight - FItemLabel.Margin.Top -
+    FItemText.Padding.Top - FItemText.Padding.Bottom -
+    FItemText.Margin.Bottom;
+  FBitmapCanvas.FontStyle := AItem.FElementText.Font.FontStyle;
+  Result := FBitmapCanvas.TextSize(AItem.FElementText.Text).Width;
 end;
 
 function TiCustomTreeView.IsItemDrawable(AItem: TiTreeItem): Boolean;
@@ -551,32 +554,32 @@ end;
 procedure TiCustomTreeView.UpdateItemDrawOffset(AItem: TiTreeItem);
 begin
   if AItem.IsRoot then
-    AItem.FElementDrawOffset := FRootElementDrawOffset
+    AItem.FElementDrawOffset := FRootItemDrawOffset
   else
     AItem.FElementDrawOffset := AItem.Parent.FElementDrawOffset +
-      FElementDrawOffset;
+      FItemDrawOffset;
 end;
 
 procedure TiCustomTreeView.UpdateItemLineDrawWidth(AItem: TiTreeItem);
 var
   ItemWidth : Cardinal;
 begin
-  ItemWidth := AItem.FElementDrawOffset + FElementLabelMargin.Left +
-    FElementLabelPadding.Left + GetLabelTextWidth(AItem) +
-    FElementLabelPadding.Right + FElementLabelMargin.Right +
-    FElementTextMargin.Left + FElementTextPadding.Left + GetTextWidth(AItem) +
-    FElementTextPadding.Right + FElementTextMargin.Right;
-  FElementMaxTextLength := Max(FElementMaxTextLength, ItemWidth);
+  ItemWidth := AItem.FElementDrawOffset + FItemLabel.Margin.Left +
+    FItemLabel.Padding.Left + GetLabelTextWidth(AItem) +
+    FItemLabel.Padding.Right + FItemLabel.Margin.Right +
+    FItemText.Margin.Left + FItemText.Padding.Left + GetTextWidth(AItem) +
+    FItemText.Padding.Right + FItemText.Margin.Right;
+  FItemMaxTextLength := Max(FItemMaxTextLength, ItemWidth);
 
   if IsItemDrawable(AItem) then
-    FDrawElementMaxTextLength := Max(FDrawElementMaxTextLength, ItemWidth);
+    FDrawItemMaxTextLength := Max(FDrawItemMaxTextLength, ItemWidth);
 end;
 
 function TiCustomTreeView.GetItem(AY: Integer): TiTreeItem;
 var
   ItemIndex : Integer;
 begin
-  ItemIndex := AY div FElementHeight;
+  ItemIndex := AY div FItemHeight;
   if FDrawItems.Count > ItemIndex then
   begin
     Result := TiTreeItem(FDrawItems[ItemIndex]);
@@ -588,26 +591,26 @@ function TiCustomTreeView.GetCollapseButtonRect(AItem: TiTreeItem): TRect;
 begin
   Result := Rect(
     { Left }
-    AItem.DrawOffset - FElementCollapseButtonMargin.Right -
+    AItem.DrawOffset - FCollapseButton.Margin.Right -
     { The collapse button must be a square, so for width size we can use it's
       height size, because it is more easy for calculation }
-    (FElementHeight - FElementCollapseButtonMargin.Top -
-    FElementCollapseButtonMargin.Bottom),
+    (FItemHeight - FCollapseButton.Margin.Top -
+    FCollapseButton.Margin.Bottom),
     { Top }
-    FElementCollapseButtonMargin.Top,
+    FCollapseButton.Margin.Top,
     { Right }
-    AItem.DrawOffset - FElementCollapseButtonMargin.Right,
+    AItem.DrawOffset - FCollapseButton.Margin.Right,
     { Bottom }
-    FElementHeight - FElementCollapseButtonMargin.Bottom
+    FItemHeight - FCollapseButton.Margin.Bottom
   );
 end;
 
 procedure TiCustomTreeView.SetElementFontAntialias(AFontAntialias: Boolean);
 begin
-  if FElementFontAntialias <> AFontAntialias then
+  if FItemFontAntialias <> AFontAntialias then
   begin
-    FElementFontAntialias := AFontAntialias;
-    FBitmap.FontAntialias := FElementFontAntialias;
+    FItemFontAntialias := AFontAntialias;
+    FBitmapCanvas.FontAntialias := FItemFontAntialias;
     RenderControl;
     Invalidate;
   end;
@@ -615,9 +618,9 @@ end;
 
 procedure TiCustomTreeView.SetElementHeight(AHeight: Cardinal);
 begin
-  if FElementHeight <> AHeight then
+  if FItemHeight <> AHeight then
   begin
-    FElementHeight := AHeight;
+    FItemHeight := AHeight;
     RenderControl;
     Invalidate;
   end;
@@ -625,9 +628,9 @@ end;
 
 procedure TiCustomTreeView.SetElementLabelPadding(APadding: TPadding);
 begin
-  if FElementLabelPadding <> APadding then
+  if FItemLabel.Padding <> APadding then
   begin
-    FElementLabelPadding := APadding;
+    FItemLabel.Padding := APadding;
     RenderControl;
     Invalidate;
   end;
@@ -635,9 +638,9 @@ end;
 
 procedure TiCustomTreeView.SetElementLabelRoundRect(ARound: Cardinal);
 begin
-  if FElementLabelRoundRect <> ARound then
+  if FItemLabel.DrawRoundRectRadius <> ARound then
   begin
-    FElementLabelRoundRect := ARound;
+    FItemLabel.DrawRoundRectRadius := ARound;
     RenderControl;
     Invalidate;
   end;
@@ -645,9 +648,9 @@ end;
 
 procedure TiCustomTreeView.SetElementTextPadding(APadding: TPadding);
 begin
-  if FElementTextPadding <> APadding then
+  if FItemText.Padding <> APadding then
   begin
-    FElementTextPadding := APadding;
+    FItemText.Padding := APadding;
     RenderControl;
     Invalidate;
   end;
@@ -655,19 +658,9 @@ end;
 
 procedure TiCustomTreeView.SetElementDrawOffset(AOffset: Integer);
 begin
-  if FElementDrawOffset <> AOffset then
+  if FItemDrawOffset <> AOffset then
   begin
-    FElementDrawOffset := AOffset;
-    RenderControl;
-    Invalidate;
-  end;
-end;
-
-procedure TiCustomTreeView.SetElementCollapseButtonShow(AShow: Boolean);
-begin
-  if FElementCollapseButtonShow <> AShow then
-  begin
-    FElementCollapseButtonShow := AShow;
+    FItemDrawOffset := AOffset;
     RenderControl;
     Invalidate;
   end;
@@ -693,38 +686,38 @@ var
 begin
   with Sender as TiCustomTreeView do
   begin
-    if (Button = mbLeft) and FElementCollapseButtonShow then
+    if (Button = mbLeft) and (opShowCollapseButton in FOptions) then
     begin
       Item := GetItem(Y);
       if (Item <> nil) then
       begin
         if (IsCollapseButtonClicked(Item, X + HorzScrollBar.Position,
-          Y + VertScrollBar.Position - ((Y div FElementHeight) *
-          FElementHeight))) then
+          Y + VertScrollBar.Position - ((Y div FItemHeight) *
+          FItemHeight))) then
         begin
           Item.Collapsed := not Item.Collapsed;
         end;
 
         if opClickSelection in FOptions then
         begin
-          if FSelectedElement.Element <> nil then
-            TiTreeItem(FSelectedElement.Element).FElementLabel.BackgroundColor:=
-              FSelectedElement.ElementLabelPrevColor;
+          if FSelectedItem.Element <> nil then
+            TiTreeItem(FSelectedItem.Element).FElementLabel.BackgroundColor:=
+              FSelectedItem.ElementLabelPrevColor;
 
-          FSelectedElement.Element := Pointer(Item);
-          FSelectedElement.ElementLabelPrevColor :=
+          FSelectedItem.Element := Pointer(Item);
+          FSelectedItem.ElementLabelPrevColor :=
             Item.FElementLabel.BackgroundColor;
           Item.FElementLabel.BackgroundColor :=
-            FSelectedElement.ElementLabelColor;
+            FSelectedItem.ElementLabelColor;
         end;
       end else
       begin
         if opClickClearEmptySelection in FOptions then
         begin
-          if FSelectedElement.Element <> nil then
-            TiTreeItem(FSelectedElement.Element).FElementLabel.BackgroundColor:=
-              FSelectedElement.ElementLabelPrevColor;
-          FSelectedElement.Element := nil;
+          if FSelectedItem.Element <> nil then
+            TiTreeItem(FSelectedItem.Element).FElementLabel.BackgroundColor:=
+              FSelectedItem.ElementLabelPrevColor;
+          FSelectedItem.Element := nil;
         end;
       end;
 
@@ -752,31 +745,31 @@ procedure TiCustomTreeView.RenderControl;
   var
     LabelTextSize : Cardinal;
     CollapseButtonRect : TRect;
-    {LinkLine : TiTreeItem.TElementLinkLine;}
   begin
-    FBitmap.FontHeight := FElementHeight - FElementLabelMargin.Top -
-      FElementLabelPadding.Top - FElementLabelPadding.Bottom -
-      FElementLabelMargin.Bottom;
+    FBitmapCanvas.FontHeight := FItemHeight - FItemLabel.Margin.Top -
+      FItemLabel.Padding.Top - FItemLabel.Padding.Bottom -
+      FItemLabel.Margin.Bottom;
 
     { Draw collapse button }
-    if AElement.HasChildrens and FElementCollapseButtonShow then
+    if AElement.HasChildrens and (opShowCollapseButton in FOptions) then
     begin
       CollapseButtonRect := GetCollapseButtonRect(AElement);
-      FBitmap.RoundRect(ARect.Left + CollapseButtonRect.Left,
+      FBitmapCanvas.RoundRect(ARect.Left + CollapseButtonRect.Left,
         ARect.Top + CollapseButtonRect.Top, ARect.Left +
         CollapseButtonRect.Right, ARect.Top + CollapseButtonRect.Bottom,
-        FElementCollapseButtonRoundRect, FElementCollapseButtonRoundRect,
+        FCollapseButton.DrawRoundRectRadius,
+        FCollapseButton.DrawRoundRectRadius,
         ColorToBGRA(clLtGray), BGRAPixelTransparent);
 
       if AElement.Collapsed then
       begin
         { Draw + symbol }
-        FBitmap.DrawLine(ARect.Left + CollapseButtonRect.Left + 3,
+        FBitmapCanvas.DrawLine(ARect.Left + CollapseButtonRect.Left + 3,
           ARect.Top + CollapseButtonRect.Top + CollapseButtonRect.Height div 2,
           ARect.Left + CollapseButtonRect.Right - 4, ARect.Top +
           CollapseButtonRect.Top + CollapseButtonRect.Height div 2, BGRABlack,
           True);
-        FBitmap.DrawLine(ARect.Left + CollapseButtonRect.Left +
+        FBitmapCanvas.DrawLine(ARect.Left + CollapseButtonRect.Left +
           CollapseButtonRect.Width div 2, ARect.Top +
           CollapseButtonRect.Top + 3, ARect.Left + CollapseButtonRect.Left +
           CollapseButtonRect.Width div 2, ARect.Top +
@@ -784,7 +777,7 @@ procedure TiCustomTreeView.RenderControl;
       end else
       begin
         { Draw - symbol }
-        FBitmap.DrawLine(ARect.Left + CollapseButtonRect.Left + 3,
+        FBitmapCanvas.DrawLine(ARect.Left + CollapseButtonRect.Left + 3,
           ARect.Top + CollapseButtonRect.Top + CollapseButtonRect.Height div 2,
           ARect.Left + CollapseButtonRect.Right - 4, ARect.Top +
           CollapseButtonRect.Top + CollapseButtonRect.Height div 2, BGRABlack,
@@ -793,27 +786,28 @@ procedure TiCustomTreeView.RenderControl;
     end;
 
     { Draw label }
-    FBitmap.FontStyle := AElement.FElementLabel.Font.FontStyle;
-    LabelTextSize := FBitmap.TextSize(AElement.LabelText).Width;
+    FBitmapCanvas.FontStyle := AElement.FElementLabel.Font.FontStyle;
+    LabelTextSize := FBitmapCanvas.TextSize(AElement.LabelText).Width;
 
-    FBitmap.FillRoundRect(ARect.Left + AElement.DrawOffset +
-      FElementLabelMargin.Left, ARect.Top + FElementLabelMargin.Top,
-      AElement.DrawOffset + FElementLabelMargin.Left +
-      FElementLabelPadding.Left + LabelTextSize + FElementLabelPadding.Right +
-      FElementLabelMargin.Right, ARect.Bottom - FElementLabelMargin.Bottom,
-      ItemLabelRoundRect, ItemLabelRoundRect, AElement.LabelBackgroundColor);
-    FBitmap.TextOut(ARect.Left + AElement.DrawOffset +
-      FElementLabelMargin.Left + FElementLabelPadding.Left,
-      ARect.Top + FElementLabelMargin.Top + FElementLabelPadding.Top,
+    FBitmapCanvas.FillRoundRect(ARect.Left + AElement.DrawOffset +
+      FItemLabel.Margin.Left, ARect.Top + FItemLabel.Margin.Top,
+      AElement.DrawOffset + FItemLabel.Margin.Left +
+      FItemLabel.Padding.Left + LabelTextSize + FItemLabel.Padding.Right +
+      FItemLabel.Margin.Right, ARect.Bottom - FItemLabel.Margin.Bottom,
+      FItemLabel.DrawRoundRectRadius, FItemLabel.DrawRoundRectRadius,
+      AElement.LabelBackgroundColor);
+    FBitmapCanvas.TextOut(ARect.Left + AElement.DrawOffset +
+      FItemLabel.Margin.Left + FItemLabel.Padding.Left,
+      ARect.Top + FItemLabel.Margin.Top + FItemLabel.Padding.Top,
       AElement.LabelText, AElement.LabelFont.FontColor);
 
     { Draw text }
-    FBitmap.FontStyle := AElement.FElementText.Font.FontStyle;
-    FBitmap.TextOut(ARect.Left + AElement.DrawOffset +
-      FElementLabelMargin.Left + FElementLabelPadding.Left +
-      LabelTextSize + FElementLabelPadding.Right + FElementLabelMargin.Right +
-      FElementTextMargin.Left + FElementTextPadding.Left,
-      ARect.Top + FElementTextMargin.Top + FElementTextPadding.Top,
+    FBitmapCanvas.FontStyle := AElement.FElementText.Font.FontStyle;
+    FBitmapCanvas.TextOut(ARect.Left + AElement.DrawOffset +
+      FItemLabel.Margin.Left + FItemLabel.Padding.Left +
+      LabelTextSize + FItemLabel.Padding.Right + FItemLabel.Margin.Right +
+      FItemText.Margin.Left + FItemText.Padding.Left,
+      ARect.Top + FItemText.Margin.Top + FItemText.Padding.Top,
       AElement.Text, AElement.TextFont.FontColor);
   end;
 
@@ -822,16 +816,16 @@ var
 begin
   CalculateControl;
 
-  FBitmap.SetSize(Max(FDrawElementMaxTextLength, ClientWidth),
-    Max(FDrawItems.Count * FElementHeight, ClientHeight));
-  FBitmap.Fill(BGRAWhite);
+  FBitmapCanvas.SetSize(Max(FDrawItemMaxTextLength, ClientWidth),
+    Max(FDrawItems.Count * FItemHeight, ClientHeight));
+  FBitmapCanvas.Fill(BGRAWhite);
 
   CalculateScrollRanges;
 
   for Index := 0 to FDrawItems.Count - 1 do
   begin
-    DrawItem(TRect.Create(0, Index * FElementHeight, ClientWidth, Index *
-      FElementHeight + FElementHeight), TiTreeItem(FDrawItems[Index]));
+    DrawItem(TRect.Create(0, Index * FItemHeight, ClientWidth, Index *
+      FItemHeight + FItemHeight), TiTreeItem(FDrawItems[Index]));
   end;
 end;
 
@@ -840,36 +834,12 @@ procedure TiCustomTreeView.CalculateControl;
   procedure CalcElement (AItem : TiTreeItem); {$IFNDEF DEBUG}inline;{$ENDIF}
   var
     Item : TiTreeItem;
-    {ItemRect : TRect;
-    LinkLine : TiTreeItem.TElementLinkLine;}
   begin
     UpdateItemDrawOffset(AItem);
     UpdateItemLineDrawWidth(AItem);
 
     if IsItemDrawable(AItem) then
-    begin
       FDrawItems.Add(Pointer(AItem));
-
-      {ItemRect := GetCollapseButtonRect(AItem);
-      if AItem.HasChildrens then
-      begin
-        if not AItem.IsRoot then
-          for LinkLine in AItem.Parent.FItemLinkLines do
-            AItem.FItemLinkLines.Add(TiTreeItem.TElementLinkLine.Create(ltPass,
-              LinkLine.Position));
-
-        AItem.FItemLinkLines.Add(TiTreeItem.TElementLinkLine.Create(ltStart,
-          ItemRect.Left + ItemRect.Width div 2));
-      end else if not AItem.IsRoot then
-      begin
-        for LinkLine in AItem.Parent.FItemLinkLines do
-          AItem.FItemLinkLines.Add(TiTreeItem.TElementLinkLine.Create(ltPass,
-            LinkLine.Position));
-
-        AItem.FItemLinkLines.Add(TiTreeItem.TElementLinkLine.Create(ltEnd,
-          ItemRect.Left + ItemRect.Width div 2));
-      end;}
-    end;
 
     for Item in AItem.Childrens do
     begin
@@ -880,8 +850,8 @@ procedure TiCustomTreeView.CalculateControl;
 var
   Item : TiTreeItem;
 begin
-  FElementMaxTextLength := 0;
-  FDrawElementMaxTextLength := 0;
+  FItemMaxTextLength := 0;
+  FDrawItemMaxTextLength := 0;
   FDrawItems.Clear;
 
   for Item in FItems do
@@ -892,13 +862,13 @@ end;
 
 procedure TiCustomTreeView.CalculateScrollRanges;
 begin
-  if FBitmap.Height > ClientHeight then
-    VertScrollBar.Range := FBitmap.Height
+  if FBitmapCanvas.Height > ClientHeight then
+    VertScrollBar.Range := FBitmapCanvas.Height
   else
     VertScrollBar.Range := 0;
 
-  if FBitmap.Width > ClientWidth then
-    HorzScrollBar.Range := FBitmap.Width
+  if FBitmapCanvas.Width > ClientWidth then
+    HorzScrollBar.Range := FBitmapCanvas.Width
   else
     HorzScrollBar.Range := 0;
 end;
@@ -908,39 +878,38 @@ begin
   inherited Create(AOwner);
   with GetControlClassDefaultSize do
     SetInitialBounds(0, 0, cx, cy);
-  FBitmap := TBGRABitmap.Create(ClientWidth, ClientHeight, BGRAWhite);
+  FBitmapCanvas := TBGRABitmap.Create(ClientWidth, ClientHeight, BGRAWhite);
   FItems := TiTreeItemList.Create(True);
   FDrawItems := TiDrawTreeItemList.Create;
-  FElementFontAntialias := True;
-  FElementMaxTextLength := 0;
-  FDrawElementMaxTextLength := 0;
-  FElementHeight := 17;
-  FElementCollapseButtonShow := True;
-  FElementCollapseButtonMargin := Margin(3, 4, 3, 5);
-  FElementCollapseButtonRoundRect := 6;
-  FElementLabelPadding := Padding(1, 10, 2, 10);
-  FElementLabelMargin := Margin(0, 0, 1, 0);
-  FElementLabelRoundRect := 17;
-  FElementTextPadding := Padding(1, 5);
-  FElementTextMargin := Margin(0, 0);
-  FRootElementDrawOffset := 20;
-  FElementDrawOffset := 12;
-  FSelectedElement.Element := nil;
-  FSelectedElement.ElementLabelColor := ColorToBGRA(clYellow);
-  FOptions := [opClickSelection];
+  FItemFontAntialias := True;
+  FItemMaxTextLength := 0;
+  FDrawItemMaxTextLength := 0;
+  FItemHeight := 17;
+  FCollapseButton.Margin := Margin(3, 4, 3, 5);
+  FCollapseButton.DrawRoundRectRadius := 6;
+  FItemLabel.Padding := Padding(1, 10, 2, 10);
+  FItemLabel.Margin := Margin(0, 0, 1, 0);
+  FItemLabel.DrawRoundRectRadius := 17;
+  FItemText.Padding := Padding(1, 5);
+  FItemText.Margin := Margin(0, 0);
+  FRootItemDrawOffset := 20;
+  FItemDrawOffset := 12;
+  FSelectedItem.Element := nil;
+  FSelectedItem.ElementLabelColor := ColorToBGRA(clYellow);
+  FOptions := [opClickSelection, opShowCollapseButton];
   OnMouseUp := @ControlMouseUp;
 end;
 
 destructor TiCustomTreeView.Destroy;
 begin
   FreeAndNil(FItems);
-  FreeAndNil(FBitmap);
+  FreeAndNil(FBitmapCanvas);
   inherited Destroy;
 end;
 
 procedure TiCustomTreeView.Paint;
 begin
-  FBitmap.Draw(Canvas, 0, 0);
+  FBitmapCanvas.Draw(Canvas, 0, 0);
   inherited Paint;
 end;
 
