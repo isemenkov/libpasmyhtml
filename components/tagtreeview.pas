@@ -58,6 +58,7 @@ type
     FontSize : Cardinal;
     FontColor : TBGRAPixel;
     FontQuality : TBGRAFontQuality;
+    FontAntialias : Boolean;
     FontOrientation : Integer;
     FontRenderer : TBGRACustomFontRenderer;
   end;
@@ -81,7 +82,8 @@ type
       TOption = (
         opClickSelection,          { left mouse click is selected item }
         opClickClearEmptySelection, { clear selection if selected item is empty }
-        opShowCollapseButton       { show collapse button }
+        opShowCollapseButton,       { show collapse button }
+        opFontAntialias             { use font antialias }
       );
       TOptions = set of TOption;
 
@@ -224,8 +226,6 @@ type
     FItems : TiTreeItemList;
     { Visible control item elements, exclude collapsed elements }
     FDrawItems : TiDrawTreeItemList;
-    { Control element's font antialias }
-    FItemFontAntialias : Boolean;
     { Elements max text length }
     FItemMaxTextLength : Cardinal;
     { Draw elements max text length }
@@ -248,45 +248,47 @@ type
     FOptions : TOptions;
 
     { Calculate label text width without gaps }
-    function GetLabelTextWidth (AItem : TiTreeItem) : Cardinal;
-      {$IFNDEF DEBUG}inline;{$ENDIF}
+    function GetLabelTextWidth (AItem : TiTreeItem) : Cardinal; {$IFNDEF DEBUG}
+      inline;{$ENDIF}
     { Calculate item text width without gaps }
-    function GetTextWidth (AItem : TiTreeItem) : Cardinal;
-      {$IFNDEF DEBUG}inline;{$ENDIF}
+    function GetTextWidth (AItem : TiTreeItem) : Cardinal; {$IFNDEF DEBUG}
+      inline;{$ENDIF}
     { Return TRUE if AItem is drawable }
-    function IsItemDrawable (AItem : TiTreeItem) : Boolean;
-      {$IFNDEF DEBUG}inline;{$ENDIF}
+    function IsItemDrawable (AItem : TiTreeItem) : Boolean; {$IFNDEF DEBUG}
+      inline;{$ENDIF}
     { Calculate and update item draw offset }
-    procedure UpdateItemDrawOffset (AItem : TiTreeItem);
-      {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure UpdateItemDrawOffset (AItem : TiTreeItem); {$IFNDEF DEBUG}inline;
+      {$ENDIF}
     { Calculate item draw width }
-    procedure UpdateItemLineDrawWidth (AItem : TiTreeItem);
-      {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure UpdateItemLineDrawWidth (AItem : TiTreeItem); {$IFNDEF DEBUG}
+      inline;{$ENDIF}
     { Find draw item for Y coordinate }
-    function GetItem (AY : Integer) : TiTreeItem;
-      {$IFNDEF DEBUG}inline;{$ENDIF}
+    function GetItem (AY : Integer) : TiTreeItem; {$IFNDEF DEBUG}inline;{$ENDIF}
     { Calculate collapse button rect }
-    function GetCollapseButtonRect (AItem : TiTreeItem) : TRect;
-      {$IFNDEF DEBUG}inline;{$ENDIF}
+    function GetCollapseButtonRect (AItem : TiTreeItem) : TRect; {$IFNDEF DEBUG}
+      inline;{$ENDIF}
 
-    { Set control item antialias font }
-    procedure SetElementFontAntialias (AFontAntialias : Boolean);
-      {$IFNDEF DEBUG}inline;{$ENDIF}
     { Set control item height }
-    procedure SetElementHeight (AHeight : Cardinal);
-      {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure SetElementHeight (AHeight : Cardinal); {$IFNDEF DEBUG}inline;
+      {$ENDIF}
     { Set control label title padding sizes }
-    procedure SetElementLabelPadding (APadding : TPadding);
-      {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure SetElementLabelPadding (APadding : TPadding); {$IFNDEF DEBUG}
+      inline;{$ENDIF}
+    { Set control label title margin sizes }
+    procedure SetElementLabelMargin (AMargin : TMargin); {$IFNDEF DEBUG}inline;
+      {$ENDIF}
     { Set control label title round rect radius size }
-    procedure SetElementLabelRoundRect (ARound : Cardinal);
-      {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure SetElementLabelRoundRect (ARound : Cardinal); {$IFNDEF DEBUG}
+      inline;{$ENDIF}
     { Set control item text padding }
-    procedure SetElementTextPadding (APadding : TPadding);
-      {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure SetElementTextPadding (APadding : TPadding); {$IFNDEF DEBUG}
+      inline;{$ENDIF}
+    { Set control item text margin }
+    procedure SetElementTextMargin (AMargin : TMargin); {$IFNDEF DEBUG}inline;
+      {$ENDIF}
     { Set control item draw level offset }
-    procedure SetElementDrawOffset (AOffset : Integer);
-      {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure SetElementDrawOffset (AOffset : Integer); {$IFNDEF DEBUG}inline;
+      {$ENDIF}
     { Set control OnMouseUp callback }
     procedure ControlMouseUp (Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -334,23 +336,28 @@ type
     property Height;
     property Top;
     property Width;
-    { Elements draw text font antialias }
-    property FontAntialias : Boolean read FItemFontAntialias write
-      SetElementFontAntialias default True;
+    { Control draw bitmap canvas }
+    property BitmapCanvas : TBGRABitmap read FBitmapCanvas;
     { Control elements }
     property Items : TiTreeItemList read FItems;
     { Element item height }
     property ItemHeight : Cardinal read FItemHeight write SetElementHeight
       default 17;
     { Element label padding }
-    property ItemLabelPadding : TPadding read FItemLabel.Padding write
+    property LabelPadding : TPadding read FItemLabel.Padding write
       SetElementLabelPadding;
+    { Element label margin }
+    property LabelMargin : TMargin read FItemLabel.Margin write
+      SetElementLabelMargin;
     { Element label round rect radius }
-    property ItemLabelRoundRect : Cardinal read FItemLabel.DrawRoundRectRadius
+    property LabelRoundRect : Cardinal read FItemLabel.DrawRoundRectRadius
       write SetElementLabelRoundRect default 17;
     { Element text padding }
-    property ItemTextPadding : TPadding read FItemText.Padding write
+    property TextPadding : TPadding read FItemText.Padding write
       SetElementTextPadding;
+    { Element text margin }
+    property TextMargin : TMargin read FItemText.Margin write
+      SetElementTextMargin;
     { Element draw level offset }
     property ItemDrawOffset : Integer read FItemDrawOffset write
       SetElementDrawOffset;
@@ -438,7 +445,8 @@ begin
   Result := (ALeft.FontName = ARight.FontName) and (ALeft.FontStyle =
     ARight.FontStyle) and (ALeft.FontSize = ARight.FontSize) and
     (ALeft.FontColor = ARight.FontColor) and (ALeft.FontQuality =
-    ARight.FontQuality) and (ALeft.FontOrientation = ARight.FontOrientation);
+    ARight.FontQuality) and (ALeft.FontAntialias = ARight.FontAntialias) and
+    (ALeft.FontOrientation = ARight.FontOrientation);
 end;
 
 function Padding(ATop, ARight, ABottom, ALeft: Integer): TPadding;
@@ -551,6 +559,12 @@ begin
       (IsItemDrawable(AItem.Parent));
 end;
 
+procedure TiCustomTreeView.SetElementLabelMargin(AMargin: TMargin);
+begin
+  if AMargin <> FItemLabel.Margin then
+    FItemLabel.Margin := AMargin;
+end;
+
 procedure TiCustomTreeView.UpdateItemDrawOffset(AItem: TiTreeItem);
 begin
   if AItem.IsRoot then
@@ -605,17 +619,6 @@ begin
   );
 end;
 
-procedure TiCustomTreeView.SetElementFontAntialias(AFontAntialias: Boolean);
-begin
-  if FItemFontAntialias <> AFontAntialias then
-  begin
-    FItemFontAntialias := AFontAntialias;
-    FBitmapCanvas.FontAntialias := FItemFontAntialias;
-    RenderControl;
-    Invalidate;
-  end;
-end;
-
 procedure TiCustomTreeView.SetElementHeight(AHeight: Cardinal);
 begin
   if FItemHeight <> AHeight then
@@ -631,6 +634,16 @@ begin
   if FItemLabel.Padding <> APadding then
   begin
     FItemLabel.Padding := APadding;
+    RenderControl;
+    Invalidate;
+  end;
+end;
+
+procedure TiCustomTreeView.SetElementTextMargin(AMargin: TMargin);
+begin
+  if FItemText.Margin <> AMargin then
+  begin
+    FItemText.Margin := AMargin;
     RenderControl;
     Invalidate;
   end;
@@ -819,6 +832,7 @@ begin
   FBitmapCanvas.SetSize(Max(FDrawItemMaxTextLength, ClientWidth),
     Max(FDrawItems.Count * FItemHeight, ClientHeight));
   FBitmapCanvas.Fill(BGRAWhite);
+  FBitmapCanvas.FontAntialias := opFontAntialias in FOptions;
 
   CalculateScrollRanges;
 
@@ -878,10 +892,11 @@ begin
   inherited Create(AOwner);
   with GetControlClassDefaultSize do
     SetInitialBounds(0, 0, cx, cy);
+  FOptions := [opClickSelection, opShowCollapseButton, opFontAntialias];
   FBitmapCanvas := TBGRABitmap.Create(ClientWidth, ClientHeight, BGRAWhite);
+  FBitmapCanvas.FontAntialias := opFontAntialias in FOptions;
   FItems := TiTreeItemList.Create(True);
   FDrawItems := TiDrawTreeItemList.Create;
-  FItemFontAntialias := True;
   FItemMaxTextLength := 0;
   FDrawItemMaxTextLength := 0;
   FItemHeight := 17;
@@ -896,7 +911,6 @@ begin
   FItemDrawOffset := 12;
   FSelectedItem.Element := nil;
   FSelectedItem.ElementLabelColor := ColorToBGRA(clYellow);
-  FOptions := [opClickSelection, opShowCollapseButton];
   OnMouseUp := @ControlMouseUp;
 end;
 
