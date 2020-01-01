@@ -44,8 +44,6 @@ uses
   Classes, SysUtils, Graphics, fgl, pascurl, pasmyhtml;
 
 type
-  TRootZoneDatabaseEnumerator = class;
-
   { TRootZoneDatabase }
   { Database class contains root zones information }
   TRootZoneDatabase = class
@@ -79,27 +77,25 @@ type
         property Value : string read FValue;
       end;
 
-      TDomainZone = class;
-
-      { TDomainZoneEnumerator }
-      { Domain zone enumerator }
-      TDomainZoneEnumerator = class
-      protected
-        FDomain : TDomainZone;
-        FPosition : Integer;
-        function GetCurrent : TInfoElement;
-      public
-        constructor Create (ADomainZone : TDomainZone);
-        function MoveNext : Boolean;
-        property Current : TInfoElement read GetCurrent;
-      end;
-
       { TDomainZone }
       { Root zone element }
       TDomainZone = class
       protected
         type
           TInfoElementList = specialize TFPGObjectList<TInfoElement>;
+
+          { TDomainZoneEnumerator }
+          { Domain zone enumerator }
+          TDomainZoneEnumerator = class
+          protected
+            FDomain : TDomainZone;
+            FPosition : Integer;
+            function GetCurrent : TInfoElement;
+          public
+            constructor Create (ADomainZone : TDomainZone);
+            function MoveNext : Boolean;
+            property Current : TInfoElement read GetCurrent;
+          end;
       protected
         FInfo : TInfoElementList;
         FName : string;
@@ -112,6 +108,19 @@ type
         procedure Merge (ADomain : TDomainZone);
       public
         property Name : string read FName;
+      end;
+
+      { TRootZoneDatabaseEnumerator }
+      { Root zone database enumerator }
+      TRootZoneDatabaseEnumerator = class
+      protected
+        FDatabase : TRootZoneDatabase;
+        FPosition : Integer;
+        function GetCurrent : TRootZoneDatabase.TDomainZone;
+      public
+        constructor Create (ADatabase : TRootZoneDatabase);
+        function MoveNext : Boolean;
+        property Current : TRootZoneDatabase.TDomainZone read GetCurrent;
       end;
 
   protected
@@ -129,19 +138,6 @@ type
     procedure AddDomain (ADomain : TDomainZone);
   public
     property Count : Integer read GetCount;
-  end;
-
-  { TRootZoneDatabaseEnumerator }
-  { Root zone database enumerator }
-  TRootZoneDatabaseEnumerator = class
-  protected
-    FDatabase : TRootZoneDatabase;
-    FPosition : Integer;
-    function GetCurrent : TRootZoneDatabase.TDomainZone;
-  public
-    constructor Create (ADatabase : TRootZoneDatabase);
-    function MoveNext : Boolean;
-    property Current : TRootZoneDatabase.TDomainZone read GetCurrent;
   end;
 
   { TRootZoneDatabaseParser }
@@ -178,7 +174,7 @@ type
     procedure ParseWikipediaEachTableCallback (ANode : TParser.TTagNode;
       {%H-}AData : Pointer = nil);
   public
-    function GetEnumerator : TRootZoneDatabaseEnumerator;
+    function GetEnumerator : TRootZoneDatabase.TRootZoneDatabaseEnumerator;
   public
     constructor Create (ADatabase : TRootZoneDatabase; ASession : TSession;
       AParser : TParser);
@@ -192,7 +188,7 @@ type
   private
     FZoneDatabase : TRootZoneDatabase;
   public
-    function GetEnumerator : TRootZoneDatabaseEnumerator;
+    function GetEnumerator : TRootZoneDatabase.TRootZoneDatabaseEnumerator;
   public
     constructor Create (ADatabase : TRootZoneDatabase);
     destructor Destroy; override;
@@ -204,7 +200,8 @@ implementation
 
 { TRootZoneDatabaseStorage }
 
-function TRootZoneDatabaseStorage.GetEnumerator: TRootZoneDatabaseEnumerator;
+function TRootZoneDatabaseStorage.GetEnumerator:
+  TRootZoneDatabase.TRootZoneDatabaseEnumerator;
 begin
   Result := FZoneDatabase.GetEnumerator;
 end;
@@ -906,7 +903,8 @@ begin
       TParser.TTransform.Create.TagNodeTransform(@ParseWikipedia5Callback));
 end;
 
-function TRootZoneDatabaseParser.GetEnumerator: TRootZoneDatabaseEnumerator;
+function TRootZoneDatabaseParser.GetEnumerator:
+  TRootZoneDatabase.TRootZoneDatabaseEnumerator;
 begin
   Result := FZoneDatabase.GetEnumerator;
 end;
@@ -934,39 +932,42 @@ end;
 
 { TRootZoneDatabaseEnumerator }
 
-function TRootZoneDatabaseEnumerator.GetCurrent: TRootZoneDatabase.TDomainZone;
+function TRootZoneDatabase.TRootZoneDatabaseEnumerator.GetCurrent:
+  TRootZoneDatabase.TDomainZone;
 begin
   Result := FDatabase.FRootZones.Data[FPosition];
   Inc(FPosition);
 end;
 
-constructor TRootZoneDatabaseEnumerator.Create(ADatabase: TRootZoneDatabase);
+constructor TRootZoneDatabase.TRootZoneDatabaseEnumerator.Create(ADatabase:
+  TRootZoneDatabase);
 begin
   FDatabase := ADatabase;
   FPosition := 0;
 end;
 
-function TRootZoneDatabaseEnumerator.MoveNext: Boolean;
+function TRootZoneDatabase.TRootZoneDatabaseEnumerator.MoveNext: Boolean;
 begin
   Result := FPosition < FDatabase.FRootZones.Count;
 end;
 
 { TRootZoneDatabase.TDomainZoneEnumerator }
 
-function TRootZoneDatabase.TDomainZoneEnumerator.GetCurrent: TInfoElement;
+function TRootZoneDatabase.TDomainZone.TDomainZoneEnumerator.GetCurrent:
+  TInfoElement;
 begin
   Result := FDomain.FInfo.Items[FPosition];
   Inc(FPosition);
 end;
 
-constructor TRootZoneDatabase.TDomainZoneEnumerator.Create(
+constructor TRootZoneDatabase.TDomainZone.TDomainZoneEnumerator.Create(
   ADomainZone: TDomainZone);
 begin
   FDomain := ADomainZone;
   FPosition := 0;
 end;
 
-function TRootZoneDatabase.TDomainZoneEnumerator.MoveNext: Boolean;
+function TRootZoneDatabase.TDomainZone.TDomainZoneEnumerator.MoveNext: Boolean;
 begin
   Result := FPosition < FDomain.FInfo.Count;
 end;
@@ -1007,9 +1008,10 @@ end;
 
 { TRootZoneDatabase.TDomainZone }
 
-function TRootZoneDatabase.TDomainZone.GetEnumerator: TDomainZoneEnumerator;
+function TRootZoneDatabase.TDomainZone.GetEnumerator:
+  TDomainZone.TDomainZoneEnumerator;
 begin
-  Result := TRootZoneDatabase.TDomainZoneEnumerator.Create(Self);
+  Result := TRootZoneDatabase.TDomainZone.TDomainZoneEnumerator.Create(Self);
 end;
 
 constructor TRootZoneDatabase.TDomainZone.Create;
