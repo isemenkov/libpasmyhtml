@@ -47,6 +47,7 @@ type
     procedure TearDown; override;
   published
     procedure TestDatabaseCount;
+    procedure TestDatabaseElements;
   end;
 
 implementation
@@ -330,6 +331,41 @@ begin
   FDatabase.AddDomain(Zone);
 
   AssertTrue('Error database element count', FDatabase.Count = 1);
+end;
+
+procedure TRootZoneDatabaseTestCase.TestDatabaseElements;
+var
+  Zone1, Zone2, Zone : TRootZoneDatabase.TDomainZone;
+  Element : TRootZoneDatabase.TInfoElement;
+  Counter : Integer;
+begin
+  Counter := 0;
+
+  Zone1 := TRootZoneDatabase.TDomainZone.Create;
+  Zone1.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_NAME, 'Zone1'));
+  Zone1.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_MANAGER, 'Manager'));
+  FDatabase.AddDomain(Zone1);
+
+  Zone2 := TRootZoneDatabase.TDomainZone.Create;
+  Zone2.AddInfo(TRootZoneDatabase.TInfoElement.Create(INFO_ENTITY, 'Entity'));
+  FDatabase.AddDomain(Zone2);
+
+  AssertTrue('Error database element count', FDatabase.Count = 2);
+
+  for Zone in FDatabase do
+    for Element in Zone do
+      case Element.InfoType of
+        INFO_MANAGER : begin
+          Inc(Counter);
+          AssertTrue('Error domain zone manager element is not correct',
+            Element.Value = 'Manager');
+        end;
+        INFO_ENTITY : begin
+          Inc(Counter);
+          AssertTrue('Error domain zone entity element is not correct',
+            Element.Value = 'Entity');
+        end;
+      end;
 end;
 
 initialization
