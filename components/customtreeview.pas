@@ -36,7 +36,7 @@ interface
 
 uses
   Classes, SysUtils, LResources, Forms, Controls, Graphics, Dialogs, Types,
-  Math, BGRABitmap, BGRABitmapTypes, fgl, pasmyhtml;
+  Math, BGRABitmap, BGRABitmapTypes, fgl;
 
 type
 
@@ -54,15 +54,22 @@ type
     Model : IListModel;
     Renderer : IListRenderer;
   public
-    constructor Create (TheOwner : TComponent); override;
-    destructor Destroy; override;
+    //constructor Create (TheOwner : TComponent); override;
+    //destructor Destroy; override;
   end;
+
+  { TiTreeViewItem }
 
   generic TiTreeViewItem<TItemData> = class
   protected
-    FParent : Pointer;
+    type
+      TCurrentType = specialize TiTreeViewItem<TItemData>;
+      PCurrentType = ^TCurrentType;
+  protected
+    FParent : PCurrentType;
     FChildrens : TList;
     FCollapsed : Boolean;
+    FItemData : TItemData;
     FRendererData : Pointer;
     FCustomData : Pointer;
 
@@ -72,9 +79,9 @@ type
       inline;{$ENDIF}
     procedure SetParent (AParent : specialize TiTreeViewItem<TItemData>);
       {$IFNDEF DEBUG}inline;{$ENDIF}
-    function GetItem (AIndex : Cardinal) : specialize TiTreeViewItem<TItemData>;
-      {$IFNDEF DEBUG}inline;{$ENDIF}
-    function SetItem (AIndex : Cardinal; AItem :
+    function GetChildren (AIndex : Cardinal) :
+      specialize TiTreeViewItem<TItemData>; {$IFNDEF DEBUG}inline;{$ENDIF}
+    procedure SetChildren (AIndex : Cardinal; AItem :
       specialize TiTreeViewItem<TItemData>); {$IFNDEF DEBUG}inline;{$ENDIF}
     function GetItemData : TItemData; {$IFNDEF DEBUG}inline;{$ENDIF}
   protected
@@ -82,24 +89,28 @@ type
     property HasChildrens : Boolean read IsElementHasChildrens;
     property Parent : specialize TiTreeViewItem<TItemData> read GetParent
       write SetParent;
-    property Items[Index : Cardinal] : specialize TiTreeViewItem<TItemData>
-      read GetItem write SetItem;
-    property Collapsed : Boolean read FCollapsed write FCollapsed;
+    property Childrens[Index : Cardinal] : specialize TiTreeViewItem<TItemData>
+      read GetChildren write SetChildren;
+    property ItemData : TItemData read FItemData write FItemData;
     property RendererData : Pointer read FRendererData write FRendererData;
     property CustomData : Pointer read FCustomData write FCustomData;
+    property Collapsed : Boolean read FCollapsed write FCollapsed;
+
+    function AddChildren (AItem : specialize TiTreeViewItem<TItemData>) :
+      specialize TiTreeViewItem<TItemData>;
   public
-    constructor Create;
+    constructor Create (AItemData : TItemData);
     destructor Destroy; override;
   end;
 
-  generic TiTreeViewModel<TiTreeViewItem> = class (TInterfacedObject,
-    specialize IListModel<TiTreeViewItem>)
+  generic TiTreeViewModel<TTreeItem> = class (TInterfacedObject,
+    specialize IListModel<TTreeItem>)
   protected
     type
-      PiTreeViewItem = ^TiTreeViewItem;
+      PTreeItem = ^TTreeItem;
   protected
-    FItemsList : specialize TFPGObjectList<TiTreeViewItem>;
-    FDrawItemsList : specialize TFPGList<PiTreeViewItem>;
+    FItemsList : specialize TFPGObjectList<TTreeItem>;
+    FDrawItemsList : specialize TFPGList<PTreeItem>;
   end;
 
   TiTreeViewRenderer = class (TInterfacedObject, IListRenderer)
@@ -108,5 +119,79 @@ type
 
 implementation
 
+
+{ TiTreeViewItem }
+
+function TiTreeViewItem.IsElementRoot: Boolean;
+begin
+  Result := (FParent = nil);
+end;
+
+function TiTreeViewItem.IsElementHasChildrens: Boolean;
+begin
+  Result := (FChildrens.Count > 0);
+end;
+
+function TiTreeViewItem.GetParent: specialize TiTreeViewItem<TItemData>;
+begin
+  if not IsRoot then
+    Result := TCurrentType(FParent^)
+  else
+    Result := nil;
+end;
+
+procedure TiTreeViewItem.SetParent(AParent:
+  specialize TiTreeViewItem<TItemData>);
+begin
+  FParent := Pointer(AParent);
+end;
+
+function TiTreeViewItem.GetChildren(AIndex: Cardinal):
+  specialize TiTreeViewItem<TItemData>;
+begin
+  if FChildrens.Count > AIndex then
+    Result := PCurrentType(FChildrens[AIndex])^
+  else
+    Result := nil;
+end;
+
+procedure TiTreeViewItem.SetChildren(AIndex: Cardinal;
+  AItem: specialize TiTreeViewItem<TItemData>);
+begin
+  if FChildrens.Count > AIndex then
+    FChildrens[AIndex] := Pointer(AItem);
+end;
+
+function TiTreeViewItem.GetItemData: TItemData;
+begin
+  Result := FItemData;
+end;
+
+function TiTreeViewItem.AddChildren(AItem: specialize TiTreeViewItem<TItemData>
+  ): specialize TiTreeViewItem<TItemData>;
+begin
+  FChildrens.Add(Pointer(AItem));
+  AItem.FParent := Pointer(Self);
+  Result := PCurrentType(FChildrens[FChildrens.Count - 1])^;
+end;
+
+constructor TiTreeViewItem.Create (AItemData : TItemData);
+begin
+  inherited Create;
+  FParent := nil;
+  FChildrens := TList.Create;
+  FCollapsed := False;
+  FItemData := AItemData;
+  FRendererData := nil;
+  FCustomData := nil;
+end;
+
+destructor TiTreeViewItem.Destroy;
+begin
+  inherited Destroy;
+  // for Item in FChildrens do
+  //   FreeAndNil(Item);
+  FreeAndNil(FChildrens);
+end;
 
 end.
