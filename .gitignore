@@ -5,10 +5,15 @@
 /examples/whois/unit-tests/UnitTests.ico
 /examples/whois/unit-tests/UnitTests.fpcunit.ini
 
-#unit-test
+#unit-tests
 /unit-tests/libpasmyhtml_testproject
 /unit-tests/libpasmyhtml_testproject.fpcunit.ini
 /unit-tests/libpasmyhtml_testproject.ico
+
+#/components/unit-tests
+/components/unit-tests/components_testproject
+/components/unit-tests/components_testproject.fpcunit.ini
+/components/unit-tests/components_testproject.ico
 
 # Delphi compiler-generated binaries (safe to delete)
 *.exe
