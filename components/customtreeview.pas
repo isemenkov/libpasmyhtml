@@ -63,11 +63,25 @@ type
   generic TiTreeViewItem<TItemData> = class
   protected
     type
-      TCurrentType = specialize TiTreeViewItem<TItemData>;
-      PCurrentType = ^TCurrentType;
+      TTreeItemData = class
+      protected
+        type
+          PItemData = ^TItemData;
+          PTreeItemData = ^TTreeItemData;
+      protected
+        FParent : PTreeItemData;
+        FPrev : PTreeItemData;
+        FNext : PTreeItemData;
+        FData : TItemData;
+      public
+        constructor Create;
+        destructor Destroy; override;
+
+        function AddChildren (AItemData : TItemData) : PTreeItemData;
+        procedure DeleteChildren (ATreeItemData : PTreeItemData);
+      end;
   protected
-    FParent : PCurrentType;
-    FChildrens : TList;
+    FItem : TTreeItemData;
     FCollapsed : Boolean;
     FItemData : TItemData;
     FRendererData : Pointer;
@@ -135,7 +149,7 @@ end;
 function TiTreeViewItem.GetParent: specialize TiTreeViewItem<TItemData>;
 begin
   if not IsRoot then
-    Result := TCurrentType(FParent^)
+    Result := TCurrentType(FParent)
   else
     Result := nil;
 end;
@@ -150,7 +164,7 @@ function TiTreeViewItem.GetChildren(AIndex: Cardinal):
   specialize TiTreeViewItem<TItemData>;
 begin
   if FChildrens.Count > AIndex then
-    Result := PCurrentType(FChildrens[AIndex])^
+    Result := TCurrentType(FChildrens[AIndex])
   else
     Result := nil;
 end;
@@ -172,7 +186,7 @@ function TiTreeViewItem.AddChildren(AItem: specialize TiTreeViewItem<TItemData>
 begin
   FChildrens.Add(Pointer(AItem));
   AItem.FParent := Pointer(Self);
-  Result := PCurrentType(FChildrens[FChildrens.Count - 1])^;
+  Result := TCurrentType(FChildrens[FChildrens.Count - 1]);
 end;
 
 constructor TiTreeViewItem.Create (AItemData : TItemData);
