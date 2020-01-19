@@ -61,60 +61,42 @@ type
   { TiTreeViewItem }
 
   generic TiTreeViewItem<TItemData> = class
-  protected
+  public
     type
-      TTreeItemData = class
+      PTreeItemElement = ^TTreeItemElement;
+
+      { TTreeItemElement }
+
+      TTreeItemElement = class
       protected
-        type
-          PItemData = ^TItemData;
-          PTreeItemData = ^TTreeItemData;
-      protected
-        FParent : PTreeItemData;
-        FPrev : PTreeItemData;
-        FNext : PTreeItemData;
         FData : TItemData;
+        FChildrensHead : PTreeItemElement;
+        FChildrensLast : PTreeItemElement;
+        FPrev : PTreeItemElement;
+        FNext : PTreeItemElement;
+      protected
+        function GetValue : TItemData; inline;
+        procedure SetValue (AValue : TItemData); inline;
       public
-        constructor Create;
+        constructor Create (AData : TItemData);
         destructor Destroy; override;
 
-        function AddChildren (AItemData : TItemData) : PTreeItemData;
-        procedure DeleteChildren (ATreeItemData : PTreeItemData);
+        function AddChildren (AData : TItemData) : TTreeItemElement;
+        function HasNext : Boolean; inline;
+        function Next : TTreeItemElement; inline;
+        function HasChildrens : Boolean; inline;
+        function Children : TTreeItemElement; inline;
+
+        property Value : TItemData read GetValue write SetValue;
       end;
   protected
-    FItem : TTreeItemData;
-    FCollapsed : Boolean;
-    FItemData : TItemData;
-    FRendererData : Pointer;
-    FCustomData : Pointer;
 
-    function IsElementRoot : Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
-    function IsElementHasChildrens : Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
-    function GetParent : specialize TiTreeViewItem<TItemData>; {$IFNDEF DEBUG}
-      inline;{$ENDIF}
-    procedure SetParent (AParent : specialize TiTreeViewItem<TItemData>);
-      {$IFNDEF DEBUG}inline;{$ENDIF}
-    function GetChildren (AIndex : Cardinal) :
-      specialize TiTreeViewItem<TItemData>; {$IFNDEF DEBUG}inline;{$ENDIF}
-    procedure SetChildren (AIndex : Cardinal; AItem :
-      specialize TiTreeViewItem<TItemData>); {$IFNDEF DEBUG}inline;{$ENDIF}
-    function GetItemData : TItemData; {$IFNDEF DEBUG}inline;{$ENDIF}
-  protected
-    property IsRoot : Boolean read IsElementRoot;
-    property HasChildrens : Boolean read IsElementHasChildrens;
-    property Parent : specialize TiTreeViewItem<TItemData> read GetParent
-      write SetParent;
-    property Childrens[Index : Cardinal] : specialize TiTreeViewItem<TItemData>
-      read GetChildren write SetChildren;
-    property ItemData : TItemData read FItemData write FItemData;
-    property RendererData : Pointer read FRendererData write FRendererData;
-    property CustomData : Pointer read FCustomData write FCustomData;
-    property Collapsed : Boolean read FCollapsed write FCollapsed;
 
-    function AddChildren (AItem : specialize TiTreeViewItem<TItemData>) :
-      specialize TiTreeViewItem<TItemData>;
+
+
+
   public
-    constructor Create (AItemData : TItemData);
-    destructor Destroy; override;
+
   end;
 
   generic TiTreeViewModel<TTreeItem> = class (TInterfacedObject,
@@ -134,78 +116,83 @@ type
 implementation
 
 
-{ TiTreeViewItem }
 
-function TiTreeViewItem.IsElementRoot: Boolean;
+{ TiTreeViewItem.TTreeItemElement }
+
+function TiTreeViewItem.TTreeItemElement.GetValue: TItemData;
 begin
-  Result := (FParent = nil);
+  Result := FData;
 end;
 
-function TiTreeViewItem.IsElementHasChildrens: Boolean;
+procedure TiTreeViewItem.TTreeItemElement.SetValue(AValue: TItemData);
 begin
-  Result := (FChildrens.Count > 0);
+  FData := AValue;
 end;
 
-function TiTreeViewItem.GetParent: specialize TiTreeViewItem<TItemData>;
+constructor TiTreeViewItem.TTreeItemElement.Create(AData: TItemData);
 begin
-  if not IsRoot then
-    Result := TCurrentType(FParent)
-  else
-    Result := nil;
+  FData := AData;
+  FChildrensHead := nil;
+  FChildrensLast := nil;
+  FPrev := nil;
+  FNext := nil;
 end;
 
-procedure TiTreeViewItem.SetParent(AParent:
-  specialize TiTreeViewItem<TItemData>);
-begin
-  FParent := Pointer(AParent);
-end;
-
-function TiTreeViewItem.GetChildren(AIndex: Cardinal):
-  specialize TiTreeViewItem<TItemData>;
-begin
-  if FChildrens.Count > AIndex then
-    Result := TCurrentType(FChildrens[AIndex])
-  else
-    Result := nil;
-end;
-
-procedure TiTreeViewItem.SetChildren(AIndex: Cardinal;
-  AItem: specialize TiTreeViewItem<TItemData>);
-begin
-  if FChildrens.Count > AIndex then
-    FChildrens[AIndex] := Pointer(AItem);
-end;
-
-function TiTreeViewItem.GetItemData: TItemData;
-begin
-  Result := FItemData;
-end;
-
-function TiTreeViewItem.AddChildren(AItem: specialize TiTreeViewItem<TItemData>
-  ): specialize TiTreeViewItem<TItemData>;
-begin
-  FChildrens.Add(Pointer(AItem));
-  AItem.FParent := Pointer(Self);
-  Result := TCurrentType(FChildrens[FChildrens.Count - 1]);
-end;
-
-constructor TiTreeViewItem.Create (AItemData : TItemData);
-begin
-  inherited Create;
-  FParent := nil;
-  FChildrens := TList.Create;
-  FCollapsed := False;
-  FItemData := AItemData;
-  FRendererData := nil;
-  FCustomData := nil;
-end;
-
-destructor TiTreeViewItem.Destroy;
+destructor TiTreeViewItem.TTreeItemElement.Destroy;
 begin
   inherited Destroy;
-  // for Item in FChildrens do
-  //   FreeAndNil(Item);
-  FreeAndNil(FChildrens);
+end;
+
+function TiTreeViewItem.TTreeItemElement.AddChildren(AData: TItemData
+  ): TTreeItemElement;
+var
+  Element : TTreeItemElement;
+begin
+  Element := TTreeItemElement.Create(AData);
+
+  { ItemElement hasn't childrens }
+  if FChildrensHead = nil then
+  begin
+    FChildrensHead := @Element;
+    Result := Element;
+    Exit;
+  end;
+
+  { Exists only one element }
+  if FChildrensLast = nil then
+  begin
+    FChildrensHead^.FNext := @Element;
+    FChildrensLast := @Element;
+    Element.FPrev := FChildrensHead;
+    Result := Element;
+    Exit;
+  end;
+
+  { Insert next element }
+  FChildrensLast^.FNext := @Element;
+  Element.FPrev := FChildrensLast;
+  FChildrensLast := @Element;
+  Result := Element;
+end;
+
+function TiTreeViewItem.TTreeItemElement.HasNext: Boolean;
+begin
+  Result := FNext <> nil;
+end;
+
+function TiTreeViewItem.TTreeItemElement.Next: TTreeItemElement;
+begin
+  Result := FNext^;
+end;
+
+function TiTreeViewItem.TTreeItemElement.HasChildrens: Boolean;
+begin
+  Result := FChildrensHead <> nil;
+end;
+
+function TiTreeViewItem.TTreeItemElement.Children: TTreeItemElement;
+begin
+  Result := FChildrensHead^;
 end;
 
 end.

@@ -14,28 +14,13 @@ type
   TiTreeViewItemPODTestCase = class(TTestCase)
   public
     type
-      generic TestTreeViewItem<TItemData> =
-        class(specialize TiTreeViewItem<TItemData>)
-      public
-        property IsRoot;
-        property HasChildrens;
-        property Parent;
-        property Childrens;
-        property ItemData;
-        property RendererData;
-        property CustomData;
-        property Collapsed;
-      end;
-
-      TreeViewItemInteger = specialize TestTreeViewItem<Integer>;
+      TIntegerTreeViewItem = specialize TiTreeViewItem<Integer>;
   private
-    TreeViewItem : TreeViewItemInteger;
+    FElement : TIntegerTreeViewItem.TTreeItemElement;
   published
     procedure TestCreate;
-    procedure TestItemValue;
-    procedure TestIsRoot;
-    procedure TestHasChildrens;
-    procedure TestAddChildrens;
+    procedure TestElementAdd;
+    procedure TestElementChildrens;
   end;
 
 implementation
@@ -44,57 +29,49 @@ implementation
 
 procedure TiTreeViewItemPODTestCase.TestCreate;
 begin
-  TreeViewItem := TreeViewItemInteger.Create(25);
+  FElement := TIntegerTreeViewItem.TTreeItemElement.Create(25);
 
-  AssertTrue('Error TiTreeViewItem is nil', TreeViewItem <> nil);
+  AssertTrue('Error TiTreeViewItem is nil', FElement <> nil);
+  AssertTrue('Error TiTreeViewItem value is not correct', FElement.Value = 25);
+  AssertFalse('Error TiTreeViewItem have more one value in list',
+    FElement.HasNext);
 end;
 
-procedure TiTreeViewItemPODTestCase.TestItemValue;
-var
-  Value : Integer;
+procedure TiTreeViewItemPODTestCase.TestElementAdd;
 begin
-  TreeViewItem := TreeViewItemInteger.Create(12);
-  Value := TreeViewItem.ItemData;
+  FElement := TIntegerTreeViewItem.TTreeItemElement.Create(25);
+  FElement.AddChildren(1);
 
-  AssertTrue('Error TiTreeViewItem is nil', TreeViewItem <> nil);
-  AssertTrue('Error TiTreeViewItem value is not correct', Value = 12);
+  AssertTrue('Error TiTreeViewItem is nil', FElement <> nil);
+  AssertTrue('Error TiTreeViewItem value is not correct', FElement.Value = 25);
+  AssertFalse('Error TiTreeViewItem have more one value in list',
+    FElement.HasNext);
+  AssertTrue('Error TiTreeViewItem have childrens element',
+    FElement.HasChildrens);
+  AssertTrue('Error TiTreeViewItem not correct children element value',
+    FElement.Children.Value = 1);
 end;
 
-procedure TiTreeViewItemPODTestCase.TestIsRoot;
+procedure TiTreeViewItemPODTestCase.TestElementChildrens;
 begin
-  TreeViewItem := TreeViewItemInteger.Create(74);
+  FElement := TIntegerTreeViewItem.TTreeItemElement.Create(2);
+  FElement.AddChildren(5);
+  FElement.AddChildren(-43);
+  FElement.AddChildren(190);
 
-  AssertTrue('Error TiTreeViewItem is nil', TreeViewItem <> nil);
-  AssertTrue('Error TiTreeViewItem by default is root item',
-    TreeViewItem.IsRoot = True);
+  AssertTrue('Error TiTreeViewItem is nil', FElement <> nil);
+  AssertTrue('Error TiTreeViewItem value is not correct', FElement.Value = 2);
+  AssertFalse('Error TiTreeViewItem have more one value in list',
+    FElement.HasNext);
+  AssertTrue('Error TitTreeViewItem children element 0 value is not correct',
+    FElement.Children.Value = 5);
+  AssertTrue('Error TitTreeViewItem children element 1 value is not correct',
+    FElement.Children.Next.Value = -43);
+  AssertTrue('Error TitTreeViewItem children element 2 value is not correct',
+    FElement.Children.Next.Next.Value = 190);
 end;
 
-procedure TiTreeViewItemPODTestCase.TestHasChildrens;
-begin
-  TreeViewItem := TreeViewItemInteger.Create(0);
 
-  AssertTrue('Error TiTreeViewItem is nil', TreeViewItem <> nil);
-  AssertTrue('Error TiTreeViewItem by default has no childrens',
-    TreeViewItem.HasChildrens = False);
-end;
-
-procedure TiTreeViewItemPODTestCase.TestAddChildrens;
-var
-  Value : Integer;
-begin
-  TreeViewItem := TreeViewItemInteger.Create(5);
-
-  AssertTrue('Error TiTreeViewItem is nil', TreeViewItem <> nil);
-  AssertTrue('Error TiTreeViewItem by default has no childrens',
-    TreeViewItem.HasChildrens = False);
-
-  TreeViewItem.AddChildren(TreeViewItemInteger.Create(17));
-  AssertTrue('Error TiTreeViewItem haven''t childrens',
-    TreeViewItem.HasChildrens = True);
-
-  Value := TreeViewItem.Childrens[0].ItemData;
-  AssertTrue('Error children item value is not correct', Value = 17);
-end;
 
 initialization
   RegisterTest(TiTreeViewItemPODTestCase);
