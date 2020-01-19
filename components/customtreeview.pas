@@ -61,7 +61,7 @@ type
   { TiTreeViewItem }
 
   generic TiTreeViewItem<TItemData> = class
-  protected
+  public
     type
       PTreeViewItem = ^TTreeViewItem;
       TTreeViewItem = specialize TiTreeViewItem<TItemData>;
@@ -88,11 +88,24 @@ type
     property Value : TItemData read GetValue write SetValue;
   end;
 
+  { TiTreeViewModel }
+
   generic TiTreeViewModel<TTreeItem> = class (TInterfacedObject,
     specialize IListModel<TTreeItem>)
+  public
+    type
+      PTreeViewItem = ^TTreeViewItem;
+      TTreeViewItem = specialize TiTreeViewItem<TTreeItem>;
   protected
+    FHeadElement : PTreeViewItem;
+    FLastElement : PTreeViewItem;
 
+  public
+    constructor Create;
+    destructor Destroy; override;
 
+    function Empty : Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
+    function AddElement (ATreeItem : TTreeItem) : PTreeViewItem;
   end;
 
   TiTreeViewRenderer = class (TInterfacedObject, IListRenderer)
@@ -101,9 +114,53 @@ type
 
 implementation
 
+{ TiTreeViewModel }
 
+constructor TiTreeViewModel.Create;
+begin
+  FHeadElement := nil;
+  FLastElement := nil;
+end;
 
+destructor TiTreeViewModel.Destroy;
+var
+  Elem, Prev : PTreeViewItem;
+begin
+  Elem := FLastElement;
+  while (Elem <> nil) do
+  begin
+    Prev := Elem^.PrevElement;
+    FreeAndNil(Elem);
+    Elem := Prev;
+  end;
 
+  inherited Destroy;
+end;
+
+function TiTreeViewModel.Empty: Boolean;
+begin
+  Result := FHeadElement = nil;
+end;
+
+function TiTreeViewModel.AddElement(ATreeItem: TTreeItem): PTreeViewItem;
+var
+  NewElement : PTreeViewItem;
+begin
+  if Empty then
+  begin
+    New(FHeadElement{%H-});
+    FHeadElement^ := TTreeViewItem.Create(ATreeItem);
+    FLastElement := FHeadElement;
+    Result := FHeadElement;
+    Exit;
+  end;
+
+  New(NewElement{%H-});
+  NewElement^ := TTreeViewItem.Create(ATreeItem);
+  NewElement^.FPrevElement := FLastElement;
+  FLastElement^.FNextElement := NewElement;
+  FLastElement := NewElement;
+end;
 
 { TiTreeViewItem }
 
@@ -164,7 +221,17 @@ begin
 end;
 
 destructor TiTreeViewItem.Destroy;
+var
+  Elem, Prev : PTreeViewItem;
 begin
+  Elem := FLastChildrenElement;
+  while (Elem <> nil) do
+  begin
+    Prev := Elem^.FPrevElement;
+    FreeAndNil(Elem);
+    Elem := Prev;
+  end;
+
   inherited Destroy;
 end;
 
