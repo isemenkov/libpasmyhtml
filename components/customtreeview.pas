@@ -96,6 +96,20 @@ type
     type
       PTreeViewItem = ^TTreeViewItem;
       TTreeViewItem = specialize TiTreeViewItem<TTreeItem>;
+
+      { TiTreeViewModelEnumerator }
+
+      TiTreeViewModelEnumerator = class
+      protected
+        FTreeViewItem : PTreeViewItem;
+        FCurrentItem : PTreeViewItem;
+
+        function GetCurrent : TTreeViewItem;
+      public
+        constructor Create (ATreeViewItem : TTreeViewItem);
+        function MoveNext : Boolean;
+        property Current : TTreeViewItem read GetCurrent;
+      end;
   protected
     FHeadElement : PTreeViewItem;
     FLastElement : PTreeViewItem;
@@ -103,6 +117,8 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+
+    function GetEnumerator : TiTreeViewModelEnumerator;
 
     function Empty : Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
     function AddElement (ATreeItem : TTreeItem) : PTreeViewItem;
@@ -113,6 +129,26 @@ type
   end;
 
 implementation
+
+{ TiTreeViewModel.TiTreeViewModelEnumerator }
+
+function TiTreeViewModel.TiTreeViewModelEnumerator.GetCurrent: TTreeViewItem;
+begin
+  Result := FCurrentItem^;
+  FCurrentItem := FCurrentItem^.NextElement;
+end;
+
+constructor TiTreeViewModel.TiTreeViewModelEnumerator.Create(
+  ATreeViewItem: TTreeViewItem);
+begin
+  FTreeViewItem := ATreeViewItem;
+  FCurrentItem := ATreeViewItem;
+end;
+
+function TiTreeViewModel.TiTreeViewModelEnumerator.MoveNext: Boolean;
+begin
+  Result := FCurrentItem <> nil;
+end;
 
 { TiTreeViewModel }
 
@@ -135,6 +171,11 @@ begin
   end;
 
   inherited Destroy;
+end;
+
+function TiTreeViewModel.GetEnumerator: TiTreeViewModelEnumerator;
+begin
+  Result := TiTreeViewModelEnumerator.Create(FHeadElement^);
 end;
 
 function TiTreeViewModel.Empty: Boolean;
