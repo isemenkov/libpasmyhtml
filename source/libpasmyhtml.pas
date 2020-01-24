@@ -37,12 +37,16 @@ uses
   {$PACKRECORDS C}
 {$ENDIF}
 
-{$IFDEF WINDOWS}
-  const MyHTMLLib = 'libmyhtml.dll';
-{$ENDIF}
-{$IFDEF LINUX}
-  const MyHTMLLib = 'libmyhtml.so';
-{$ENDIF}
+const
+  {$IFDEF WIN32}
+    MyHTMLLib = 'libmyhtml.dll';
+  {$ENDIF}
+  {$IFDEF WIN64}
+    MyHTMLLib = 'libmyhtml-x64.dll';
+  {$ENDIF}
+  {$IFDEF LINUX}
+    MyHTMLLib = 'libmyhtml.so';
+  {$ENDIF}
 
 type
   PPChar = ^PChar;
@@ -289,9 +293,9 @@ type
   pmycore_incoming_buffer_t = ^mycore_incoming_buffer_t;
   mycore_incoming_buffer_t = record
     data : PChar;
-    length : QWord; (* use of data *)
-    size : QWord;   (* size of data *)
-    offset : QWord; (* begin global offset *)
+    length : QWord;             { use of data }
+    size : QWord;               { size of data }
+    offset : QWord;             { begin global offset }
 
     prev : pmycore_incoming_buffer_t;
     next : pmycore_incoming_buffer_t;
@@ -348,7 +352,7 @@ type
     MyTHREAD_TYPE_BATCH                                                 = $0001
   );
 
-  (* thread *)
+  { thread }
   pmythread_context_t = ^mythread_context_t;
   mythread_context_t = record
     id : mythread_id_t;
@@ -387,7 +391,7 @@ type
     opt : mythread_thread_opt_t;
   end;
 
-  (* queue *)
+  { queue }
   ppmythread_queue_node_t = ^pmythread_queue_node_t;
   pmythread_queue_node_t = ^mythread_queue_node_t;
   mythread_queue_node_t = record
@@ -473,7 +477,7 @@ type
     ctx : Pointer) : mystatus_t of object;
 
 
-  (* encoding *)
+  { encoding }
   pmyencoding_t = ^myencoding_t;
   myencoding_t = (
     MyENCODING_DEFAULT                                                  = $0000,
@@ -866,7 +870,7 @@ type
   myhtml_callback_tree_node_f = procedure (tree : pmyhtml_tree_t; node :
     pmyhtml_tree_node_t; ctx : Pointer) of object;
 
-  (* tree *)
+  { tree }
   myhtml_tree_flags = (
     MyHTML_TREE_FLAGS_CLEAN                                             = $0000,
     MyHTML_TREE_FLAGS_SCRIPT                                            = $0001,
@@ -884,7 +888,7 @@ type
     MyHTML_TREE_PARSE_FLAGS_CLEAN                                       = $0000,
     MyHTML_TREE_PARSE_FLAGS_WITHOUT_BUILD_TREE                          = $0001,
     MyHTML_TREE_PARSE_FLAGS_WITHOUT_PROCESS_TOKEN                       = $0003,
-    (* skip ws token, but not for RCDATA, RAWTEXT, CDATA and PLAINTEXT *)
+    { skip ws token, but not for RCDATA, RAWTEXT, CDATA and PLAINTEXT }
     MyHTML_TREE_PARSE_FLAGS_SKIP_WHITESPACE_TOKEN                       = $0004,
     MyHTML_TREE_PARSE_FLAGS_WITHOUT_DOCTYPE_IN_TREE                     = $0008
   );
@@ -912,7 +916,7 @@ type
   pmyhtml_token_attr_index_t = ^myhtml_token_attr_index_t;
   myhtml_token_attr_index_t = type QWord;
 
-  (* tags *)
+  { tags }
   pmyhtml_tag_categories_t = ^myhtml_tag_categories_t;
   myhtml_tag_categories_t = (
     MyHTML_TAG_CATEGORIES_UNDEF                                         = $0000,
@@ -926,7 +930,7 @@ type
     MyHTML_TAG_CATEGORIES_SCOPE_SELECT                                  = $0080
   );
 
-  (* parse *)
+  { parse }
   pmyhtml_tokenizer_state_t = ^myhtml_tokenizer_state_t;
   myhtml_tokenizer_state_t = (
     TOKENIZER_STATE_DATA                                                = $0000,
@@ -1033,7 +1037,7 @@ type
     INSERTION_MODE_LAST_ENTRY                                           = $0017
   );
 
-  (* base *)
+  { base }
   pmyhtml_status_t = ^myhtml_status_t;
   myhtml_status_t = (
     MyHTML_STATUS_OK                                                    = $0000,
@@ -1301,7 +1305,7 @@ type
   end;
 
   myhtml_tree_t = record
-    (* ref *)
+    { ref }
     myhtml : pmyhtml_t;
     mchar : pmchar_async_t;
     token : pmyhtml_token_t;
@@ -1313,14 +1317,14 @@ type
     modest : Pointer;
     context : Pointer;
 
-    (* init id's *)
+    { init id's }
     mcasync_rules_token_id : QWord;
     mcasync_rules_attr_id : QWord;
     mcasync_tree_id : QWord;
 
-    (* mchar_node_id *)
-    (* for rules, or if single mode. *)
-    (* or for main thread only after parsing *)
+    { mchar_node_id }
+    { for rules, or if single mode. }
+    { or for main thread only after parsing }
     mchar_node_id : QWord;
     attr_current : pmyhtml_token_attr_t;
     tmp_tag_id : myhtml_tag_id_t;
@@ -1331,7 +1335,7 @@ type
     incoming_buf : pmycore_incoming_buffer_t;
     incoming_buf_first : pmycore_incoming_buffer_t;
 
-    (* ref for nodes *)
+    { ref for nodes }
     document : pmyhtml_tree_node_t;
     fragment : pmyhtml_tree_node_t;
     node_head : pmyhtml_tree_node_t;
@@ -1340,7 +1344,7 @@ type
     node_form : pmyhtml_tree_node_t;
     doctype : myhtml_tree_doctype_t;
 
-    (* for build tree *)
+    { for build tree }
     active_formatting : pmyhtml_tree_list_t;
     open_elements : pmyhtml_tree_list_t;
     other_elements : pmyhtml_tree_list_t;
@@ -1350,10 +1354,10 @@ type
     stream_buffer : pmyhtml_stream_buffer_t;
     token_last_done : pmyhtml_token_node_t;
 
-    (* for detect namespace out of tree builder *)
+    { for detect namespace out of tree builder }
     token_namespace : pmyhtml_token_node_t;
 
-    (* tree params *)
+    { tree params }
     state : myhtml_tokenizer_state_t;
     state_of_builder : myhtml_tokenizer_state_t;
     insert_mode : myhtml_insertion_mode_t;
@@ -1369,7 +1373,7 @@ type
     encoding_usereq : myencoding_t;
     temp_tag_name : pmyhtml_tree_temp_tag_name_t;
 
-    (* callback *)
+    { callback }
     callback_before_token : myhtml_callback_token_f;
     callback_after_token : myhtml_callback_token_f;
 
@@ -1387,9 +1391,9 @@ type
     tree : pmyhtml_tree_t; { ref }
 
     nodes_obj : pmcobject_async_t; { myhtml_token_node_t }
-    attr_obj : pmcobject_async_t; { myhtml_token_attr_t }
+    attr_obj : pmcobject_async_t;  { myhtml_token_attr_t }
 
-    (* def thread node_id *)
+    { def thread node_id }
     mcasync_token_id : QWord;
     mcasync_attr_id : QWord;
 
@@ -1415,41 +1419,41 @@ type
 
   pmyhtml_data_process_entry_t = ^myhtml_data_process_entry_t;
 
-  (* parser state function *)
+  { parser state function }
   myhtml_tokenizer_state_f = function (tree : pmyhtml_tree_t; token_node :
     pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
     QWord) : QWord of object;
 
-  (* parser insertion mode function *)
+  { parser insertion mode function }
   myhtml_insertion_f = function (tree : pmyhtml_tree_t; token :
     pmyhtml_token_node_t) : Boolean of object;
 
-  (* char references state *)
+  { char references state }
   myhtml_data_process_state_f = function (chref : pmyhtml_data_process_entry_t;
     str : pmycore_string_t; const data : PChar; offset : QWord; size : QWord) :
     QWord of object;
 
-  (* find attribute value functions *)
+  { find attribute value functions }
   myhtml_attribute_value_find_f = function (str_key : pmycore_string_t;
     const value : PChar; value_len : QWord) : Boolean of object;
 
   myhtml_data_process_entry_t = record
-    (* current state for process data *)
+    { current state for process data }
     state : myhtml_data_process_state_f;
 
-    (* for encoding *)
+    { for encoding }
     encoding : myencoding_t;
     res : myencoding_result_t;
 
-    (* temp *)
+    { temp }
     tmp_str_pos_proc : QWord;
     tmp_str_pos : QWord;
     tmp_num : QWord;
 
-    (* current result *)
+    { current result }
     charef_res : charef_entry_result_t;
 
-    (* settings *)
+    { settings }
     is_attributes : Boolean;
     emit_null_char : Boolean;
   end;
@@ -1689,7 +1693,7 @@ function mchar_async_crop_first_chars_without_cache (data : PChar; crop_len :
 function mchar_async_get_size_by_data (const data : PChar) : QWord; cdecl;
   external MyHTMLLib;
 
-// cache
+{ cache }
 function mchar_async_cache_init (cache : pmchar_async_cache_t) : mystatus_t;
   cdecl; external MyHTMLLib;
 function mchar_async_cache_destroy (cache : pmchar_async_cache_t; self_destroy :
@@ -1846,7 +1850,7 @@ function mythread_entry_status (entry : pmythread_entry_t) : mystatus_t; cdecl;
 function mythread_entry_mythread (entry : pmythread_entry_t) : pmythread_t;
   cdecl; external MyHTMLLib;
 
-(* API for ports *)
+{ API for ports }
 function mythread_thread_create (mythread : pmythread_t; process_func :
   mythread_process_f; ctx : Pointer) : Pointer; cdecl; external MyHTMLLib;
 function mythread_thread_join (mythread : pmythread_t; thread : Pointer) :
@@ -1878,7 +1882,7 @@ procedure mythread_nanosleep_destroy (timespec : Pointer); cdecl;
 function mythread_nanosleep_sleep (timespec : Pointer) : mystatus_t; cdecl;
   external MyHTMLLib;
 
-(* callback *)
+{ callback }
 procedure mythread_callback_quit (mythread : pmythread_t; entry :
   pmythread_entry_t; ctx : Pointer); cdecl; external MyHTMLLib;
 {$ENDIF}{MyCORE_BUILD_WITHOUT_THREADS}
@@ -1952,7 +1956,7 @@ function mycore_calloc (num : QWord; size : QWord) : Pointer; cdecl;
   external MyHTMLLib;
 function mycore_free (dst : Pointer) : Pointer; cdecl; external MyHTMLLib;
 
-(* io *)
+{ io }
 function mycore_fopen (const filename : PChar; const mode : PChar) : Pointer;
   cdecl; external MyHTMLLib;
 function mycore_fclose (stream : Pointer) : Integer; cdecl; external MyHTMLLib;
@@ -2099,7 +2103,7 @@ function myencoding_extracting_character_encoding_from_charset_with_found (
 procedure myencoding_string_append (str : pmycore_string_t; const buff :
   PChar; length : QWord; encoding : myencoding_t); cdecl; external MyHTMLLib;
 
-(* append with convert encoding *)
+{ append with convert encoding }
 procedure myencoding_string_append_chunk (str : pmycore_string_t; res :
   pmyencoding_result_t; const buff : PChar; length : QWord; encoding :
   myencoding_t); cdecl; external MyHTMLLib;
@@ -2107,7 +2111,7 @@ procedure myencoding_string_append_one (str : pmycore_string_t; res :
   pmyencoding_result_t; const data : Char; encoding : myencoding_t); cdecl;
   external MyHTMLLib;
 
-(* append with convert encoding lowercase *)
+{ append with convert encoding lowercase }
 procedure myencoding_string_append_lowercase_ascii (str : pmycore_string_t;
   const buff : PChar; length : QWord; encoding : myencoding_t); cdecl;
   external MyHTMLLib;
@@ -2142,7 +2146,7 @@ function myhtml_stream_buffer_entry_destroy (stream_buffer_entry :
 
 (*myhtml/tree.h****************************************************************)
 
-(* list *)
+{ list }
 function myhtml_tree_list_init : pmyhtml_tree_list_t; cdecl; external MyHTMLLib;
 procedure myhtml_tree_list_clean (list : pmyhtml_tree_list_t); cdecl;
   external MyHTMLLib;
@@ -2157,7 +2161,7 @@ procedure myhtml_tree_list_insert_by_index (list : pmyhtml_tree_list_t;
 function myhtml_tree_list_current_node (list : pmyhtml_tree_list_t) :
   pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
 
-(* token list *)
+{ token list }
 function myhtml_tree_token_list_init : pmyhtml_tree_token_list_t; cdecl;
   external MyHTMLLib;
 procedure myhtml_tree_token_list_clean (list : pmyhtml_tree_token_list_t);
@@ -2173,7 +2177,7 @@ procedure myhtml_tree_token_list_append_after_index (list :
 function myhtml_tree_token_list_current_node (list : pmyhtml_tree_token_list_t)
   : pmyhtml_token_node_t; cdecl; external MyHTMLLib;
 
-(* active formatting *)
+{ active formatting }
 function myhtml_tree_active_formatting_init (tree : pmyhtml_tree_t) :
   pmyhtml_tree_list_t; cdecl; external MyHTMLLib;
 procedure myhtml_tree_active_formatting_clean (tree : pmyhtml_tree_t); cdecl;
@@ -2205,7 +2209,7 @@ function myhtml_tree_active_formatting_find (tree : pmyhtml_tree_t; idx :
 function myhtml_tree_active_formatting_current_node (tree : pmyhtml_tree_t) :
   pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
 
-(* open elements *)
+{ open elements }
 function myhtml_tree_open_elements_init (tree : pmyhtml_tree_t) :
   pmyhtml_tree_list_t; cdecl; external MyHTMLLib;
 procedure myhtml_tree_open_elements_clean (tree : pmyhtml_tree_t); cdecl;
@@ -2260,7 +2264,7 @@ function myhtml_tree_appropriate_place_inserting_in_tree (target :
   pmyhtml_tree_node_t; mode : pmyhtml_tree_insertion_mode_t) :
   pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
 
-(* template insertion *)
+{ template insertion }
 function myhtml_tree_template_insertion_init (tree : pmyhtml_tree_t) :
   pmyhtml_tree_insertion_list_t; cdecl; external MyHTMLLib;
 procedure myhtml_tree_template_insertion_clean (tree : pmyhtml_tree_t); cdecl;
@@ -2279,7 +2283,7 @@ function myhtml_tree_adoption_agency_algorithm (tree : pmyhtml_tree_t; token :
 function myhtml_tree_template_insertion_length (tree : pmyhtml_tree_t) : QWord;
   cdecl; external MyHTMLLib;
 
-(* other for a tree *)
+{ other for a tree }
 function myhtml_tree_node_create (tree : pmyhtml_tree_t) : pmyhtml_tree_node_t;
   cdecl; external MyHTMLLib;
 procedure myhtml_tree_node_delete (node : pmyhtml_tree_node_t); cdecl;
@@ -2322,7 +2326,7 @@ function myhtml_tree_node_insert_text (tree : pmyhtml_tree_t; token :
 function myhtml_tree_node_find_parent_by_tag_id (node : pmyhtml_tree_node_t;
   tag_id : myhtml_tag_id_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
 
-(* other *)
+{ other }
 procedure myhtml_tree_wait_for_last_done_token (tree : pmyhtml_tree_t;
   token_for_wait : pmyhtml_token_node_t); cdecl; external MyHTMLLib;
 procedure myhtml_tree_tags_close_p (tree : pmyhtml_tree_t; token :
@@ -2343,7 +2347,7 @@ function myhtml_tree_is_mathml_intergation_point (tree : pmyhtml_tree_t; node :
 function myhtml_tree_is_html_integration_point (tree : pmyhtml_tree_t; node :
   pmyhtml_tree_node_t) : Boolean; cdecl; external MyHTMLLib;
 
-(* temp tag name *)
+{ temp tag name }
 function myhtml_tree_temp_tag_name_init (temp_tag_name :
   pmyhtml_tree_temp_tag_name_t) : mystatus_t; cdecl; external MyHTMLLib;
 procedure myhtml_tree_temp_tag_name_clean (temp_tag_name :
@@ -2358,7 +2362,7 @@ function myhtml_tree_temp_tag_name_append_one (temp_tag_name :
   pmyhtml_tree_temp_tag_name_t; const name : Char) : mystatus_t; cdecl;
   external MyHTMLLib;
 
-(* special token list *)
+{ special token list }
 function myhtml_tree_special_list_init (special :
   pmyhtml_tree_special_token_list_t) : mystatus_t; cdecl; external MyHTMLLib;
 function myhtml_tree_special_list_append (special :
@@ -2372,7 +2376,7 @@ function myhtml_tree_special_list_get_last (special :
 function myhtml_tree_special_list_pop (special :
   pmyhtml_tree_special_token_list_t) : QWord; cdecl; external MyHTMLLib;
 
-(* incoming buffer *)
+{ incoming buffer }
 function myhtml_tree_incoming_buffer_make_data (tree : pmyhtml_tree_t;
   start : QWord; length : QWord) : PChar; cdecl; external MyHTMLLib;
 
@@ -2505,7 +2509,7 @@ function myhtml_namespace_name_entry_by_name (const name : PChar; length :
 
 (*myhtml/mystring.h************************************************************)
 
-(* append with convert encoding with preprocessing *)
+{ append with convert encoding with preprocessing }
 function myhtml_string_append_with_convert_encoding_with_preprocessing (str :
   pmycore_string_t; const buff : PChar; length : QWord; encoding : myencoding_t;
   emit_null_chars : Boolean) : QWord; cdecl; external MyHTMLLib;
@@ -2514,7 +2518,7 @@ function myhtml_string_append_chunk_with_convert_encoding_with_preprocessing
   length : QWord; encoding : myencoding_t; emit_null_chars : Boolean) : QWord;
   cdecl; external MyHTMLLib;
 
-(* append with convert encoding lowercase with preprocessing *)
+{ append with convert encoding lowercase with preprocessing }
 function myhtml_string_append_lowercase_with_convert_encoding_with_preprocessing
   (str : pmycore_string_t; const buff : PChar; length : QWord; encoding :
   myencoding_t; emit_null_chars : Boolean) : QWord; cdecl; external MyHTMLLib;
@@ -2523,7 +2527,7 @@ function myhtml_string_append_lowercase_chunk_with_convert_encoding_with_preproc
   length : QWord; encoding : myencoding_t; emit_null_chars : Boolean) :QWord;
   cdecl; external MyHTMLLib;
 
-(* append with preprocessing *)
+{ append with preprocessing }
 function myhtml_string_before_append_any_preprocessing (str : pmycore_string_t;
   const buff : PChar; length : QWord; last_position : QWord) : QWord; cdecl;
   external MyHTMLLib;
@@ -2928,185 +2932,159 @@ function myhtml_tokenizer_state_script_data_double_escape_end (tree :
 (*                                                                            *)
 (******************************************************************************)
 
-(**
- * Create a MyHTML structure
- *
- * @return pmyhtml_t if successful, otherwise an NULL value.
- *)
+{ Create a MyHTML structure
+
+ @return pmyhtml_t if successful, otherwise an NULL value. }
 function myhtml_create : pmyhtml_t; cdecl; external MyHTMLLib;
 
-(**
- * Allocating and Initialization resources for a MyHTML structure
- *
- * @param[in] pmyhtml_t
- * @param[in] work options, how many threads will be.
- * Default: MyHTML_OPTIONS_PARSE_MODE_SEPARATELY
- *
- * @param[in] thread count, it depends on the choice of work options
- * Default: 1
- *
- * @param[in] queue size for a tokens. Dynamically increasing the specified
- * number here. Default: 4096
- *
- * @return MyHTML_STATUS_OK if successful, otherwise an error status value.
- *)
+{ Allocating and Initialization resources for a MyHTML structure
+
+  @param[in] pmyhtml_t
+  @param[in] work options, how many threads will be.
+  Default: MyHTML_OPTIONS_PARSE_MODE_SEPARATELY
+
+  @param[in] thread count, it depends on the choice of work options
+  Default: 1
+
+  @param[in] queue size for a tokens. Dynamically increasing the specified
+  number here. Default: 4096
+
+  @return MyHTML_STATUS_OK if successful, otherwise an error status value. }
 function myhtml_init (myhtml : pmyhtml_t; opt : myhtml_options_t; thread_count :
   QWord; queue_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
 
-(**
- * Clears queue and threads resources
- *
- * @param[in] pmyhtml_t
- *)
+{ Clears queue and threads resources
+
+  @param[in] pmyhtml_t }
 procedure myhtml_clean (myhtml : pmyhtml_t); cdecl; external MyHTMLLib;
 
-(**
- * Destroy of a MyHTML structure
- *
- * @param[in] pmyhtml_t
- * @return NULL if successful, otherwise an MyHTML structure.
- *)
+{ Destroy of a MyHTML structure
+
+  @param[in] pmyhtml_t
+  @return NULL if successful, otherwise an MyHTML structure. }
 function myhtml_destroy (myhtml : pmyhtml_t) : pmyhtml_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Parsing HTML
- *
- * @param[in] previously created structure pmyhtml_tree_t
- * @param[in] Input character encoding; Default: MyENCODING_UTF_8 or
- *            MyENCODING_DEFAULT or 0
- * @param[in] HTML
- * @param[in] HTML size
- *
- * All input character encoding decode to utf-8
- *
- * @return MyHTML_STATUS_OK if successful, otherwise an error status
- *)
+{ Parsing HTML
+
+  @param[in] previously created structure pmyhtml_tree_t
+  @param[in] Input character encoding; Default: MyENCODING_UTF_8 or
+             MyENCODING_DEFAULT or 0
+  @param[in] HTML
+  @param[in] HTML size
+
+  All input character encoding decode to utf-8
+
+  @return MyHTML_STATUS_OK if successful, otherwise an error status }
 function myhtml_parse (tree : pmyhtml_tree_t; encoding : myencoding_t;
   const html : PChar; html_size : QWord) : mystatus_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Parsing fragment of HTML
- *
- * @param[in] previously created structure pmyhtml_tree_t
- * @param[in] Input character encoding; Default: MyENCODING_UTF_8 or
- *            MyENCODING_DEFAULT or 0
- * @param[in] HTML
- * @param[in] HTML size
- * @param[in] fragment base (root) tag id. Default: MyHTML_TAG_DIV if set 0
- * @param[in] fragment NAMESPACE. Default: MyHTML_NAMESPACE_HTML if set 0
- *
- * All input character encoding decode to utf-8
- *
- * @return MyHTML_STATUS_OK if successful, otherwise an error status
- *)
+{ Parsing fragment of HTML
+
+  @param[in] previously created structure pmyhtml_tree_t
+  @param[in] Input character encoding; Default: MyENCODING_UTF_8 or
+             MyENCODING_DEFAULT or 0
+  @param[in] HTML
+  @param[in] HTML size
+  @param[in] fragment base (root) tag id. Default: MyHTML_TAG_DIV if set 0
+  @param[in] fragment NAMESPACE. Default: MyHTML_NAMESPACE_HTML if set 0
+
+  All input character encoding decode to utf-8
+
+  @return MyHTML_STATUS_OK if successful, otherwise an error status }
 function myhtml_parse_fragment (tree : pmyhtml_tree_t; encoding : myencoding_t;
   const html : PChar; html_size : QWord; tag_id : myhtml_tag_id_t; ns :
   myhtml_namespace_t) : mystatus_t; cdecl; external MyHTMLLib;
 
-(**
- * Parsing HTML in Single Mode.
- * No matter what was said during initialization MyHTML
- *
- * @param[in] previously created structure pmyhtml_tree_t
- * @param[in] Input character encoding; Default: MyENCODING_UTF_8 or
- *            MyENCODING_DEFAULT or 0
- * @param[in] HTML
- * @param[in] HTML size
- *
- * All input character encoding decode to utf-8
- *
- * @return MyHTML_STATUS_OK if successful, otherwise an error status
- *)
+{ Parsing HTML in Single Mode.
+  No matter what was said during initialization MyHTML
+
+  @param[in] previously created structure pmyhtml_tree_t
+  @param[in] Input character encoding; Default: MyENCODING_UTF_8 or
+             MyENCODING_DEFAULT or 0
+  @param[in] HTML
+  @param[in] HTML size
+
+  All input character encoding decode to utf-8
+
+  @return MyHTML_STATUS_OK if successful, otherwise an error status }
 function myhtml_parse_single (tree : pmyhtml_tree_t; encoding : myencoding_t;
   const html : PChar; html_size : QWord) : mystatus_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Parsing fragment of HTML in Single Mode.
- * No matter what was said during initialization MyHTML
- *
- * @param[in] previously created structure pmyhtml_tree_t
- * @param[in] Input character encoding; Default: MyENCODING_UTF_8 or
- *            MyENCODING_DEFAULT or 0
- * @param[in] HTML
- * @param[in] HTML size
- * @param[in] fragment base (root) tag id. Default: MyHTML_TAG_DIV if set 0
- * @param[in] fragment NAMESPACE. Default: MyHTML_NAMESPACE_HTML if set 0
- *
- * All input character encoding decode to utf-8
- *
- * @return MyHTML_STATUS_OK if successful, otherwise an error status
- *)
+{ Parsing fragment of HTML in Single Mode.
+  No matter what was said during initialization MyHTML
+
+  @param[in] previously created structure pmyhtml_tree_t
+  @param[in] Input character encoding; Default: MyENCODING_UTF_8 or
+             MyENCODING_DEFAULT or 0
+  @param[in] HTML
+  @param[in] HTML size
+  @param[in] fragment base (root) tag id. Default: MyHTML_TAG_DIV if set 0
+  @param[in] fragment NAMESPACE. Default: MyHTML_NAMESPACE_HTML if set 0
+
+  All input character encoding decode to utf-8
+
+  @return MyHTML_STATUS_OK if successful, otherwise an error status }
 function myhtml_parse_fragment_single (tree : pmyhtml_tree_t; encoding :
   myencoding_t; const html : PChar; html_size : QWord; tag_id : myhtml_tag_id_t;
   ns : myhtml_namespace_t) : mystatus_t; cdecl; external MyHTMLLib;
 
-(**
- * Parsing HTML chunk. For end parsing call myhtml_parse_chunk_end function
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] HTML
- * @param[in] HTML size
- *
- * @return MyHTML_STATUS_OK if successful, otherwise an error status
- *)
+{ Parsing HTML chunk. For end parsing call myhtml_parse_chunk_end function
+
+  @param[in] pmyhtml_tree_t
+  @param[in] HTML
+  @param[in] HTML size
+
+  @return MyHTML_STATUS_OK if successful, otherwise an error status }
 function myhtml_parse_chunk (tree : pmyhtml_tree_t; const html : PChar;
   html_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
 
-(**
- * Parsing chunk of fragment HTML. For end parsing call myhtml_parse_chunk_end
- * function
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] HTML
- * @param[in] HTML size
- * @param[in] fragment base (root) tag id. Default: MyHTML_TAG_DIV if set 0
- * @param[in] fragment NAMESPACE. Default: MyHTML_NAMESPACE_HTML if set 0
- *
- * @return MyHTML_STATUS_OK if successful, otherwise an error status
- *)
+{ Parsing chunk of fragment HTML. For end parsing call myhtml_parse_chunk_end
+  function
+
+  @param[in] pmyhtml_tree_t
+  @param[in] HTML
+  @param[in] HTML size
+  @param[in] fragment base (root) tag id. Default: MyHTML_TAG_DIV if set 0
+  @param[in] fragment NAMESPACE. Default: MyHTML_NAMESPACE_HTML if set 0
+
+  @return MyHTML_STATUS_OK if successful, otherwise an error status }
 function myhtml_parse_chunk_fragment (tree : pmyhtml_tree_t; const html : PChar;
   html_size : QWord; tag_id : myhtml_tag_id_t; ns : myhtml_namespace_t) :
   mystatus_t; cdecl; external MyHTMLLib;
 
-(**
- * Parsing HTML chunk in Single Mode.
- * No matter what was said during initialization MyHTML
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] HTML
- * @param[in] HTML size
- *
- * @return MyHTML_STATUS_OK if successful, otherwise an error status
- *)
+{ Parsing HTML chunk in Single Mode.
+  No matter what was said during initialization MyHTML
+
+  @param[in] pmyhtml_tree_t
+  @param[in] HTML
+  @param[in] HTML size
+
+  @return MyHTML_STATUS_OK if successful, otherwise an error status }
 function myhtml_parse_chunk_single (tree : pmyhtml_tree_t; const html : PChar;
   html_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
 
-(**
- * Parsing chunk of fragment of HTML in Single Mode.
- * No matter what was said during initialization MyHTML
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] HTML
- * @param[in] HTML size
- * @param[in] fragment base (root) tag id. Default: MyHTML_TAG_DIV if set 0
- * @param[in] fragment NAMESPACE. Default: MyHTML_NAMESPACE_HTML if set 0
- *
- * @return MyHTML_STATUS_OK if successful, otherwise an error status
- *)
+{ Parsing chunk of fragment of HTML in Single Mode.
+  No matter what was said during initialization MyHTML
+
+  @param[in] pmyhtml_tree_t
+  @param[in] HTML
+  @param[in] HTML size
+  @param[in] fragment base (root) tag id. Default: MyHTML_TAG_DIV if set 0
+  @param[in] fragment NAMESPACE. Default: MyHTML_NAMESPACE_HTML if set 0
+
+  @return MyHTML_STATUS_OK if successful, otherwise an error status }
 function myhtml_parse_chunk_fragment_single (tree : pmyhtml_tree_t; const html :
   PChar; html_size : QWord; tag_id : myhtml_tag_id_t; ns : myhtml_namespace_t) :
   mystatus_t; cdecl; external MyHTMLLib;
 
-(**
- * End of parsing HTML chunks
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return MyHTML_STATUS_OK if successful, otherwise an error status
- *)
+{ End of parsing HTML chunks
+
+  @param[in] pmyhtml_tree_t
+
+  @return MyHTML_STATUS_OK if successful, otherwise an error status }
 function myhtml_parse_chunk_end (tree : pmyhtml_tree_t) : mystatus_t; cdecl;
   external MyHTMLLib;
 
@@ -3116,181 +3094,145 @@ function myhtml_parse_chunk_end (tree : pmyhtml_tree_t) : mystatus_t; cdecl;
 (*                                                                            *)
 (******************************************************************************)
 
-(**
- * Create a MyHTML_TREE structure
- *
- * @return pmyhtml_tree_t if successful, otherwise an NULL value.
- *)
+{ Create a MyHTML_TREE structure
+
+  @return pmyhtml_tree_t if successful, otherwise an NULL value. }
 function myhtml_tree_create : pmyhtml_tree_t; cdecl; external MyHTMLLib;
 
-(**
- * Allocating and Initialization resources for a MyHTML_TREE structure
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] pworkmyhtml_t
- *
- * @return MyHTML_STATUS_OK if successful, otherwise an error status
- *)
+{ Allocating and Initialization resources for a MyHTML_TREE structure
+
+  @param[in] pmyhtml_tree_t
+  @param[in] pworkmyhtml_t
+
+  @return MyHTML_STATUS_OK if successful, otherwise an error status }
  function myhtml_tree_init (tree : pmyhtml_tree_t; myhtml : pmyhtml_t) :
    mystatus_t; cdecl; external MyHTMLLib;
 
-(**
- * Get Parse Flags of Tree
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return myhtml_tree_parse_flags_t
- *)
+{ Get Parse Flags of Tree
+
+  @param[in] pmyhtml_tree_t
+
+  @return myhtml_tree_parse_flags_t }
 function myhtml_tree_parse_flags (tree : pmyhtml_tree_t) :
   pmyhtml_tree_parse_flags_t; cdecl; external MyHTMLLib;
 
-(**
- * Set Parse Flags for Tree
- * See enum myhtml_tree_parse_flags in this file
- *
- * @example myhtml_tree_parse_flags_set(tree,
- *                            MyHTML_TREE_PARSE_FLAGS_WITHOUT_BUILD_TREE or
- *                            MyHTML_TREE_PARSE_FLAGS_WITHOUT_DOCTYPE_IN_TREE or
- *                            MyHTML_TREE_PARSE_FLAGS_SKIP_WHITESPACE_TOKEN);
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] parse flags. You can combine their
- *)
+{ Set Parse Flags for Tree
+  See enum myhtml_tree_parse_flags in this file
+
+  @example myhtml_tree_parse_flags_set(tree,
+                             MyHTML_TREE_PARSE_FLAGS_WITHOUT_BUILD_TREE or
+                             MyHTML_TREE_PARSE_FLAGS_WITHOUT_DOCTYPE_IN_TREE or
+                             MyHTML_TREE_PARSE_FLAGS_SKIP_WHITESPACE_TOKEN);
+
+  @param[in] pmyhtml_tree_t
+  @param[in] parse flags. You can combine their }
 procedure myhtml_tree_parse_flags_set (tree : pmyhtml_tree_t; parse_flags :
   myhtml_tree_parse_flags_t); cdecl; external MyHTMLLib;
 
-(**
- * Clears resources before new parsing
- *
- * @param[in] pmyhtml_tree_t
- *)
+{ Clears resources before new parsing
+
+  @param[in] pmyhtml_tree_t }
 procedure myhtml_tree_clean (tree : pmyhtml_tree_t); cdecl; external MyHTMLLib;
 
-(**
- * Add child node to node. If children already exists it will be added to the
- * last
- *
- * @param[in] pmyhtml_tree_node_t The node to which we add child node
- * @param[in] pmyhtml_tree_node_t The node which adds
- *)
+{ Add child node to node. If children already exists it will be added to the
+  last
+
+  @param[in] pmyhtml_tree_node_t The node to which we add child node
+  @param[in] pmyhtml_tree_node_t The node which adds }
 procedure myhtml_tree_node_add_child (root : pmyhtml_tree_node_t; node :
   pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
 
-(**
- * Add a node immediately before the existing node
- *
- * @param[in] pmyhtml_tree_node_t add for this node
- * @param[in] pmyhtml_tree_node_t add this node
- *)
+{ Add a node immediately before the existing node
+
+  @param[in] pmyhtml_tree_node_t add for this node
+  @param[in] pmyhtml_tree_node_t add this node }
 procedure myhtml_tree_node_insert_before (root : pmyhtml_tree_node_t; node :
   pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
 
-(**
- * Add a node immediately after the existing node
- *
- * @param[in] pmyhtml_tree_node_t add for this node
- * @param[in] pmyhtml_tree_node_t add this node
- *)
+{ Add a node immediately after the existing node
+
+  @param[in] pmyhtml_tree_node_t add for this node
+  @param[in] pmyhtml_tree_node_t add this node }
 procedure myhtml_tree_node_insert_after (root : pmyhtml_tree_node_t; node :
   pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
 
-(**
- * Destroy of a MyHTML_TREE structure
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return NULL if successful, otherwise an MyHTML_TREE structure
- *)
+{ Destroy of a MyHTML_TREE structure
+
+  @param[in] pmyhtml_tree_t
+
+  @return NULL if successful, otherwise an MyHTML_TREE structure }
 function myhtml_tree_destroy (tree : pmyhtml_tree_t) : pmyhtml_tree_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Get pmyhtml_t from a pmyhtml_tree_t
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return pmyhtml_t if exists, otherwise a NULL value
- *)
+{ Get pmyhtml_t from a pmyhtml_tree_t
+
+  @param[in] pmyhtml_tree_t
+
+  @return pmyhtml_t if exists, otherwise a NULL value }
 function myhtml_tree_get_myhtml (tree : pmyhtml_tree_t) : pmyhtml_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Get pmyhtml_tag_t from a pmyhtml_tree_t
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return pmyhtml_tag_t if exists, otherwise a NULL value
- *)
+{ Get pmyhtml_tag_t from a pmyhtml_tree_t
+
+  @param[in] pmyhtml_tree_t
+
+  @return pmyhtml_tag_t if exists, otherwise a NULL value }
 function myhtml_tree_get_tag (tree : pmyhtml_tree_t) : pmyhtml_tag_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Get Tree Document (Root of Tree)
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return pmyhtml_tree_node_t if successful, otherwise a NULL value
- *)
+{ Get Tree Document (Root of Tree)
+
+  @param[in] pmyhtml_tree_t
+
+  @return pmyhtml_tree_node_t if successful, otherwise a NULL value }
 function myhtml_tree_get_document (tree : pmyhtml_tree_t) : pmyhtml_tree_node_t;
   cdecl; external MyHTMLLib;
 
-(**
- * Get node HTML (Document -> HTML, Root of HTML Document)
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return pmyhtml_tree_node_t if successful, otherwise a NULL value
- *)
+{ Get node HTML (Document -> HTML, Root of HTML Document)
+
+  @param[in] pmyhtml_tree_t
+
+  @return pmyhtml_tree_node_t if successful, otherwise a NULL value }
 function myhtml_tree_get_node_html (tree : pmyhtml_tree_t) :
   pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
 
-(**
- * Get node HEAD (Document -> HTML -> HEAD)
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return pmyhtml_tree_node_t if successful, otherwise a NULL value
- *)
+{ Get node HEAD (Document -> HTML -> HEAD)
+
+  @param[in] pmyhtml_tree_t
+
+  @return pmyhtml_tree_node_t if successful, otherwise a NULL value }
 function myhtml_tree_get_node_head (tree : pmyhtml_tree_t) :
   pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
 
-(**
- * Get node BODY (Document -> HTML -> BODY)
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return pmyhtml_tree_node_t if successful, otherwise a NULL value
- *)
+{ Get node BODY (Document -> HTML -> BODY)
+
+  @param[in] pmyhtml_tree_t
+
+  @return pmyhtml_tree_node_t if successful, otherwise a NULL value }
  function myhtml_tree_get_node_body (tree : pmyhtml_tree_t) :
    pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
 
-(**
- * Get mchar_async_t object
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return pmchar_async_t if exists, otherwise a NULL value
- *)
+{ Get mchar_async_t object
+
+  @param[in] pmyhtml_tree_t
+
+  @return pmchar_async_t if exists, otherwise a NULL value }
 function myhtml_tree_get_mchar (tree : pmyhtml_tree_t) : pmchar_async_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Get node_id from main thread for mchar_async_t object
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return QWord, node id
- *)
+{ Get node_id from main thread for mchar_async_t object
+
+  @param[in] pmyhtml_tree_t
+
+  @return QWord, node id }
 function myhtml_tree_get_mchar_node_id (tree : pmyhtml_tree_t) : QWord; cdecl;
   external MyHTMLLib;
 
-(**
- * Get first Incoming Buffer
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return pmycore_incoming_buffer_t if successful, otherwise a NULL value
- *)
+{ Get first Incoming Buffer
+
+  @param[in] pmyhtml_tree_t
+
+  @return pmycore_incoming_buffer_t if successful, otherwise a NULL value }
 function myhtml_tree_incoming_buffer_first (tree : pmyhtml_tree_t) :
   pmycore_incoming_buffer_t; cdecl; external MyHTMLLib;
 
