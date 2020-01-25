@@ -3242,557 +3242,471 @@ function myhtml_tree_incoming_buffer_first (tree : pmyhtml_tree_t) :
 (*                                                                            *)
 (******************************************************************************)
 
-(**
- * Get first (begin) node of tree
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return pmyhtml_tree_node_t if successful, otherwise a NULL value
- *)
+{ Get first (begin) node of tree
+
+  @param[in] pmyhtml_tree_t
+
+  @return pmyhtml_tree_node_t if successful, otherwise a NULL value }
 function myhtml_node_first (tree : pmyhtml_tree_t) : pmyhtml_tree_node_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Get nodes by tag id
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] pmyhtml_collection_t, creates new collection if NULL
- * @param[in] tag id
- * @param[out] status of this operation
- *
- * @return pmyhtml_collection_t if successful, otherwise an NULL value
- *)
+{ Get nodes by tag id
+
+  @param[in] pmyhtml_tree_t
+  @param[in] pmyhtml_collection_t, creates new collection if NULL
+  @param[in] tag id
+  @param[out] status of this operation
+
+  @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_tag_id (tree : pmyhtml_tree_t; collection :
   pmyhtml_collection_t; tag_id : pmyhtml_tag_id_t; status : pmystatus_t) :
   pmyhtml_collection_t; cdecl; external MyHTMLLib;
 
-(**
- * Get nodes by tag name
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] pmyhtml_collection_t, creates new collection if NULL
- * @param[in] tag name
- * @param[in] tag name length
- * @param[out] status of this operation, optional
- *
- * @return pmyhtml_collection_t if successful, otherwise an NULL value
- *)
+{ Get nodes by tag name
+
+  @param[in] pmyhtml_tree_t
+  @param[in] pmyhtml_collection_t, creates new collection if NULL
+  @param[in] tag name
+  @param[in] tag name length
+  @param[out] status of this operation, optional
+
+  @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_name (tree : pmyhtml_tree_t; collection :
   pmyhtml_collection_t; const name : PChar; length : QWord; status :
   pmystatus_t) : pmyhtml_collection_t; cdecl; external MyHTMLLib;
 
-(**
- * Get nodes by attribute key
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
- * @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
- * @param[in] find key
- * @param[in] find key length
- * @param[out] status of this operation, optional
- *
- * @return pmyhtml_collection_t if successful, otherwise an NULL value
- *)
+{ Get nodes by attribute key
+
+  @param[in] pmyhtml_tree_t
+  @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
+  @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
+  @param[in] find key
+  @param[in] find key length
+  @param[out] status of this operation, optional
+
+  @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_attributes_key (tree : pmyhtml_tree_t; collection :
   pmyhtml_collection_t; scope_node : pmyhtml_tree_node_t; const key : PChar;
   key_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Get nodes by attribute value; exactly equal; like a [foo="bar"]
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
- * @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
- * @param[in] case-insensitive if true
- * @param[in] find in key; if NULL find in all attributes
- * @param[in] find in key length; if 0 find in all attributes
- * @param[in] find value
- * @param[in] find value length
- * @param[out] status of this operation, optional
- *
- * @return pmyhtml_collection_t if successful, otherwise an NULL value
- *)
+{ Get nodes by attribute value; exactly equal; like a [foo="bar"]
+
+  @param[in] pmyhtml_tree_t
+  @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
+  @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
+  @param[in] case-insensitive if true
+  @param[in] find in key; if NULL find in all attributes
+  @param[in] find in key length; if 0 find in all attributes
+  @param[in] find value
+  @param[in] find value length
+  @param[out] status of this operation, optional
+
+  @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_attribute_value (tree : pmyhtml_tree_t;
   collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
   case_insensitive : Boolean; const key : PChar; key_len : QWord; const value :
   PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Get nodes by attribute value; whitespace separated; like a [foo~="bar"]
- *
- * @example if value="bar" and node attr value="lalala bar bebebe", then this
- * node is found
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
- * @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
- * @param[in] case-insensitive if true
- * @param[in] find in key; if NULL find in all attributes
- * @param[in] find in key length; if 0 find in all attributes
- * @param[in] find value
- * @param[in] find value length
- * @param[out] status of this operation, optional
- *
- * @return pmyhtml_collection_t if successful, otherwise an NULL value
- *)
+{ Get nodes by attribute value; whitespace separated; like a [foo~="bar"]
+
+  @example if value="bar" and node attr value="lalala bar bebebe", then this
+  node is found
+
+  @param[in] pmyhtml_tree_t
+  @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
+  @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
+  @param[in] case-insensitive if true
+  @param[in] find in key; if NULL find in all attributes
+  @param[in] find in key length; if 0 find in all attributes
+  @param[in] find value
+  @param[in] find value length
+  @param[out] status of this operation, optional
+
+  @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_attribute_value_whitespace_separated (tree :
   pmyhtml_tree_t; collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
   case_sensitive : Boolean; const key : PChar; key_len : QWord; const value :
   PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Get nodes by attribute value; value begins exactly with the string; like a
- * [foo^="bar"]
- *
- * @example if value="bar" and node attr value="barmumumu", then this node is
- * found
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
- * @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
- * @param[in] case-insensitive if true
- * @param[in] find in key; if NULL find in all attributes
- * @param[in] find in key length; if 0 find in all attributes
- * @param[in] find value
- * @param[in] find value length
- * @param[out] status of this operation, optional
- *
- * @return pmyhtml_collection_t if successful, otherwise an NULL value
- *)
+{ Get nodes by attribute value; value begins exactly with the string; like a
+  [foo^="bar"]
+
+  @example if value="bar" and node attr value="barmumumu", then this node is
+  found
+
+  @param[in] pmyhtml_tree_t
+  @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
+  @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
+  @param[in] case-insensitive if true
+  @param[in] find in key; if NULL find in all attributes
+  @param[in] find in key length; if 0 find in all attributes
+  @param[in] find value
+  @param[in] find value length
+  @param[out] status of this operation, optional
+
+  @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_attribute_value_begin (tree : pmyhtml_tree_t;
   collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
   case_insensitive : Boolean; const key : PChar; key_len : QWord; const value :
   PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Get nodes by attribute value; value ends exactly with the string; like a
- * [foo$="bar"]
- *
- * @example if value="bar" and node attr value="mumumubar", then this node is
- * found
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
- * @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
- * @param[in] case-insensitive if true
- * @param[in] find in key; if NULL find in all attributes
- * @param[in] find in key length; if 0 find in all attributes
- * @param[in] find value
- * @param[in] find value length
- * @param[out] status of this operation, optional
- *
- * @return pmyhtml_collection_t if successful, otherwise an NULL value
- *)
+{ Get nodes by attribute value; value ends exactly with the string; like a
+  [foo$="bar"]
+
+  @example if value="bar" and node attr value="mumumubar", then this node is
+  found
+
+  @param[in] pmyhtml_tree_t
+  @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
+  @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
+  @param[in] case-insensitive if true
+  @param[in] find in key; if NULL find in all attributes
+  @param[in] find in key length; if 0 find in all attributes
+  @param[in] find value
+  @param[in] find value length
+  @param[out] status of this operation, optional
+
+  @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_attribute_value_end (tree : pmyhtml_tree_t;
   collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
   case_insensitive : Boolean; const key : PChar; key_len : QWord; const value :
   PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Get nodes by attribute value; value contains the substring; like a
- * [foo*="bar"]
- *
- * @example if value="bar" and node attr value="bububarmumu", then this node is
- * found
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
- * @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
- * @param[in] case-insensitive if true
- * @param[in] find in key; if NULL find in all attributes
- * @param[in] find in key length; if 0 find in all attributes
- * @param[in] find value
- * @param[in] find value length
- * @param[out] status of this operation, optional
- *
- * @return pmyhtml_collection_t if successful, otherwise an NULL value
- *)
+{ Get nodes by attribute value; value contains the substring; like a
+  [foo*="bar"]
+
+  @example if value="bar" and node attr value="bububarmumu", then this node is
+  found
+
+  @param[in] pmyhtml_tree_t
+  @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
+  @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
+  @param[in] case-insensitive if true
+  @param[in] find in key; if NULL find in all attributes
+  @param[in] find in key length; if 0 find in all attributes
+  @param[in] find value
+  @param[in] find value length
+  @param[out] status of this operation, optional
+
+  @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_attribute_value_contain (tree : pmyhtml_tree_t;
   collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
   case_insensitive : Boolean; const key : PChar; key_len : QWord; const value :
   PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Get nodes by attribute value; attribute value is a hyphen-separated list of
- * values beginning;
- * like a [foo|="bar"]
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
- * @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
- * @param[in] case-insensitive if true
- * @param[in] find in key; if NULL find in all attributes
- * @param[in] find in key length; if 0 find in all attributes
- * @param[in] find value
- * @param[in] find value length
- * @param[out] optional; status of this operation
- *
- * @return pmyhtml_collection_t if successful, otherwise an NULL value
- *)
+{ Get nodes by attribute value; attribute value is a hyphen-separated list of
+  values beginning;
+  like a [foo|="bar"]
+
+  @param[in] pmyhtml_tree_t
+  @param[in] pmyhtml_collection_t, optional; creates new collection if NULL
+  @param[in] pmyhtml_tree_node_t, optional; scope node; html if NULL
+  @param[in] case-insensitive if true
+  @param[in] find in key; if NULL find in all attributes
+  @param[in] find in key length; if 0 find in all attributes
+  @param[in] find value
+  @param[in] find value length
+  @param[out] optional; status of this operation
+
+  @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_attribute_value_hyphen_separated (tree :
   pmyhtml_tree_t; collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
   case_insensitive : Boolean; const key : PChar; key_len : QWord; const value :
   PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Get nodes by tag id in node scope
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] pmyhtml_collection_t, creates new collection if NULL
- * @param[in] node for search tag_id in children nodes
- * @param[in] tag_id for search
- * @param[out] status of this operation
- *
- * @return pmyhtml_collection_t if successful, otherwise an NULL value
- *)
+{ Get nodes by tag id in node scope
+
+  @param[in] pmyhtml_tree_t
+  @param[in] pmyhtml_collection_t, creates new collection if NULL
+  @param[in] node for search tag_id in children nodes
+  @param[in] tag_id for search
+  @param[out] status of this operation
+
+  @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_tag_id_in_scope (tree : pmyhtml_tree_t; collection
   : pmyhtml_collection_t; node : pmyhtml_tree_node_t; tag_id : myhtml_tag_id_t;
   status : pmystatus_t) : pmyhtml_collection_t; cdecl; external MyHTMLLib;
 
-(**
- * Get nodes by tag name in node scope
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] pmyhtml_collection_t, creates new collection if NULL
- * @param[in] node for search tag_id in children nodes
- * @param[in] tag name
- * @param[in] tag name length
- * @param[out] status of this operation
- *
- * @return pmyhtml_collection_t if successful, otherwise an NULL value
- *)
+{ Get nodes by tag name in node scope
+
+  @param[in] pmyhtml_tree_t
+  @param[in] pmyhtml_collection_t, creates new collection if NULL
+  @param[in] node for search tag_id in children nodes
+  @param[in] tag name
+  @param[in] tag name length
+  @param[out] status of this operation
+
+  @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_name_in_scope (tree : pmyhtml_tree_t; collection :
   pmyhtml_collection_t; node : pmyhtml_tree_node_t; const html : PChar; length :
   QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Get next sibling node
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return pmyhtml_tree_node_t if exists, otherwise an NULL value
- *)
+{ Get next sibling node
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return pmyhtml_tree_node_t if exists, otherwise an NULL value }
 function myhtml_node_next (node : pmyhtml_tree_node_t) : pmyhtml_tree_node_t;
   cdecl; external MyHTMLLib;
 
-(**
- * Get previous sibling node
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return pmyhtml_tree_node_t if exists, otherwise an NULL value
- *)
+{ Get previous sibling node
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return pmyhtml_tree_node_t if exists, otherwise an NULL value }
 function myhtml_node_prev (node : pmyhtml_tree_node_t) : pmyhtml_tree_node_t;
   cdecl; external MyHTMLLib;
 
-(**
- * Get parent node
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return pmyhtml_tree_node_t if exists, otherwise an NULL value
- *)
+{ Get parent node
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return pmyhtml_tree_node_t if exists, otherwise an NULL value }
 function myhtml_node_parent (node : pmyhtml_tree_node_t) : pmyhtml_tree_node_t;
   cdecl; external MyHTMLLib;
 
-(**
- * Get child (first child) of node
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return pmyhtml_tree_node_t if exists, otherwise an NULL value
- *)
+{ Get child (first child) of node
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return pmyhtml_tree_node_t if exists, otherwise an NULL value }
 function myhtml_node_child (node : pmyhtml_tree_node_t) : pmyhtml_tree_node_t;
   cdecl; external MyHTMLLib;
 
-(**
- * Get last child of node
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return pmyhtml_tree_node_t if exists, otherwise an NULL value
- *)
+{ Get last child of node
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return pmyhtml_tree_node_t if exists, otherwise an NULL value }
 function myhtml_node_last_child (node : pmyhtml_tree_node_t) :
   pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
 
-(**
- * Create new node
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] tag id, see enum myhtml_tags
- * @param[in] enum myhtml_namespace
- *
- * @return pmyhtml_tree_node_t if successful, otherwise a NULL value
- *)
+{ Create new node
+
+  @param[in] pmyhtml_tree_t
+  @param[in] tag id, see enum myhtml_tags
+  @param[in] enum myhtml_namespace
+
+  @return pmyhtml_tree_node_t if successful, otherwise a NULL value }
 function myhtml_node_create (tree : pmyhtml_tree_t; tag_id : myhtml_tag_id_t;
   ns : myhtml_namespace_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
 
-(**
- * Release allocated resources
- *
- * @param[in] pmyhtml_tree_node_t
- *)
+{ Release allocated resources
+
+  @param[in] pmyhtml_tree_node_t }
 procedure myhtml_node_free (node : pmyhtml_tree_node_t); cdecl;
   external MyHTMLLib;
 
-(**
- * Remove node of tree
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return pmyhtml_tree_node_t if successful, otherwise a NULL value
- *)
+{ Remove node of tree
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return pmyhtml_tree_node_t if successful, otherwise a NULL value }
 function myhtml_node_remove (node : pmyhtml_tree_node_t) : pmyhtml_tree_node_t;
   cdecl; external MyHTMLLib;
 
-(**
- * Remove node of tree and release allocated resources
- *
- * @param[in] pmyhtml_tree_node_t
- *)
+{ Remove node of tree and release allocated resources
+
+  @param[in] pmyhtml_tree_node_t }
 procedure myhtml_node_delete (node : pmyhtml_tree_node_t); cdecl;
   external MyHTMLLib;
 
-(**
- * Remove nodes of tree recursively and release allocated resources
- *
- * @param[in] pmyhtml_tree_node_t
- *)
+{ Remove nodes of tree recursively and release allocated resources
+
+  @param[in] pmyhtml_tree_node_t }
 procedure myhtml_node_delete_recursive (node : pmyhtml_tree_node_t); cdecl;
   external MyHTMLLib;
 
-(**
- * The appropriate place for inserting a node. Insertion with validation.
- * If try insert <a> node to <table> node, then <a> node inserted before <table>
- * node
- *
- * @param[in] target node
- * @param[in] insertion node
- *
- * @return insertion node if successful, otherwise a NULL value
- *)
+{ The appropriate place for inserting a node. Insertion with validation.
+  If try insert <a> node to <table> node, then <a> node inserted before <table>
+  node
+
+  @param[in] target node
+  @param[in] insertion node
+
+  @return insertion node if successful, otherwise a NULL value }
 function myhtml_node_insert_to_appropriate_place (target : pmyhtml_tree_node_t;
   node : pmyhtml_tree_node_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
 
-(**
- * Append to target node as last child. Insertion without validation.
- *
- * @param[in] target node
- * @param[in] insertion node
- *
- * @return insertion node if successful, otherwise a NULL value
- *)
+{ Append to target node as last child. Insertion without validation.
+
+  @param[in] target node
+  @param[in] insertion node
+
+  @return insertion node if successful, otherwise a NULL value }
 function myhtml_node_append_child (target : pmyhtml_tree_node_t; node :
   pmyhtml_tree_node_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
 
-(**
- * Append sibling node after target node. Insertion without validation.
- *
- * @param[in] target node
- * @param[in] insertion node
- *
- * @return insertion node if successful, otherwise a NULL value
- *)
+{ Append sibling node after target node. Insertion without validation.
+
+  @param[in] target node
+  @param[in] insertion node
+
+  @return insertion node if successful, otherwise a NULL value }
 function myhtml_node_insert_after (target : pmyhtml_tree_node_t; node :
   pmyhtml_tree_node_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
 
-(**
- * Append sibling node before target node. Insertion without validation.
- *
- * @param[in] target node
- * @param[in] insertion node
- *
- * @return insertion node if successful, otherwise a NULL value
- *)
+{ Append sibling node before target node. Insertion without validation.
+
+  @param[in] target node
+  @param[in] insertion node
+
+  @return insertion node if successful, otherwise a NULL value }
 function myhtml_node_insert_before (target : pmyhtml_tree_node_t; node :
   pmyhtml_tree_node_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
 
-(**
- * Add text for a node with convert character encoding.
- *
- * @param[in] target node
- * @param[in] text
- * @param[in] text length
- * @param[in] character encoding
- *
- * @return pmycore_string_t if successful, otherwise a NULL value
- *)
+{ Add text for a node with convert character encoding.
+
+  @param[in] target node
+  @param[in] text
+  @param[in] text length
+  @param[in] character encoding
+
+  @return pmycore_string_t if successful, otherwise a NULL value }
 function myhtml_node_text_set (node : pmyhtml_tree_node_t; const text : PChar;
   length : QWord; encoding : myencoding_t) : pmycore_string_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Add text for a node with convert character encoding.
- *
- * @param[in] target node
- * @param[in] text
- * @param[in] text length
- * @param[in] character encoding
- *
- * @return pmycore_string_t if successful, otherwise a NULL value
- *)
+{ Add text for a node with convert character encoding.
+
+  @param[in] target node
+  @param[in] text
+  @param[in] text length
+  @param[in] character encoding
+
+  @return pmycore_string_t if successful, otherwise a NULL value }
 function myhtml_node_text_set_with_charef (node : pmyhtml_tree_node_t;
   const text : PChar; length : QWord; encoding : myencoding_t) :
   pmycore_string_t; cdecl; external MyHTMLLib;
 
-(**
- * Get token node
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return pmyhtml_token_node_t
- *)
+{ Get token node
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return pmyhtml_token_node_t }
 function myhtml_node_token (node : pmyhtml_tree_node_t) : pmyhtml_token_node_t;
   cdecl; external MyHTMLLib;
 
-(**
- * Get node namespace
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return myhtml_namespace_t
- *)
+{ Get node namespace
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return myhtml_namespace_t }
 function myhtml_node_namespace (node : pmyhtml_tree_node_t) :
   myhtml_namespace_t; cdecl; external MyHTMLLib;
 
-(**
- * Set node namespace
- *
- * @param[in] pmyhtml_tree_node_t
- * @param[in] myhtml_namespace_t
- *)
+{ Set node namespace
+
+  @param[in] pmyhtml_tree_node_t
+  @param[in] myhtml_namespace_t }
 procedure myhtml_node_namespace_set (node : pmyhtml_tree_node_t; ns :
   myhtml_namespace_t); cdecl; external MyHTMLLib;
 
-(**
- * Get node tag id
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return myhtml_tag_id_t
- *)
+{ Get node tag id
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return myhtml_tag_id_t }
 function myhtml_node_tag_id (node : pmyhtml_tree_node_t) : myhtml_tag_id_t;
   cdecl; external MyHTMLLib;
 
-(**
- * Node has self-closing flag?
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return true or false (1 or 0)
- *)
+{ Node has self-closing flag?
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return true or false (1 or 0) }
 function myhtml_node_is_close_self (node : pmyhtml_tree_node_t) : Boolean;
   cdecl; external MyHTMLLib;
 
-(**
- * Node is a void element?
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return true or false (1 or 0)
- *)
+{ Node is a void element?
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return true or false (1 or 0) }
 function myhtml_node_is_void_element (node : pmyhtml_tree_node_t) : Boolean;
   cdecl; external MyHTMLLib;
 
-(**
- * Get first attribute of a node
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return pmyhtml_tree_attr_t if exists, otherwise an NULL value
- *)
+{ Get first attribute of a node
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return pmyhtml_tree_attr_t if exists, otherwise an NULL value }
 function myhtml_node_attribute_first (node : pmyhtml_tree_node_t) :
   pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
 
-(**
- * Get last attribute of a node
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return pmyhtml_tree_attr_t if exists, otherwise an NULL value
- *)
+{ Get last attribute of a node
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return pmyhtml_tree_attr_t if exists, otherwise an NULL value }
 function myhtml_node_attribute_last (node : pmyhtml_tree_node_t) :
   pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
 
-(**
- * Get text of a node. Only for a MyHTML_TAG__TEXT or MyHTML_TAG__COMMENT tags
- *
- * @param[in] pmyhtml_tree_node_t
- * @param[out] optional, text length
- *
- * @return const char* if exists, otherwise an NULL value
- *)
+{ Get text of a node. Only for a MyHTML_TAG__TEXT or MyHTML_TAG__COMMENT tags
+
+  @param[in] pmyhtml_tree_node_t
+  @param[out] optional, text length
+
+  @return const char* if exists, otherwise an NULL value }
 function myhtml_node_text (node : pmyhtml_tree_node_t; length : PQWord) : PChar;
   cdecl; external MyHTMLLib;
 
-(**
- * Get mycore_string_t object by Tree node
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return pmycore_string_t if exists, otherwise an NULL value
- *)
+{ Get mycore_string_t object by Tree node
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return pmycore_string_t if exists, otherwise an NULL value }
 function myhtml_node_string (node : pmyhtml_tree_node_t) : pmycore_string_t;
   cdecl; external MyHTMLLib;
 
-(**
- * Get raw position for Tree Node in Incoming Buffer
- *
- * @example <[BEGIN]div[LENGTH] attr=lalala>
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return myhtml_tree_node_t
- *)
+{ Get raw position for Tree Node in Incoming Buffer
+
+  @example <[BEGIN]div[LENGTH] attr=lalala>
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return myhtml_tree_node_t }
 function myhtml_node_raw_position (node : pmyhtml_tree_node_t) :
   myhtml_position_t; cdecl; external MyHTMLLib;
 
-(**
- * Get element position for Tree Node in Incoming Buffer
- *
- * @example [BEGIN]<div attr=lalala>[LENGTH]
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return myhtml_tree_node_t
- *)
+{ Get element position for Tree Node in Incoming Buffer
+
+  @example [BEGIN]<div attr=lalala>[LENGTH]
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return myhtml_tree_node_t }
 function myhtml_node_element_position (node : pmyhtml_tree_node_t) :
   myhtml_position_t; cdecl; external MyHTMLLib;
 
-(**
- * Get data value from tree node
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return Pointer
- *)
+{ Get data value from tree node
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return Pointer }
 function myhtml_node_get_data (node : pmyhtml_tree_node_t) : Pointer; cdecl;
   external MyHTMLLib;
 
-(**
- * Set data value to tree node
- *
- * @param[in] pmyhtml_tree_node_t
- * @param[in] Pointer
- *)
+{ Set data value to tree node
+
+  @param[in] pmyhtml_tree_node_t
+  @param[in] Pointer }
 procedure myhtml_node_set_data (node : pmyhtml_tree_node_t; data : Pointer);
   cdecl; external MyHTMLLib;
 
-(**
- * Get current tree (pmyhtml_tree_t) from node
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return pmyhtml_tree_t
- *)
+{ Get current tree (pmyhtml_tree_t) from node
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return pmyhtml_tree_t }
 function myhtml_node_tree (node : pmyhtml_tree_node_t) : pmyhtml_tree_t; cdecl;
   external MyHTMLLib;
 
@@ -3802,178 +3716,145 @@ function myhtml_node_tree (node : pmyhtml_tree_node_t) : pmyhtml_tree_t; cdecl;
 (*                                                                            *)
 (******************************************************************************)
 
-(**
- * Get next sibling attribute of one node
- *
- * @param[in] pmyhtml_tree_attr_t
- *
- * @return pmyhtml_tree_attr_t if exists, otherwise an NULL value
- *)
+{ Get next sibling attribute of one node
+
+  @param[in] pmyhtml_tree_attr_t
+
+  @return pmyhtml_tree_attr_t if exists, otherwise an NULL value }
 function myhtml_attribute_next (attr : pmyhtml_tree_attr_t) :
   pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
 
-(**
- * Get previous sibling attribute of one node
- *
- * @param[in] pmyhtml_tree_attr_t
- *
- * @return pmyhtml_tree_attr_t if exists, otherwise an NULL value
- *)
+{ Get previous sibling attribute of one node
+
+  @param[in] pmyhtml_tree_attr_t
+
+  @return pmyhtml_tree_attr_t if exists, otherwise an NULL value }
 function myhtml_attribute_prev (attr : pmyhtml_tree_attr_t) :
   pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
 
-(**
- * Get attribute namespace
- *
- * @param[in] pmyhtml_tree_attr_t
- *
- * @return enum myhtml_namespace
- *)
+{ Get attribute namespace
+
+  @param[in] pmyhtml_tree_attr_t
+
+  @return enum myhtml_namespace }
 function myhtml_attribute_namespace (attr : pmyhtml_tree_attr_t) :
   myhtml_namespace_t; cdecl; external MyHTMLLib;
 
-(**
- * Set attribute namespace
- *
- * @param[in] pmyhtml_tree_attr_t
- * @param[in] myhtml_namespace_t
- *)
+{ Set attribute namespace
+
+  @param[in] pmyhtml_tree_attr_t
+  @param[in] myhtml_namespace_t }
 procedure myhtml_attribute_namespace_set (attr : pmyhtml_tree_attr_t; ns :
   myhtml_namespace_t); cdecl; external MyHTMLLib;
 
-(**
- * Get attribute key
- *
- * @param[in] pmyhtml_tree_attr_t
- * @param[out] optional, name length
- *
- * @return const char* if exists, otherwise an NULL value
- *)
+{ Get attribute key
+
+  @param[in] pmyhtml_tree_attr_t
+  @param[out] optional, name length
+
+  @return const char* if exists, otherwise an NULL value }
 function myhtml_attribute_key (attr : pmyhtml_tree_attr_t; length : PQWord) :
   PChar; cdecl; external MyHTMLLib;
 
-(**
- * Get attribute value
- *
- * @param[in] pmyhtml_tree_attr_t
- * @param[out] optional, value length
- *
- * @return const char* if exists, otherwise an NULL value
- *)
+{ Get attribute value
+
+  @param[in] pmyhtml_tree_attr_t
+  @param[out] optional, value length
+
+  @return const char* if exists, otherwise an NULL value }
 function myhtml_attribute_value (attr : pmyhtml_tree_attr_t; length : PQWord) :
   PChar; cdecl; external MyHTMLLib;
 
-(**
- * Get attribute key string
- *
- * @param[in] pmyhtml_tree_attr_t
- *
- * @return pmycore_string_t if exists, otherwise an NULL value
- *)
+{ Get attribute key string
+
+  @param[in] pmyhtml_tree_attr_t
+
+  @return pmycore_string_t if exists, otherwise an NULL value }
 function myhtml_attribute_key_string (attr : pmyhtml_tree_attr_t) :
   pmycore_string_t; cdecl; external MyHTMLLib;
 
-(**
- * Get attribute value string
- *
- * @param[in] pmyhtml_tree_attr_t
- *
- * @return pmycore_string_t if exists, otherwise an NULL value
- *)
+{ Get attribute value string
+
+  @param[in] pmyhtml_tree_attr_t
+
+  @return pmycore_string_t if exists, otherwise an NULL value }
 function myhtml_attribute_value_string (attr : pmyhtml_tree_attr_t) :
   pmycore_string_t; cdecl; external MyHTMLLib;
 
-(**
- * Get attribute by key
- *
- * @param[in] pmyhtml_tree_node_t
- * @param[in] attr key name
- * @param[in] attr key name length
- *
- * @return pmyhtml_tree_attr_t if exists, otherwise a NULL value
- *)
+{ Get attribute by key
+
+  @param[in] pmyhtml_tree_node_t
+  @param[in] attr key name
+  @param[in] attr key name length
+
+  @return pmyhtml_tree_attr_t if exists, otherwise a NULL value }
 function myhtml_attribute_by_key (node : pmyhtml_tree_node_t; const key : PChar;
   key_len : QWord) : pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
 
-(**
- * Added attribute to tree node
- *
- * @param[in] pmyhtml_tree_node_t
- * @param[in] attr key name
- * @param[in] attr key name length
- * @param[in] attr value name
- * @param[in] attr value name length
- * @param[in] character encoding; Default: MyENCODING_UTF_8 or
- *            MyENCODING_DEFAULT or 0
- *
- * @return created pmyhtml_tree_attr_t if successful, otherwise a NULL value
- *)
+{ Added attribute to tree node
+
+  @param[in] pmyhtml_tree_node_t
+  @param[in] attr key name
+  @param[in] attr key name length
+  @param[in] attr value name
+  @param[in] attr value name length
+  @param[in] character encoding; Default: MyENCODING_UTF_8 or
+             MyENCODING_DEFAULT or 0
+
+  @return created pmyhtml_tree_attr_t if successful, otherwise a NULL value }
 function myhtml_attribute_add (node : pmyhtml_tree_node_t; const key : PChar;
   key_len : QWord; const value : PChar; value_len : QWord; encoding :
   myencoding_t) : pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
 
-(**
- * Remove attribute reference. Not release the resources
- *
- * @param[in] pmyhtml_tree_node_t
- * @param[in] pmyhtml_tree_attr_t
- *
- * @return pmyhtml_tree_attr_t if successful, otherwise a NULL value
- *)
+{ Remove attribute reference. Not release the resources
+
+  @param[in] pmyhtml_tree_node_t
+  @param[in] pmyhtml_tree_attr_t
+
+  @return pmyhtml_tree_attr_t if successful, otherwise a NULL value }
 function myhtml_attribute_remove (node : pmyhtml_tree_node_t; attr :
   pmyhtml_tree_attr_t) : pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
 
-(**
- * Remove attribute by key reference. Not release the resources
- *
- * @param[in] pmyhtml_tree_node_t
- * @param[in] attr key name
- * @param[in] attr key name length
- *
- * @return pmyhtml_tree_attr_t if successful, otherwise a NULL value
- *)
+{ Remove attribute by key reference. Not release the resources
+
+  @param[in] pmyhtml_tree_node_t
+  @param[in] attr key name
+  @param[in] attr key name length
+
+  @return pmyhtml_tree_attr_t if successful, otherwise a NULL value }
 function myhtml_attribute_remove_by_key (node : pmyhtml_tree_node_t; const key :
   PChar; key_len : QWord) : pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
 
-(**
- * Remove attribute and release allocated resources
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] pmyhtml_tree_node_t
- * @param[in] pmyhtml_tree_attr_t
- *
- *)
+{ Remove attribute and release allocated resources
+
+  @param[in] pmyhtml_tree_t
+  @param[in] pmyhtml_tree_node_t
+  @param[in] pmyhtml_tree_attr_t }
 procedure myhtml_attribute_delete (tree : pmyhtml_tree_t; node :
   pmyhtml_tree_node_t; attr : pmyhtml_tree_attr_t); cdecl; external MyHTMLLib;
 
-(**
- * Release allocated resources
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] pmyhtml_tree_attr_t
- *
- * @return pmyhtml_tree_attr_t if successful, otherwise a NULL value
- *)
+{ Release allocated resources
+
+  @param[in] pmyhtml_tree_t
+  @param[in] pmyhtml_tree_attr_t
+
+  @return pmyhtml_tree_attr_t if successful, otherwise a NULL value }
 procedure myhtml_attribute_free (tree : pmyhtml_tree_t; attr :
   pmyhtml_tree_attr_t); cdecl; external MyHTMLLib;
 
-(**
- * Get raw position for Attribute Key in Incoming Buffer
- *
- * @param[in] pmyhtml_tree_attr_t
- *
- * @return myhtml_position_t
- *)
+{ Get raw position for Attribute Key in Incoming Buffer
+
+  @param[in] pmyhtml_tree_attr_t
+
+  @return myhtml_position_t }
 function myhtml_attribute_key_raw_position (attr : pmyhtml_tree_attr_t) :
   myhtml_position_t; cdecl; external MyHTMLLib;
 
-(**
- * Get raw position for Attribute Value in Incoming Buffer
- *
- * @param[in] pmyhtml_tree_attr_t
- *
- * @return myhtml_position_t
- *)
+{ Get raw position for Attribute Value in Incoming Buffer
+
+  @param[in] pmyhtml_tree_attr_t
+
+  @return myhtml_position_t }
 function myhtml_attribute_value_raw_position (attr : pmyhtml_tree_attr_t) :
   myhtml_position_t; cdecl; external MyHTMLLib;
 
@@ -3983,108 +3864,88 @@ function myhtml_attribute_value_raw_position (attr : pmyhtml_tree_attr_t) :
 (*                                                                            *)
 (******************************************************************************)
 
-(**
- * Get token node tag id
- *
- * @param[in] pmyhtml_token_node_t
- *
- * @return myhtml_tag_id_t
- *)
+{ Get token node tag id
+
+  @param[in] pmyhtml_token_node_t
+
+  @return myhtml_tag_id_t }
 function myhtml_token_node_tag_id (token_node : pmyhtml_token_node_t) :
   myhtml_tag_id_t; cdecl; external MyHTMLLib;
 
-(**
- * Get raw position for Token Node in Incoming Buffer
- *
- * @example <[BEGIN]div[LENGTH] attr=lalala>
- *
- * @param[in] pmyhtml_token_node_t
- *
- * @return myhtml_position_t
- *)
+{ Get raw position for Token Node in Incoming Buffer
+
+  @example <[BEGIN]div[LENGTH] attr=lalala>
+
+  @param[in] pmyhtml_token_node_t
+
+  @return myhtml_position_t }
 function myhtml_token_node_raw_position (token_node : pmyhtml_token_node_t) :
   myhtml_position_t; cdecl; external MyHTMLLib;
 
-(**
- * Get element position for Token Node in Incoming Buffer
- *
- * @example [BEGIN]<div attr=lalala>[LENGTH]
- *
- * @param[in] pmyhtml_token_node_t
- *
- * @return myhtml_position_t
- *)
+{ Get element position for Token Node in Incoming Buffer
+
+  @example [BEGIN]<div attr=lalala>[LENGTH]
+
+  @param[in] pmyhtml_token_node_t
+
+  @return myhtml_position_t }
 function myhtml_token_node_element_position (token_node : pmyhtml_token_node_t)
   : myhtml_position_t; cdecl; external MyHTMLLib;
 
-(**
- * Get first attribute of a token node
- *
- * @param[in] pmyhtml_token_node_t
- *
- * @return pmyhtml_tree_attr_t if exists, otherwise an NULL value
- *)
+{ Get first attribute of a token node
+
+  @param[in] pmyhtml_token_node_t
+
+  @return pmyhtml_tree_attr_t if exists, otherwise an NULL value }
 function myhtml_token_node_attribute_first (token_node : pmyhtml_token_node_t) :
   pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
 
-(**
- * Get last attribute of a token node
- *
- * @param[in] pmyhtml_token_node_t
- *
- * @return pmyhtml_tree_attr_t if exists, otherwise an NULL value
- *)
+{ Get last attribute of a token node
+
+  @param[in] pmyhtml_token_node_t
+
+  @return pmyhtml_tree_attr_t if exists, otherwise an NULL value }
 function myhtml_token_node_attribute_last (token_node : pmyhtml_token_node_t) :
   pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
 
-(**
- * Get text of a token node. Only for a MyHTML_TAG__TEXT or MyHTML_TAG__COMMENT
- * tags
- *
- * @param[in] pmyhtml_token_node_t
- * @param[out] optional, text length
- *
- * @return const char* if exists, otherwise an NULL value
- *)
+{ Get text of a token node. Only for a MyHTML_TAG__TEXT or MyHTML_TAG__COMMENT
+  tags
+
+  @param[in] pmyhtml_token_node_t
+  @param[out] optional, text length
+
+  @return const char* if exists, otherwise an NULL value }
 function myhtml_token_node_text (token_node : pmyhtml_token_node_t; length :
   PQWord) : PChar; cdecl; external MyHTMLLib;
 
-(**
- * Get mycore_string_t object by token node
- *
- * @param[in] pmyhtml_token_node_t
- *
- * @return pmycore_string_t if exists, otherwise an NULL value
- *)
+{ Get mycore_string_t object by token node
+
+  @param[in] pmyhtml_token_node_t
+
+  @return pmycore_string_t if exists, otherwise an NULL value }
 function myhtml_token_node_string (token_node : pmyhtml_token_node_t) :
   pmycore_string_t; cdecl; external MyHTMLLib;
 
-(**
- * Token node has closing flag?
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return true or false
- *)
+{ Token node has closing flag?
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return true or false }
 function myhtml_token_node_is_close (token_node : pmyhtml_token_node_t) :
   Boolean; cdecl; external MyHTMLLib;
 
-(**
- * Token node has self-closing flag?
- *
- * @param[in] pmyhtml_tree_node_t
- *
- * @return true or false (1 or 0)
- *)
+{ Token node has self-closing flag?
+
+  @param[in] pmyhtml_tree_node_t
+
+  @return true or false (1 or 0) }
 function myhtml_token_node_is_close_self (token_node : pmyhtml_token_node_t) :
   Boolean; cdecl; external MyHTMLLib;
 
-(**
- * Wait for process token all parsing stage. Need if you use thread mode
- *
- * @param[in] pmyhtml_token_t
- * @param[in] pmyhtml_token_node_t
- *)
+{ Wait for process token all parsing stage. Need if you use thread mode
+
+  @param[in] pmyhtml_token_t
+  @param[in] pmyhtml_token_node_t }
 procedure myhtml_token_node_wait_for_done (token : pmyhtml_token_t; node :
   pmyhtml_token_node_t); cdecl; external MyHTMLLib;
 
@@ -4094,27 +3955,23 @@ procedure myhtml_token_node_wait_for_done (token : pmyhtml_token_t; node :
 (*                                                                            *)
 (******************************************************************************)
 
-(**
- * Get tag name by tag id
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] tag id
- * @param[out] optional, name length
- *
- * @return const char* if exists, otherwise a NULL value
- *)
+{ Get tag name by tag id
+
+  @param[in] pmyhtml_tree_t
+  @param[in] tag id
+  @param[out] optional, name length
+
+  @return const char* if exists, otherwise a NULL value }
 function myhtml_tag_name_by_id (tree : pmyhtml_tree_t; tag_id : myhtml_tag_id_t;
   length : PQWord) : PChar; cdecl; external MyHTMLLib;
 
-(**
- * Get tag id by name
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] tag name
- * @param[in] tag name length
- *
- * @return tag id
- *)
+{ Get tag id by name
+
+  @param[in] pmyhtml_tree_t
+  @param[in] tag name
+  @param[in] tag name length
+
+  @return tag id }
 function myhtml_tag_id_by_name (tree : pmyhtml_tree_t; const tag_name : PChar;
   length : QWord) : myhtml_tag_id_t; cdecl; external MyHTMLLib;
 
@@ -4124,45 +3981,37 @@ function myhtml_tag_id_by_name (tree : pmyhtml_tree_t; const tag_name : PChar;
 (*                                                                            *)
 (******************************************************************************)
 
-(**
- * Create collection
- *
- * @param[in] list size
- * @param[out] optional, status of operation
- *
- * @return pmyhtml_collection_t if successful, otherwise an NULL value
- *)
+{ Create collection
+
+  @param[in] list size
+  @param[out] optional, status of operation
+
+  @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_collection_create (size : QWord; status : pmystatus_t) :
   pmyhtml_collection_t; cdecl; external MyHTMLLib;
 
-(**
- * Clears collection
- *
- * @param[in] pmyhtml_collection_t
- *)
+{ Clears collection
+
+  @param[in] pmyhtml_collection_t }
 procedure myhtml_collection_clean (collection : pmyhtml_collection_t); cdecl;
   external MyHTMLLib;
 
-(**
- * Destroy allocated resources
- *
- * @param[in] pmyhtml_collection_t
- *
- * @return NULL if successful, otherwise an pmyhtml_collection_t structure
- *)
+{ Destroy allocated resources
+
+  @param[in] pmyhtml_collection_t
+
+  @return NULL if successful, otherwise an pmyhtml_collection_t structure }
 function myhtml_collection_destroy (collection : pmyhtml_collection_t) :
   pmyhtml_collection_t; cdecl; external MyHTMLLib;
 
-(**
- * Check size by length and increase if necessary
- *
- * @param[in] pmyhtml_collection_t
- * @param[in] need nodes
- * @param[in] upto_length: count for up if nodes not exists
- *            (current length + need + upto_length + 1)
- *
- * @return NULL if successful, otherwise an pmyhtml_collection_t structure
- *)
+{ Check size by length and increase if necessary
+
+  @param[in] pmyhtml_collection_t
+  @param[in] need nodes
+  @param[in] upto_length: count for up if nodes not exists
+             (current length + need + upto_length + 1)
+
+  @return NULL if successful, otherwise an pmyhtml_collection_t structure }
 function myhtml_collection_check_size (collection : pmyhtml_collection_t; need :
   QWord; upto_length : QWord) : mystatus_t; cdecl; external MyHTMLLib;
 
@@ -4172,226 +4021,192 @@ function myhtml_collection_check_size (collection : pmyhtml_collection_t; need :
 (*                                                                            *)
 (******************************************************************************)
 
-(**
- * Set character encoding for input stream
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] Input character encoding
- *
- *)
+{ Set character encoding for input stream
+
+  @param[in] pmyhtml_tree_t
+  @param[in] Input character encoding }
 procedure myhtml_encoding_set (tree : pmyhtml_tree_t; encoding : myencoding_t);
   cdecl; external MyHTMLLib;
 
-(**
- * Get character encoding for current stream
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return myencoding_t
- *)
+{ Get character encoding for current stream
+
+  @param[in] pmyhtml_tree_t
+
+  @return myencoding_t }
 function myhtml_encoding_get (tree : pmyhtml_tree_t) : myencoding_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Convert Unicode Codepoint to UTF-8
- *
- * @param[in] Codepoint
- * @param[in] Data to set characters. Minimum data length is 1 bytes, maximum is
- * 4 byte data length must be always available 4 bytes
- *
- * @return size character set
- *)
+{ Convert Unicode Codepoint to UTF-8
+
+  @param[in] Codepoint
+  @param[in] Data to set characters. Minimum data length is 1 bytes, maximum is
+             4 byte data length must be always available 4 bytes
+
+  @return size character set }
 function myencoding_codepoint_to_ascii_utf8 (codepoint : QWord; data : PChar) :
   QWord; cdecl; external MyHTMLLib;
 
-(**
- * Convert Unicode Codepoint to UTF-16LE
- *
- * I advise not to use UTF-16! Use UTF-8 and be happy!
- *
- * @param[in] Codepoint
- * @param[in] Data to set characters. Data length is 2 or 4 bytes data length
- * must be always available 4 bytes
- *
- * @return size character set
- *)
+{ Convert Unicode Codepoint to UTF-16LE
+
+  I advise not to use UTF-16! Use UTF-8 and be happy!
+
+  @param[in] Codepoint
+  @param[in] Data to set characters. Data length is 2 or 4 bytes data length
+             must be always available 4 bytes
+
+  @return size character set }
 function myencoding_codepoint_to_ascii_utf16 (codepoint : QWord; data : PChar) :
   QWord; cdecl; external MyHTMLLib;
 
-(**
- * Detect character encoding
- *
- * Now available for detect UTF-8, UTF-16LE, UTF-16BE
- * and Russians: windows-1251,  koi8-r, iso-8859-5, x-mac-cyrillic, ibm866
- * Other in progress
- *
- * @param[in]  text
- * @param[in]  text length
- * @param[out] detected encoding
- *
- * @return true if encoding found, otherwise false
- *)
+{ Detect character encoding
+
+  Now available for detect UTF-8, UTF-16LE, UTF-16BE
+  and Russians: windows-1251,  koi8-r, iso-8859-5, x-mac-cyrillic, ibm866
+  Other in progress
+
+  @param[in]  text
+  @param[in]  text length
+  @param[out] detected encoding
+
+  @return true if encoding found, otherwise false }
 function myencoding_detect (const text : PChar; length : QWord; encoding :
   pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
 
-(**
- * Detect Russian character encoding
- *
- * Now available for detect windows-1251,  koi8-r, iso-8859-5, x-mac-cyrillic,
- * ibm866
- *
- * @param[in]  text
- * @param[in]  text length
- * @param[out] detected encoding
- *
- * @return true if encoding found, otherwise false
- *)
+{ Detect Russian character encoding
+
+  Now available for detect windows-1251,  koi8-r, iso-8859-5, x-mac-cyrillic,
+  ibm866
+
+  @param[in]  text
+  @param[in]  text length
+  @param[out] detected encoding
+
+  @return true if encoding found, otherwise false }
 function myencoding_detect_russian (const text : PChar; length : QWord;
   encoding : pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
 
-(**
- * Detect Unicode character encoding
- *
- * Now available for detect UTF-8, UTF-16LE, UTF-16BE
- *
- * @param[in]  text
- * @param[in]  text length
- * @param[out] detected encoding
- *
- * @return true if encoding found, otherwise false
- *)
+{ Detect Unicode character encoding
+
+  Now available for detect UTF-8, UTF-16LE, UTF-16BE
+
+  @param[in]  text
+  @param[in]  text length
+  @param[out] detected encoding
+
+  @return true if encoding found, otherwise false }
 function myencoding_detect_unicode (const text : PChar; length : QWord;
   encoding : pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
 
-(**
- * Detect Unicode character encoding by BOM
- *
- * Now available for detect UTF-8, UTF-16LE, UTF-16BE
- *
- * @param[in]  text
- * @param[in]  text length
- * @param[out] detected encoding
- *
- * @return true if encoding found, otherwise false
- *)
+{ Detect Unicode character encoding by BOM
+
+  Now available for detect UTF-8, UTF-16LE, UTF-16BE
+
+  @param[in]  text
+  @param[in]  text length
+  @param[out] detected encoding
+
+  @return true if encoding found, otherwise false }
 function myencoding_detect_bom (const text : PChar; length : QWord;
   encoding : pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
 
-(**
- * Detect Unicode character encoding by BOM. Cut BOM if will be found
- *
- * Now available for detect UTF-8, UTF-16LE, UTF-16BE
- *
- * @param[in]  text
- * @param[in]  text length
- * @param[out] detected encoding
- * @param[out] new text position
- * @param[out] new size position
- *
- * @return true if encoding found, otherwise false
- *)
+{ Detect Unicode character encoding by BOM. Cut BOM if will be found
+
+  Now available for detect UTF-8, UTF-16LE, UTF-16BE
+
+  @param[in]  text
+  @param[in]  text length
+  @param[out] detected encoding
+  @param[out] new text position
+  @param[out] new size position
+
+  @return true if encoding found, otherwise false }
 function myencoding_detect_and_cut_bom (const text : PChar; length : QWord;
   encoding : pmyencoding_t; const new_text : PPChar; new_size : PQWord) :
   Boolean; cdecl; external MyHTMLLib;
 
-(**
- * Detect encoding by name
- * Names like: windows-1258 return MyENCODING_WINDOWS_1258
- *             cp1251 or windows-1251 return MyENCODING_WINDOWS_1251
- *
- * See https://encoding.spec.whatwg.org/#names-and-labels
- *
- * @param[in]  name
- * @param[in]  name length
- * @param[out] detected encoding
- *
- * @return true if encoding found, otherwise false
- *)
+{ Detect encoding by name
+  Names like: windows-1258 return MyENCODING_WINDOWS_1258
+              cp1251 or windows-1251 return MyENCODING_WINDOWS_1251
+
+  See https://encoding.spec.whatwg.org/#names-and-labels
+
+  @param[in]  name
+  @param[in]  name length
+  @param[out] detected encoding
+
+  @return true if encoding found, otherwise false }
 function myencoding_by_name (const name : PChar; length : QWord; encoding :
   pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
 
-(**
- * Get Encoding name by myencoding_t (by id)
- *
- * @param[in]  myencoding_t, encoding id
- * @param[out] return name length
- *
- * @return encoding name, otherwise NULL value
- *)
+{ Get Encoding name by myencoding_t (by id)
+
+  @param[in]  myencoding_t, encoding id
+  @param[out] return name length
+
+  @return encoding name, otherwise NULL value }
 function myencoding_name_by_id (encoding : myencoding_t; length : PQWord) :
   PChar; cdecl; external MyHTMLLib;
 
-(**
- * Detect encoding in meta tag (<meta ...>) before start parsing
- *
- * See https://html.spec.whatwg.org/multipage/syntax.html#prescan-a-byte-stream-
- *             to-determine-its-encoding
- *
- * @param[in]  html data bytes
- * @param[in]  html data length
- *
- * @return detected encoding if encoding found, otherwise
- * MyENCODING_NOT_DETERMINED
- *)
+{ Detect encoding in meta tag (<meta ...>) before start parsing
+
+  See https://html.spec.whatwg.org/multipage/syntax.html#prescan-a-byte-stream-
+              to-determine-its-encoding
+
+  @param[in]  html data bytes
+  @param[in]  html data length
+
+  @return detected encoding if encoding found, otherwise
+          MyENCODING_NOT_DETERMINED }
 function myencoding_prescan_stream_to_determine_encoding (const data : PChar;
   data_size : QWord) : myencoding_t; cdecl; external MyHTMLLib;
 
-(**
- * Extracting character encoding from string. Find "charset=" and see encoding.
- * For example: "text/html; charset=windows-1251".
- * Return MyENCODING_WINDOWS_1251
- *
- *
- * See https://html.spec.whatwg.org/multipage/infrastructure.html#algorithm-for-
- *             extracting-a-character-encoding-from-a-meta-element
- *
- * @param[in]  data
- * @param[in]  data length
- * @param[out] return encoding
- *
- * @return true if encoding found
- *)
+{ Extracting character encoding from string. Find "charset=" and see encoding.
+  For example: "text/html; charset=windows-1251".
+  Return MyENCODING_WINDOWS_1251
+
+  See https://html.spec.whatwg.org/multipage/infrastructure.html#algorithm-for-
+              extracting-a-character-encoding-from-a-meta-element
+
+  @param[in]  data
+  @param[in]  data length
+  @param[out] return encoding
+
+  @return true if encoding found }
 function myencoding_extracting_character_encoding_from_charset (const data :
   PChar; data_size : QWord; encoding : pmyencoding_t) : Boolean; cdecl;
   external MyHTMLLib;
 
-(**
- * Detect encoding in meta tag (<meta ...>) before start parsing and return
- * found raw data
- *
- * See https://html.spec.whatwg.org/multipage/syntax.html#prescan-a-byte-stream-
- *             to-determine-its-encoding
- *
- * @param[in]  html data bytes
- * @param[in]  html data length
- * @param[out] return raw char data point for find encoding
- * @param[out] return raw char length
- *
- * @return detected encoding if encoding found, otherwise
- * MyENCODING_NOT_DETERMINED
- *)
+{ Detect encoding in meta tag (<meta ...>) before start parsing and return
+  found raw data
+
+  See https://html.spec.whatwg.org/multipage/syntax.html#prescan-a-byte-stream-
+              to-determine-its-encoding
+
+  @param[in]  html data bytes
+  @param[in]  html data length
+  @param[out] return raw char data point for find encoding
+  @param[out] return raw char length
+
+  @return detected encoding if encoding found, otherwise
+          MyENCODING_NOT_DETERMINED }
 function myencoding_prescan_stream_to_determine_encoding_with_found
   (const data : PChar; data_size : QWord; const found : PPChar; found_length :
   PQWord) : myencoding_t; cdecl; external MyHTMLLib;
 
-(**
- * Extracting character encoding from string. Find "charset=" and see encoding.
- * Return found raw data.
- * For example: "text/html; charset=windows-1251". Return
- * MyENCODING_WINDOWS_1251
- *
- *
- * See https://html.spec.whatwg.org/multipage/infrastructure.html#algorithm-for-
- *             extracting-a-character-encoding-from-a-meta-element
- *
- * @param[in]  data
- * @param[in]  data length
- * @param[out] return encoding
- * @param[out] return raw char data point for find encoding
- * @param[out] return raw char length
- *
- * @return true if encoding found
- *)
+{ Extracting character encoding from string. Find "charset=" and see encoding.
+  Return found raw data.
+  For example: "text/html; charset=windows-1251". Return MyENCODING_WINDOWS_1251
+
+  See https://html.spec.whatwg.org/multipage/infrastructure.html#algorithm-for-
+              extracting-a-character-encoding-from-a-meta-element
+
+  @param[in]  data
+  @param[in]  data length
+  @param[out] return encoding
+  @param[out] return raw char data point for find encoding
+  @param[out] return raw char length
+
+  @return true if encoding found }
 function myencoding_extracting_character_encoding_from_character_with_found
   (const data : PChar; data_size : QWord; encoding : pmyencoding_t;
   const found : PPChar; found_length : PQWord) : Boolean; cdecl;
@@ -4403,178 +4218,149 @@ function myencoding_extracting_character_encoding_from_character_with_found
 (*                                                                            *)
 (******************************************************************************)
 
-(**
- * Init mycore_string_t structure
- *
- * @param[in] pmchar_async_t. It can be obtained from myhtml_tree_t object
- *  (see myhtml_tree_get_mchar function) or create manualy
- *  For each Tree creates its object, I recommend to use it
- * (myhtml_tree_get_mchar).
- *
- * @param[in] node_id. For all threads (and Main thread) identifier that is
- * unique.
- * if created mchar_async_t object manually you know it, if not then take from
- * the Tree (see myhtml_tree_get_mchar_node_id)
- *
- * @param[in] pmycore_string_t. It can be obtained from myhtml_tree_node_t
- * object (see myhtml_node_string function) or create manualy
- *
- * @param[in] data size. Set the size you want for char*
- *
- * @return char* of the size if successful, otherwise a NULL value
- *)
+{ Init mycore_string_t structure
+
+  @param[in] pmchar_async_t. It can be obtained from myhtml_tree_t object
+             (see myhtml_tree_get_mchar function) or create manualy
+             For each Tree creates its object, I recommend to use it
+             (myhtml_tree_get_mchar).
+
+  @param[in] node_id. For all threads (and Main thread) identifier that is
+             unique. if created mchar_async_t object manually you know it,
+             if not then take from the Tree (see myhtml_tree_get_mchar_node_id)
+
+  @param[in] pmycore_string_t. It can be obtained from myhtml_tree_node_t
+             object (see myhtml_node_string function) or create manualy
+
+  @param[in] data size. Set the size you want for char*
+
+  @return char* of the size if successful, otherwise a NULL value }
 function mycore_string_init (mchar : pmchar_async_t; node_id : QWord; str :
   pmycore_string_t; size : QWord) : PChar; cdecl; external MyHTMLLib;
 
-(**
- * Increase the current size for mycore_string_t object
- *
- * @param[in] pmycore_string_t. See description for mycore_string_init function
- * @param[in] data size. Set the new size you want for mycore_string_t object
- *
- * @return char* of the size if successful, otherwise a NULL value
- *)
+{ Increase the current size for mycore_string_t object
+
+  @param[in] pmycore_string_t. See description for mycore_string_init function
+  @param[in] data size. Set the new size you want for mycore_string_t object
+
+  @return char* of the size if successful, otherwise a NULL value }
 function mycore_string_realloc (str : pmycore_string_t; new_size : QWord) :
   PChar; cdecl; external MyHTMLLib;
 
-(**
- * Clean mycore_string_t object. In reality, data length set to 0
- * Equivalently: mycore_string_length_set(str, 0);
- *
- * @param[in] pmycore_string_t. See description for mycore_string_init function
- *)
+{ Clean mycore_string_t object. In reality, data length set to 0
+  Equivalently: mycore_string_length_set(str, 0);
+
+  @param[in] pmycore_string_t. See description for mycore_string_init function }
 procedure mycore_string_clean (str : pmycore_string_t); cdecl;
   external MyHTMLLib;
 
-(**
- * Clean mycore_string_t object. Equivalently: memset(str, 0,
- * sizeof(mycore_string_t))
- *
- * @param[in] pmycore_string_t. See description for mycore_string_init function
- *)
+{ Clean mycore_string_t object. Equivalently: memset(str, 0,
+  sizeof(mycore_string_t))
+
+  @param[in] pmycore_string_t. See description for mycore_string_init function }
 procedure mycore_string_clean_all (str : pmycore_string_t); cdecl;
   external MyHTMLLib;
 
-(**
- * Release all resources for mycore_string_t object
- *
- * @param[in] pmycore_string_t. See description for mycore_string_init function
- * @param[in] call free function for current object or not
- *
- * @return NULL if destroy_obj set true, otherwise a current mycore_string_t
- * object
- *)
+{ Release all resources for mycore_string_t object
+
+  @param[in] pmycore_string_t. See description for mycore_string_init function
+  @param[in] call free function for current object or not
+
+  @return NULL if destroy_obj set true, otherwise a current mycore_string_t
+          object }
 function mycore_string_destroy (str : pmycore_string_t; destroy_obj : Boolean) :
   pmycore_string_t; cdecl; external MyHTMLLib;
 
-(**
- * Get data (char * ) from a mycore_string_t object
- *
- * @param[in] pmycore_string_t. See description for mycore_string_init function
- *
- * @return char* if exists, otherwise a NULL value
- *)
+{ Get data (char * ) from a mycore_string_t object
+
+  @param[in] pmycore_string_t. See description for mycore_string_init function
+
+  @return char* if exists, otherwise a NULL value }
 function mycore_string_data (str : pmycore_string_t) : PChar; cdecl;
   external MyHTMLLib;
 
-(**
- * Get data length from a mycore_string_t object
- *
- * @param[in] pmycore_string_t. See description for mycore_string_init function
- *
- * @return data length
- *)
+{ Get data length from a mycore_string_t object
+
+  @param[in] pmycore_string_t. See description for mycore_string_init function
+
+  @return data length }
 function mycore_string_length (str : pmycore_string_t) : QWord; cdecl;
   external MyHTMLLib;
 
-(**
- * Get data size from a mycore_string_t object
- *
- * @param[in] pmycore_string_t. See description for mycore_string_init function
- *
- * @return data size
- *)
+{ Get data size from a mycore_string_t object
+
+  @param[in] pmycore_string_t. See description for mycore_string_init function
+
+  @return data size }
 function mycore_string_size (str : pmycore_string_t) : QWord; cdecl;
   external MyHTMLLib;
 
-(**
- * Set data (char * ) for a mycore_string_t object.
- *
- * Attention!!! Attention!!! Attention!!!
- *
- * You can assign only that it has been allocated from functions:
- * mycore_string_data_alloc
- * mycore_string_data_realloc
- * or obtained manually created from mchar_async_t object
- *
- * Attention!!! Do not try set chat* from allocated by malloc or realloc!!!
- *
- * @param[in] pmycore_string_t. See description for mycore_string_init function
- * @param[in] you data to want assign
- *
- * @return assigned data if successful, otherwise a NULL value
- *)
+{ Set data (char * ) for a mycore_string_t object.
+
+  Attention!!! Attention!!! Attention!!!
+
+  You can assign only that it has been allocated from functions:
+  mycore_string_data_alloc
+  mycore_string_data_realloc
+  or obtained manually created from mchar_async_t object
+
+  Attention!!! Do not try set chat* from allocated by malloc or realloc!!!
+
+  @param[in] pmycore_string_t. See description for mycore_string_init function
+  @param[in] you data to want assign
+
+  @return assigned data if successful, otherwise a NULL value }
 function mycore_string_data_set (str : pmycore_string_t; data : PChar) : PChar;
   cdecl; external MyHTMLLib;
 
-(**
- * Set data size for a mycore_string_t object.
- *
- * @param[in] pmycore_string_t. See description for mycore_string_init function
- * @param[in] you size to want assign
- *
- * @return assigned size
- *)
+{ Set data size for a mycore_string_t object.
+
+  @param[in] pmycore_string_t. See description for mycore_string_init function
+  @param[in] you size to want assign
+
+  @return assigned size }
 function mycore_string_size_set (str : pmycore_string_t; size : QWord) : QWord;
   cdecl; external MyHTMLLib;
 
-(**
- * Set data length for a mycore_string_t object.
- *
- * @param[in] pmycore_string_t. See description for mycore_string_init function
- * @param[in] you length to want assign
- *
- * @return assigned length
- *)
+{ Set data length for a mycore_string_t object.
+
+  @param[in] pmycore_string_t. See description for mycore_string_init function
+  @param[in] you length to want assign
+
+  @return assigned length }
 function mycore_string_length_set (str : pmycore_string_t; length : QWord) :
   QWord; cdecl; external MyHTMLLib;
 
-(**
- * Allocate data (char* ) from a mchar_async_t object
- *
- * @param[in] pmchar_async_t. See description for mycore_string_init function
- * @param[in] node id. See description for mycore_string_init function
- * @param[in] you size to want assign
- *
- * @return data if successful, otherwise a NULL value
- *)
+{ Allocate data (char* ) from a mchar_async_t object
+
+  @param[in] pmchar_async_t. See description for mycore_string_init function
+  @param[in] node id. See description for mycore_string_init function
+  @param[in] you size to want assign
+
+  @return data if successful, otherwise a NULL value }
 function mycore_string_data_alloc (mchar : pmchar_async_t; node_id : QWord;
   size : QWord) : PChar; cdecl; external MyHTMLLib;
 
-(**
- * Allocate data (char* ) from a mchar_async_t object
- *
- * @param[in] pmchar_async_t. See description for mycore_string_init function
- * @param[in] node id. See description for mycore_string_init function
- * @param[in] old data
- * @param[in] how much data is copied from the old data to new data
- * @param[in] new size
- *
- * @return data if successful, otherwise a NULL value
- *)
+{ Allocate data (char* ) from a mchar_async_t object
+
+  @param[in] pmchar_async_t. See description for mycore_string_init function
+  @param[in] node id. See description for mycore_string_init function
+  @param[in] old data
+  @param[in] how much data is copied from the old data to new data
+  @param[in] new size
+
+  @return data if successful, otherwise a NULL value }
 function mycore_string_data_realloc (mchar : pmchar_async_t; node_id : QWord;
   data : PChar; len_to_copy : QWord; size : QWord) : PChar; cdecl;
   external MyHTMLLib;
 
-(**
- * Release allocated data
- *
- * @param[in] pmchar_async_t. See description for mycore_string_init function
- * @param[in] node id. See description for mycore_string_init function
- * @param[in] data to release
- *
- * @return data if successful, otherwise a NULL value
- *)
+{ Release allocated data
+
+  @param[in] pmchar_async_t. See description for mycore_string_init function
+  @param[in] node id. See description for mycore_string_init function
+  @param[in] data to release
+
+  @return data if successful, otherwise a NULL value }
 procedure mycore_string_data_free (mchar : pmchar_async_t; node_id : QWord;
   data : PChar); cdecl; external MyHTMLLib;
 
@@ -4590,32 +4376,26 @@ procedure mycore_string_data_free (mchar : pmchar_async_t; node_id : QWord;
 (* You can call free for str_raw.data, or change str_raw.length = 0           *)
 (******************************************************************************)
 
-(**
- * Clean mycore_string_raw_t object. In reality, data length set to 0
- *
- * @param[in] pmycore_string_raw_t
- *)
+{ Clean mycore_string_raw_t object. In reality, data length set to 0
+
+  @param[in] pmycore_string_raw_t }
 procedure mycore_string_raw_clean (str_raw : pmycore_string_raw_t); cdecl;
   external MyHTMLLib;
 
-(**
- * Full clean mycore_string_raw_t object.
- * Equivalently: memset(str_raw, 0, sizeof(mycore_string_raw_t))
- *
- * @param[in] pmycore_string_raw_t
- *)
+{ Full clean mycore_string_raw_t object.
+  Equivalently: memset(str_raw, 0, sizeof(mycore_string_raw_t))
+
+  @param[in] pmycore_string_raw_t }
 procedure mycore_string_raw_clean_all (str_raw : pmycore_string_raw_t); cdecl;
   external MyHTMLLib;
 
-(**
- * Free resources for mycore_string_raw_t object
- *
- * @param[in] pmycore_string_raw_t
- * @param[in] call free function for current object or not
- *
- * @return NULL if destroy_obj set true, otherwise a current mycore_string_raw_t
- * object
- *)
+{ Free resources for mycore_string_raw_t object
+
+  @param[in] pmycore_string_raw_t
+  @param[in] call free function for current object or not
+
+  @return NULL if destroy_obj set true, otherwise a current mycore_string_raw_t
+          object }
 function mycore_string_raw_destroy (str_raw : pmycore_string_raw_t;
   destroy_obj : Boolean) : pmycore_string_raw_t; cdecl; external MyHTMLLib;
 
@@ -4625,101 +4405,83 @@ function mycore_string_raw_destroy (str_raw : pmycore_string_raw_t;
 (*                                                                            *)
 (******************************************************************************)
 
-(**
- * Get Incoming Buffer by position
- *
- * @param[in] current pmycore_incoming_buffer_t
- * @param[in] begin position
- *
- * @return mycore_incoming_buffer_t if successful, otherwise a NULL value
- *)
+{ Get Incoming Buffer by position
+
+  @param[in] current pmycore_incoming_buffer_t
+  @param[in] begin position
+
+  @return mycore_incoming_buffer_t if successful, otherwise a NULL value }
 function mycore_incoming_buffer_find_by_position (inc_buf :
   pmycore_incoming_buffer_t; start : QWord) : pmycore_incoming_buffer_t; cdecl;
   external MyHTMLLib;
 
-(**
- * Get data of Incoming Buffer
- *
- * @param[in] pmycore_incoming_buffer_t
- *
- * @return const char* if successful, otherwise a NULL value
- *)
+{ Get data of Incoming Buffer
+
+  @param[in] pmycore_incoming_buffer_t
+
+  @return const char* if successful, otherwise a NULL value }
 function mycore_incoming_buffer_data (inc_buf : pmycore_incoming_buffer_t) :
   PChar; cdecl; external MyHTMLLib;
 
-(**
- * Get data length of Incoming Buffer
- *
- * @param[in] pmycore_incoming_buffer_t
- *
- * @return size_t
- *)
+{ Get data length of Incoming Buffer
+
+  @param[in] pmycore_incoming_buffer_t
+
+  @return size_t }
 function mycore_incoming_buffer_length (inc_buf : pmycore_incoming_buffer_t) :
   QWord; cdecl; external MyHTMLLib;
 
-(**
- * Get data size of Incoming Buffer
- *
- * @param[in] pmycore_incoming_buffer_t
- *
- * @return size_t
- *)
+{ Get data size of Incoming Buffer
+
+  @param[in] pmycore_incoming_buffer_t
+
+  @return size_t }
 function mycore_incoming_buffer_size (inc_buf : pmycore_incoming_buffer_t) :
   QWord; cdecl; external MyHTMLLib;
 
-(**
- * Get data offset of Incoming Buffer. Global position of begin Incoming Buffer.
- * See description for MyHTML_INCOMING title
- *
- * @param[in] pmycore_incoming_buffer_t
- *
- * @return size_t
- *)
+{ Get data offset of Incoming Buffer. Global position of begin Incoming Buffer.
+  See description for MyHTML_INCOMING title
+
+  @param[in] pmycore_incoming_buffer_t
+
+  @return size_t }
 function mycore_incoming_buffer_offset (inc_buf : pmycore_incoming_buffer_t) :
   QWord; cdecl; external MyHTMLLib;
 
-(**
- * Get Relative Position for Incoming Buffer.
- * Incoming Buffer should be prepared by mycore_incoming_buffer_find_by_position
- *
- * @param[in] pmycore_incoming_buffer_t
- * @param[in] global begin
- *
- * @return size_t
- *)
+{ Get Relative Position for Incoming Buffer.
+  Incoming Buffer should be prepared by mycore_incoming_buffer_find_by_position
+
+  @param[in] pmycore_incoming_buffer_t
+  @param[in] global begin
+
+  @return size_t }
 function mycore_incoming_buffer_relative_begin (inc_buf :
   pmycore_incoming_buffer_t; start : QWord) : QWord; cdecl; external MyHTMLLib;
 
-(**
- * This function returns number of available data by Incoming Buffer
- * Incoming buffer may be incomplete. See mycore_incoming_buffer_next
- *
- * @param[in] pmycore_incoming_buffer_t
- * @param[in] global begin
- *
- * @return size_t
- *)
+{ This function returns number of available data by Incoming Buffer
+  Incoming buffer may be incomplete. See mycore_incoming_buffer_next
+
+  @param[in] pmycore_incoming_buffer_t
+  @param[in] global begin
+
+  @return size_t }
 function mycore_incoming_buffer_available_length (inc_buf :
   pmycore_incoming_buffer_t; relative_begin : QWord; length : QWord) : QWord;
   cdecl; external MyHTMLLib;
 
-(**
- * Get next buffer
- *
- * @param[in] pmycore_incoming_buffer_t
- *
- * @return pmycore_incoming_buffer_t
- *)
+{ Get next buffer
+
+  @param[in] pmycore_incoming_buffer_t
+
+  @return pmycore_incoming_buffer_t }
 function mycore_incoming_buffer_next (inc_buf : pmycore_incoming_buffer_t) :
   pmycore_incoming_buffer_t; cdecl; external MyHTMLLib;
 
-(**
- * Get prev buffer
- *
- * @param[in] pmycore_incoming_buffer_t
- *
- * @return pmycore_incoming_buffer_t
- *)
+{ Get prev buffer
+
+  @param[in] pmycore_incoming_buffer_t
+
+  @return pmycore_incoming_buffer_t }
 function mycore_incoming_buffer_prev (inc_buf : pmycore_incoming_buffer_t) :
   pmycore_incoming_buffer_t; cdecl; external MyHTMLLib;
 
@@ -4729,26 +4491,22 @@ function mycore_incoming_buffer_prev (inc_buf : pmycore_incoming_buffer_t) :
 (*                                                                            *)
 (******************************************************************************)
 
-(**
- * Get namespace text by namespace type (id)
- *
- * @param[in] myhtml_namespace_t
- * @param[out] optional, length of returned text
- *
- * @return text if successful, otherwise a NULL value
- *)
+{ Get namespace text by namespace type (id)
+
+  @param[in] myhtml_namespace_t
+  @param[out] optional, length of returned text
+
+  @return text if successful, otherwise a NULL value }
 function myhtml_namespace_name_by_id (ns : myhtml_namespace_t; length :
   PQWord) : PChar; cdecl; external MyHTMLLib;
 
-(**
- * Get namespace type (id) by namespace text
- *
- * @param[in] const char*, namespace text
- * @param[in] size of namespace text
- * @param[out] detected namespace type (id)
- *
- * @return true if detect, otherwise false
- *)
+{ Get namespace type (id) by namespace text
+
+  @param[in] const char*, namespace text
+  @param[in] size of namespace text
+  @param[out] detected namespace type (id)
+
+  @return true if detect, otherwise false }
 function myhtml_namespace_id_by_name (const name : PChar; length : QWord; ns :
   pmyhtml_namespace_t) : Boolean; cdecl; external MyHTMLLib;
 
@@ -4758,113 +4516,97 @@ function myhtml_namespace_id_by_name (const name : PChar; length : QWord; ns :
 (*                                                                            *)
 (******************************************************************************)
 
-(**
- * Get current callback for tokens before processing
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return myhtml_callback_token_f
- *)
+{ Get current callback for tokens before processing
+
+  @param[in] pmyhtml_tree_t
+
+  @return myhtml_callback_token_f }
 function myhtml_callback_before_token_done (tree : pmyhtml_tree_t) :
   myhtml_callback_token_f; cdecl; external MyHTMLLib;
 
-(**
- * Get current callback for tokens after processing
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return myhtml_callback_token_f
- *)
+{ Get current callback for tokens after processing
+
+  @param[in] pmyhtml_tree_t
+
+  @return myhtml_callback_token_f }
 function myhtml_callback_after_token_done (tree : pmyhtml_tree_t) :
   myhtml_callback_token_f; cdecl; external MyHTMLLib;
 
-(**
- * Set callback for tokens before processing
- *
- * Warning!
- * If you using thread mode parsing then this callback calls from thread (not
- * Main thread)
- * If you build MyHTML without thread or using MyHTML_OPTIONS_PARSE_MODE_SINGLE
- * for create myhtml_t object then this callback calls from Main thread
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] myhtml_callback_token_f callback function
- *)
+{ Set callback for tokens before processing
+
+  Warning!
+  If you using thread mode parsing then this callback calls from thread (not
+  Main thread)
+  If you build MyHTML without thread or using MyHTML_OPTIONS_PARSE_MODE_SINGLE
+  for create myhtml_t object then this callback calls from Main thread
+
+  @param[in] pmyhtml_tree_t
+  @param[in] myhtml_callback_token_f callback function }
 procedure myhtml_callback_before_token_done_set (tree : pmyhtml_tree_t; func :
   myhtml_callback_token_f; ctx : Pointer); cdecl; external MyHTMLLib;
 
-(**
- * Set callback for tokens after processing
- *
- * Warning!
- * If you using thread mode parsing then this callback calls from thread (not
- * Main thread)
- * If you build MyHTML without thread or using MyHTML_OPTIONS_PARSE_MODE_SINGLE
- * for create myhtml_t object then this callback calls from Main thread
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] myhtml_callback_token_f callback function
- *)
+{ Set callback for tokens after processing
+
+  Warning!
+  If you using thread mode parsing then this callback calls from thread (not
+  Main thread)
+  If you build MyHTML without thread or using MyHTML_OPTIONS_PARSE_MODE_SINGLE
+  for create myhtml_t object then this callback calls from Main thread
+
+  @param[in] pmyhtml_tree_t
+  @param[in] myhtml_callback_token_f callback function }
 procedure myhtml_callback_after_token_done_set (tree : pmyhtml_tree_t; func :
   myhtml_callback_token_f; ctx : Pointer); cdecl; external MyHTMLLib;
 
-(**
- * Get current callback for tree node after inserted
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return myhtml_callback_tree_node_f
- *)
+{ Get current callback for tree node after inserted
+
+  @param[in] pmyhtml_tree_t
+
+  @return myhtml_callback_tree_node_f }
 function myhtml_callback_tree_node_insert (tree : pmyhtml_tree_t) :
   myhtml_callback_tree_node_f; cdecl; external MyHTMLLib;
 
-(**
- * Get current callback for tree node after removed
- *
- * @param[in] pmyhtml_tree_t
- *
- * @return myhtml_callback_tree_node_f
- *)
+{ Get current callback for tree node after removed
+
+  @param[in] pmyhtml_tree_t
+
+  @return myhtml_callback_tree_node_f }
 function myhtml_callback_tree_node_remove (tree : pmyhtml_tree_t) :
   myhtml_callback_tree_node_f; cdecl; external MyHTMLLib;
 
-(**
- * Set callback for tree node after inserted
- *
- * Warning!
- * If you using thread mode parsing then this callback calls from thread (not
- * Main thread)
- * If you build MyHTML without thread or using MyHTML_OPTIONS_PARSE_MODE_SINGLE
- * for create myhtml_t object then this callback calls from Main thread
- *
- * Warning!!!
- * If you well access to attributes or text for node and you using thread mode
- * then you need wait for token processing done.
- * See myhtml_token_node_wait_for_done
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] myhtml_callback_tree_node_f callback function
- *)
+{ Set callback for tree node after inserted
+
+  Warning!
+  If you using thread mode parsing then this callback calls from thread (not
+  Main thread)
+  If you build MyHTML without thread or using MyHTML_OPTIONS_PARSE_MODE_SINGLE
+  for create myhtml_t object then this callback calls from Main thread
+
+  Warning!!!
+  If you well access to attributes or text for node and you using thread mode
+  then you need wait for token processing done.
+  See myhtml_token_node_wait_for_done
+
+  @param[in] pmyhtml_tree_t
+  @param[in] myhtml_callback_tree_node_f callback function }
 procedure myhtml_callback_tree_node_insert_set (tree : pmyhtml_tree_t; func :
   myhtml_callback_tree_node_f; ctx : Pointer); cdecl; external MyHTMLLib;
 
-(**
- * Set callback for tree node after removed
- *
- * Warning!
- * If you using thread mode parsing then this callback calls from thread (not
- * Main thread)
- * If you build MyHTML without thread or using MyHTML_OPTIONS_PARSE_MODE_SINGLE
- * for create myhtml_t object then this callback calls from Main thread
- *
- * Warning!!!
- * If you well access to attributes or text for node and you using thread mode
- * then you need wait for token processing done.
- * See myhtml_token_node_wait_for_done
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] myhtml_callback_tree_node_f callback function
- *)
+{ Set callback for tree node after removed
+
+  Warning!
+  If you using thread mode parsing then this callback calls from thread (not
+  Main thread)
+  If you build MyHTML without thread or using MyHTML_OPTIONS_PARSE_MODE_SINGLE
+  for create myhtml_t object then this callback calls from Main thread
+
+  Warning!!!
+  If you well access to attributes or text for node and you using thread mode
+  then you need wait for token processing done.
+  See myhtml_token_node_wait_for_done
+
+  @param[in] pmyhtml_tree_t
+  @param[in] myhtml_callback_tree_node_f callback function }
 procedure myhtml_callback_tree_node_remove_set (tree : pmyhtml_tree_t; func :
   myhtml_callback_tree_node_f; ctx : Pointer); cdecl; external MyHTMLLib;
 
@@ -4874,25 +4616,21 @@ procedure myhtml_callback_tree_node_remove_set (tree : pmyhtml_tree_t; func :
 (*                                                                            *)
 (******************************************************************************)
 
-(**
- * Compare two strings ignoring case
- *
- * @param[in] pmyhtml_collection_t
- * @param[in] count of add nodes
- *
- * @return 0 if match, otherwise index of break position
- *)
+{ Compare two strings ignoring case
+
+  @param[in] pmyhtml_collection_t
+  @param[in] count of add nodes
+
+  @return 0 if match, otherwise index of break position }
 function mycore_strcasecmp (const str1 : PChar; const str2 : PChar) : QWord;
   cdecl; external MyHTMLLib;
 
-(**
- * Compare two strings ignoring case
- *
- * @param[in] pmyhtml_collection_t
- * @param[in] count of add nodes
- *
- * @return 0 if match, otherwise index of break position
- *)
+{ Compare two strings ignoring case
+
+  @param[in] pmyhtml_collection_t
+  @param[in] count of add nodes
+
+  @return 0 if match, otherwise index of break position }
 function mycore_strncasecmp (const str1 : PChar; const str2 : PChar; size :
   QWord) : QWord; cdecl; external MyHTMLLib;
 
@@ -4908,70 +4646,58 @@ function myhtml_queue_add (tree : pmyhtml_tree_t; start : QWord; token :
 (*                                                                            *)
 (******************************************************************************)
 
-(**
- * Tree fragment serialization
- * The same as myhtml_serialization_tree_buffer function
- *)
+{ Tree fragment serialization
+  The same as myhtml_serialization_tree_buffer function }
 function myhtml_serialization (scope_node : pmyhtml_tree_node_t; str :
   pmycore_string_raw_t) : mystatus_t; cdecl; external MyHTMLLib;
 
-(**
- * Only one tree node serialization
- * The same as myhtml_serialization_node_buffer function
- *)
+{ Only one tree node serialization
+  The same as myhtml_serialization_node_buffer function }
 function myhtml_serialization_node (node : pmyhtml_tree_node_t; str :
   pmycore_string_raw_t) : mystatus_t; cdecl; external MyHTMLLib;
 
-(**
- * Serialize tree to an output string
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] scope node
- * @param[in] pmycore_string_raw_t
- *
- * @return true if successful, otherwise false
- *)
+{ Serialize tree to an output string
+
+  @param[in] pmyhtml_tree_t
+  @param[in] scope node
+  @param[in] pmycore_string_raw_t
+
+  @return true if successful, otherwise false }
 function myhtml_serialization_tree_buffer (scope_node : pmyhtml_tree_node_t;
   str : pmycore_string_raw_t) : mystatus_t; cdecl; external MyHTMLLib;
 
-(**
- * Serialize node to an output string
- *
- * @param[in] pmyhtml_tree_t
- * @param[in] node
- * @param[in] pmycore_string_raw_t
- *
- * @return true if successful, otherwise false
- *)
+{ Serialize node to an output string
+
+  @param[in] pmyhtml_tree_t
+  @param[in] node
+  @param[in] pmycore_string_raw_t
+
+  @return true if successful, otherwise false }
 function myhtml_serialization_node_buffer (node : pmyhtml_tree_node_t; str :
   pmycore_string_raw_t) : mystatus_t; cdecl; external MyHTMLLib;
 
-(**
- * The serialize function for an entire tree
- *
- * @param[in] tree        the tree to be serialized
- * @param[in] scope_node  the scope_node
- * @param[in] callback    function that will be called for all strings that have
- *                        to be printed
- * @param[in] ptr         user-supplied pointer
- *
- * @return true if successful, otherwise false
- *)
+{ The serialize function for an entire tree
+
+  @param[in] tree        the tree to be serialized
+  @param[in] scope_node  the scope_node
+  @param[in] callback    function that will be called for all strings that have
+                         to be printed
+  @param[in] ptr         user-supplied pointer
+
+  @return true if successful, otherwise false }
 function myhtml_serialization_tree_callback (scope_node : pmyhtml_tree_node_t;
   callback : mycore_callback_serialize_f; ptr : Pointer) : mystatus_t; cdecl;
   external MyHTMLLib;
 
-(**
- * The serialize function for a single node
- *
- * @param[in] tree        the tree to be serialized
- * @param[in] node        the node that is going to be serialized
- * @param[in] callback    function that will be called for all strings that have
- *                        to be printed
- * @param[in] ptr         user-supplied pointer
- *
- * @return true if successful, otherwise false
- *)
+{ The serialize function for a single node
+
+  @param[in] tree        the tree to be serialized
+  @param[in] node        the node that is going to be serialized
+  @param[in] callback    function that will be called for all strings that have
+                         to be printed
+  @param[in] ptr         user-supplied pointer
+
+  @return true if successful, otherwise false }
 function myhtml_serialization_node_callback (node : pmyhtml_tree_node_t;
   callback : mycore_callback_serialize_f; ptr : Pointer) : mystatus_t; cdecl;
   external MyHTMLLib;
@@ -4982,11 +4708,9 @@ function myhtml_serialization_node_callback (node : pmyhtml_tree_node_t;
 (*                                                                            *)
 (******************************************************************************)
 
-(**
- * Get current version
- *
- * @return myhtml_version_t
- *)
+{ Get current version
+
+  @return myhtml_version_t }
 function myhtml_version : myhtml_version_t; cdecl; external MyHTMLLib;
 
 implementation
