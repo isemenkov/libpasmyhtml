@@ -568,30 +568,6 @@ type
       { TTransform }
       { Class provides transform callback wrapper which apply to tag element }
       TTransform = class
-      public
-        type
-          { TMutableTagNode }
-          { Class implements HTML tag and functions to operation with it }
-          TMutableTagNode = class (TTagNode)
-          private
-
-          public
-            constructor Create (ANode : pmyhtml_tree_node_t);
-            destructor Destroy; override;
-
-            { Add child node to current node. If children already exists it will
-              be added to the last }
-            function AddChildren (ANode : TTagNode) : TMutableTagNode;
-              {$IFNDEF DEBUG}inline;{$ENDIF}
-
-            { Add child node immediately before current node }
-            function AddChildrenBefore (ANode : TTagNode) : TMutableTagNode;
-              {$IFNDEF DEBUG}inline;{$ENDIF}
-
-            { Add child node immediately after the current node }
-            function AddChildrenAfter (ANode : TTagNode) : TMutableTagNode;
-              {$IFNDEF DEBUG}inline;{$ENDIF}
-          end;
       private
         FTagNodeCallback : TTagNodeTransformCallback;
         FTagNodeData : Pointer;
@@ -695,49 +671,6 @@ end;
 destructor TParser.TFilter.TTagIdExclude.Destroy;
 begin
   inherited Destroy;
-end;
-
-{ TParser.TTransform.TMutableTagNode }
-
-constructor TParser.TTransform.TMutableTagNode.Create(ANode: pmyhtml_tree_node_t
-  );
-begin
-  inherited Create (ANode);
-end;
-
-destructor TParser.TTransform.TMutableTagNode.Destroy;
-begin
-  inherited Destroy;
-end;
-
-function TParser.TTransform.TMutableTagNode.AddChildren(ANode: TTagNode
-  ): TMutableTagNode;
-begin
-  if IsOk then
-  begin
-    myhtml_tree_node_add_child(FNode, ANode.FNode);
-  end;
-  Result := Self;
-end;
-
-function TParser.TTransform.TMutableTagNode.AddChildrenBefore(ANode: TTagNode
-  ): TMutableTagNode;
-begin
-  if IsOk then
-  begin
-    myhtml_tree_node_insert_before(FNode, ANode.FNode);
-  end;
-  Result := Self;
-end;
-
-function TParser.TTransform.TMutableTagNode.AddChildrenAfter(ANode: TTagNode
-  ): TMutableTagNode;
-begin
-  if IsOk then
-  begin
-    myhtml_tree_node_insert_after(FNode, ANode.FNode);
-  end;
-  Result := Self;
 end;
 
 { TParser.TFilter.TNotContainsAttributeAllValues }
