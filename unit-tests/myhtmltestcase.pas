@@ -407,7 +407,6 @@ procedure TParserHtml5TestCase.TestLastNodeAttribute;
 var
   Node : TParser.TTagNode;
   Attribute : TParser.TTagNodeAttribute;
-  Value : string;
 begin
   Node := FParser.Parse(Html5TestPage, DOCUMENT_BODY);
   AssertTrue('Error body node is nil', Node.IsOk);
@@ -423,17 +422,15 @@ begin
   AssertTrue('Error not correct attribute key', Attribute.Key = 'role');
   AssertTrue('Error not correct attribute value', Attribute.Value = 'document');
 
-  Attribute := Node.PrevNodeAttribute;
+  Attribute := Attribute.Prev;
   AssertTrue('Error attribute is nil', Attribute.IsOk);
   AssertTrue('Error not correct attribute key', Attribute.Key = 'class');
   AssertTrue('Error not correct attribute value', Attribute.Value = 'page');
-  {
-  Attribute := Node.PrevNodeAttribute;
+
+  Attribute := Attribute.Prev;
   AssertTrue('Error attribute is nil', Attribute.IsOk);
-  Value := Attribute.Key;
   AssertTrue('Error not correct attribute key', Attribute.Key = 'id');
   AssertTrue('Error not correct attribute value', Attribute.Value = 'top');
-  }
 end;
 
 { TMyHTMLParserIanaTestCase }
