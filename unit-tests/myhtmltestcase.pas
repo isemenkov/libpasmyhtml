@@ -407,6 +407,7 @@ procedure TParserHtml5TestCase.TestLastNodeAttribute;
 var
   Node : TParser.TTagNode;
   Attribute : TParser.TTagNodeAttribute;
+  Value : string;
 begin
   Node := FParser.Parse(Html5TestPage, DOCUMENT_BODY);
   AssertTrue('Error body node is nil', Node.IsOk);
@@ -424,7 +425,9 @@ begin
 
   Attribute := Attribute.Prev;
   AssertTrue('Error attribute is nil', Attribute.IsOk);
+  Value := Attribute.Key;
   AssertTrue('Error not correct attribute key', Attribute.Key = 'class');
+  Value := Attribute.Value;
   AssertTrue('Error not correct attribute value', Attribute.Value = 'page');
 
   Attribute := Attribute.Prev;

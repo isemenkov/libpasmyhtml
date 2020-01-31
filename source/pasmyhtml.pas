@@ -3,7 +3,7 @@
 (*                object pascal wrapper around MyHTML library                 *)
 (*                    https://github.com/lexborisov/myhtml                    *)
 (*                                                                            *)
-(* Copyright (c) 2019                                       Ivan Semenkov     *)
+(* Copyright (c) 2019 - 2020                                Ivan Semenkov     *)
 (* https://github.com/isemenkov/libpasmyhtml                ivan@semenkov.pro *)
 (*                                                          Ukraine           *)
 (******************************************************************************)
@@ -142,14 +142,13 @@ type
 
         { Apply AFilter to AAttribute if it is. Return filtered
           pmyhtml_tree_attr_t element if find or nil }
-        function FilterAttribute (AAttribute : pmyhtml_tree_attr_t; AFilter :
-          TFilter) : pmyhtml_tree_attr_t; {$IFNDEF DEBUG}inline;{$ENDIF}
+        {function FilterAttribute (AAttribute : pmyhtml_tree_attr_t; AFilter :
+          TFilter) : pmyhtml_tree_attr_t;}
 
         { Apply AFilter to AAttribute if it is. Return filtered
           pmyhtml_tree_attr_t element if find or nil }
-        function ReverseFilterAttribute (AAttribute : pmyhtml_tree_attr_t;
-          AFilter : TFilter) : pmyhtml_tree_attr_t; {$IFNDEF DEBUG}inline;
-          {$ENDIF}
+        {function ReverseFilterAttribute (AAttribute : pmyhtml_tree_attr_t;
+          AFilter : TFilter) : pmyhtml_tree_attr_t;}
       private
         { Return tag id }
         function GetTag :  TTag; {$IFNDEF DEBUG}inline;{$ENDIF}
@@ -295,6 +294,14 @@ type
 
         { Return attribute values tokenize by space }
         function GetValueList : TStringList;
+
+        { Filters node attribute to forward }
+        function Filter (AFilter : TFilter) : TTagNodeAttribute; {$IFNDEF DEBUG}
+          inline;{$ENDIF}
+
+        { Filters node attirbute to backward }
+        function ReverseFilter (AFilter : TFilter) : TTagNodeAttribute;
+        {$IFNDEF DEBUG}inline;{$ENDIF}
       public
         constructor Create (AAttribute : pmyhtml_tree_attr_t);
         destructor Destroy; override;
@@ -1259,36 +1266,6 @@ var
     Result := ANode;
 end;
 
-function TParser.TTagNode.FilterAttribute(AAttribute : pmyhtml_tree_attr_t;
-  AFilter : TFilter) : pmyhtml_tree_attr_t;
-var
-  NodeAttr : pmyhtml_tree_attr_t;
-begin
-  if AFilter <> nil then
-  begin
-    NodeAttr := AAttribute;
-    while (NodeAttr <> nil) and (not AFilter.IsEqual(NodeAttr)) do
-      NodeAttr := myhtml_attribute_next(NodeAttr);
-    Result := NodeAttr;
-  end else
-    Result := AAttribute;
-end;
-
-function TParser.TTagNode.ReverseFilterAttribute(
-  AAttribute: pmyhtml_tree_attr_t; AFilter: TFIlter): pmyhtml_tree_attr_t;
-var
-  NodeAttr : pmyhtml_tree_attr_t;
-begin
-  if AFilter <> nil then
-  begin
-    NodeAttr := AAttribute;
-    while (NodeAttr <> nil) and (not AFilter.IsEqual(NodeAttr)) do
-      NodeAttr := myhtml_attribute_prev(NodeAttr);
-    Result := NodeAttr;
-  end else
-    Result := AAttribute;
-end;
-
 function TParser.TTagNode.GetTag: TTag;
 begin
   if IsOk then
@@ -1524,8 +1501,7 @@ begin
  if IsOk then
  begin
    FNodeAttribute := myhtml_node_attribute_first(FNode);
-   Result := TTagNodeAttribute.Create(FilterAttribute(FNodeAttribute,
-     AFilter));
+   Result := TTagNodeAttribute.Create(FNodeAttribute).Filter(AFilter);
  end else
    Result := TTagNodeAttribute.Create(nil);
 end;
@@ -1536,8 +1512,7 @@ begin
   if IsOk then
   begin
     FNodeAttribute := myhtml_node_attribute_last(FNode);
-    Result := TTagNodeAttribute.Create(ReverseFilterAttribute(FNodeAttribute,
-      AFilter));
+    Result := TTagNodeAttribute.Create(FNodeAttribute).ReverseFilter(AFilter);
   end else
     Result := TTagNodeAttribute.Create(nil);
 end;
@@ -1695,6 +1670,18 @@ begin
     Exit;
   end;
   Result := nil;
+end;
+
+function TParser.TTagNodeAttribute.Filter(AFilter: TFilter): TTagNodeAttribute;
+begin
+  Result := TTagNodeAttribute.Create(FilterAttribute(FAttribute, AFilter));
+end;
+
+function TParser.TTagNodeAttribute.ReverseFilter(AFilter: TFilter
+  ): TTagNodeAttribute;
+begin
+  Result := TTagNodeAttribute.Create(ReverseFilterAttribute(FAttribute,
+    AFilter));
 end;
 
 { TParser }
