@@ -1,6 +1,6 @@
 libPasMyHTML
 ============
-It is object pascal bindings and wrapper around [MyHTML library](https://github.com/lexborisov/myhtml).
+It is object pascal bindings and wrapper around [MyHTML library](https://github.com/lexborisov/myhtml). MyHTML is a fast HTML 5 Parser using Threads.
 
 ### Bindings
 
