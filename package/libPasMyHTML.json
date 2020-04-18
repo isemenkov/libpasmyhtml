@@ -1,0 +1,31 @@
+{
+  "PackageData0" : {
+    "Name" : "libpasmyhtml",
+    "DisplayName" : "libPasMyHTML",
+    "Category" : "Other",
+    "CommunityDescription" : "libPasMyHTML is object pascal wrapper around MyHTML library. Fast HTML 5 Parser. Using threads. ",
+    "RepositoryFileName" : "libPasMyHTML.zip",
+    "RepositoryFileSize" : 69822,
+    "RepositoryFileHash" : "6dc7b95f5683c88343ec440bb31f729e",
+    "RepositoryDate" : 4.3939421650266202E+004,
+    "PackageBaseDir" : "libpasmyhtml\\/",
+    "HomePageURL" : "https://github.com/isemenkov/libpasmyhtml",
+    "DownloadURL" : "",
+    "SVNURL" : ""
+  },
+  "PackageFiles0" : [
+    {
+      "Name" : "libpasmyhtmlpackage.lpk",
+      "Description" : "libPasMyHTML is object pascal wrapper around MyHTML library. Fast HTML 5 Parser. Using threads. \nhttps://github.com/isemenkov/libpasmyhtml",
+      "Author" : "Ivan Semenkov <ivan@semenkov.pro>",
+      "License" : "This source  is free software;  you can redistribute  it and/or modify  it  under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License.                  \n\nThis code is distributed in the  hope that it will  be useful, but WITHOUT ANY  WARRANTY;  without even  the implied  warranty of MERCHANTABILITY  or FITNESS FOR A PARTICULAR PURPOSE.  See the  GNU General Public License for more details.                                                              \n\nA copy  of the  GNU General Public License is available  on the World Wide Web at <http://www.gnu.org/copyleft/gpl.html>. You  can also obtain  it by writing to the Free Software Foundation, Inc., 51  Franklin Street - Fifth Floor, Boston, MA 02110-1335, USA.",
+      "RelativeFilePath" : "package\\/",
+      "VersionAsString" : "1.0.0.0",
+      "LazCompatibility" : "1.6, 1.8, Trunk",
+      "FPCCompatibility" : "2.6.4, 3.0.0, 3.0.2, 3.0.4",
+      "SupportedWidgetSet" : "win32/64, gtk2, carbon",
+      "PackageType" : 0,
+      "DependenciesAsString" : "FCL"
+    }
+  ]
+}
