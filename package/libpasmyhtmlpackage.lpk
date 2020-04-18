@@ -7,11 +7,12 @@
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
-        <OtherUnitFiles Value="source"/>
+        <OtherUnitFiles Value="../source"/>
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/"/>
       </SearchPaths>
     </CompilerOptions>
-    <Description Value="libPasMyHTML is object pascal wrapper around MyHTML library. Fast HTML 5 Parser. Using threads. "/>
+    <Description Value="libPasMyHTML is object pascal wrapper around MyHTML library. Fast HTML 5 Parser. Using threads. 
+https://github.com/isemenkov/libpasmyhtml"/>
     <License Value="This source  is free software;  you can redistribute  it and/or modify  it  under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License.                  
 
 This code is distributed in the  hope that it will  be useful, but WITHOUT ANY  WARRANTY;  without even  the implied  warranty of MERCHANTABILITY  or FITNESS FOR A PARTICULAR PURPOSE.  See the  GNU General Public License for more details.                                                              
@@ -20,11 +21,11 @@ A copy  of the  GNU General Public License is available  on the World Wide Web a
     <Version Major="1"/>
     <Files Count="2">
       <Item1>
-        <Filename Value="source/libpasmyhtml.pas"/>
+        <Filename Value="../source/libpasmyhtml.pas"/>
         <UnitName Value="libpasmyhtml"/>
       </Item1>
       <Item2>
-        <Filename Value="source/pasmyhtml.pas"/>
+        <Filename Value="../source/pasmyhtml.pas"/>
         <UnitName Value="pasmyhtml"/>
       </Item2>
     </Files>
