@@ -9,7 +9,7 @@
   ],
   "UpdatePackageData" : {
     "DisableInOPM" : false,
-    "DownloadZipURL" : "",
+    "DownloadZipURL" : "https://github.com/isemenkov/libpasmyhtml/blob/master/package/libPasMyHTML.zip",
     "Name" : "libpasmyhtml"
   }
 }
