@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <Name Value="libPasMyHTMLPackage"/>
+    <Type Value="RunAndDesignTime"/>
+    <Author Value="Ivan Semenkov &lt;ivan@semenkov.pro>"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <OtherUnitFiles Value="source"/>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Description Value="libPasMyHTML is object pascal wrapper around MyHTML library. Fast HTML 5 Parser. Using threads. "/>
+    <License Value="This source  is free software;  you can redistribute  it and/or modify  it  under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License.                  
+
+This code is distributed in the  hope that it will  be useful, but WITHOUT ANY  WARRANTY;  without even  the implied  warranty of MERCHANTABILITY  or FITNESS FOR A PARTICULAR PURPOSE.  See the  GNU General Public License for more details.                                                              
+
+A copy  of the  GNU General Public License is available  on the World Wide Web at &lt;http://www.gnu.org/copyleft/gpl.html>. You  can also obtain  it by writing to the Free Software Foundation, Inc., 51  Franklin Street - Fifth Floor, Boston, MA 02110-1335, USA."/>
+    <Version Major="1"/>
+    <Files Count="2">
+      <Item1>
+        <Filename Value="source/libpasmyhtml.pas"/>
+        <UnitName Value="libpasmyhtml"/>
+      </Item1>
+      <Item2>
+        <Filename Value="source/pasmyhtml.pas"/>
+        <UnitName Value="pasmyhtml"/>
+      </Item2>
+    </Files>
+    <RequiredPkgs Count="1">
+      <Item1>
+        <PackageName Value="FCL"/>
+      </Item1>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
