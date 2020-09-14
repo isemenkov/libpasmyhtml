@@ -2,6 +2,52 @@ libPasMyHTML
 ============
 It is object pascal bindings and wrapper around [MyHTML library](https://github.com/lexborisov/myhtml). MyHTML is a fast HTML 5 Parser using Threads.
 
+
+
+### Table of contents
+
+* [Requierements](#requirements)
+* [Installation](#installation)
+* [Usage](#usage)
+* [Testing](#testing)
+* [Bindings](#bindings)
+  * [Usage example](#usage-example)
+* [Object wrapper](#object-wrapper)
+  * [Usage example](#usage-example-1)
+
+
+
+### Requirements
+
+* [Free Pascal Compiler](http://freepascal.org)
+* [Lazarus IDE](http://www.lazarus.freepascal.org/) (optional)
+
+Library is tested with latest stable FreePascal Compiler (currently 3.2.0) and Lazarus IDE (currently 2.0.10).
+
+
+
+### Installation
+
+Get the sources and add the *source* directory to the *fpc.cfg* file.
+
+
+
+### Usage
+
+Clone the repository `git clone https://github.com/isemenkov/libpasmyhtml`.
+
+Add the unit you want to use to the `uses` clause.
+
+
+
+### Testing
+
+A testing framework consists of the following ingredients:
+1. Test runner project located in `unit-tests` directory.
+2. Test cases (FPCUnit based) for additional helpers classes.
+
+
+
 ### Bindings
 
 [libpasmyhtml.pas](https://github.com/isemenkov/libpasmyhtml/blob/master/source/libpasmyhtml.pas) file contains the MyHTML translated headers to use this library in pascal programs.
