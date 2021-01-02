@@ -1,6 +1,6 @@
 libPasMyHTML
 ============
-It is object pascal bindings and wrapper around [MyHTML library](https://github.com/lexborisov/myhtml). MyHTML is a fast HTML 5 Parser using Threads.
+It is delphi and object pascal bindings and wrapper around [MyHTML library](https://github.com/lexborisov/myhtml). MyHTML is a fast HTML 5 Parser using Threads.
 
 
 
@@ -19,16 +19,21 @@ It is object pascal bindings and wrapper around [MyHTML library](https://github.
 
 ### Requirements
 
+* [MyHTML](https://github.com/lexborisov/myhtml)
+* [Embarcadero (R) Rad Studio](https://www.embarcadero.com)
 * [Free Pascal Compiler](http://freepascal.org)
 * [Lazarus IDE](http://www.lazarus.freepascal.org/) (optional)
 
-Library is tested with latest stable FreePascal Compiler (currently 3.2.0) and Lazarus IDE (currently 2.0.10).
+Library is tested for 
+
+- Embarcadero (R) Delphi 10.3 on Windows 7 Service Pack 1 (Version 6.1, Build 7601, 64-bit Edition)
+- FreePascal Compiler (3.2.0) and Lazarus IDE (2.0.10) on Ubuntu Linux 5.8.0-33-generic x86_64
 
 
 
 ### Installation
 
-Get the sources and add the *source* directory to the *fpc.cfg* file.
+Get the sources and add the *source* directory to the project search path. For FPC add the *source* directory to the *fpc.cfg* file.
 
 
 
@@ -44,7 +49,7 @@ Add the unit you want to use to the `uses` clause.
 
 A testing framework consists of the following ingredients:
 1. Test runner project located in `unit-tests` directory.
-2. Test cases (FPCUnit based) for additional helpers classes.
+2. Test cases (DUnit for Delphi and FPCUnit for FPC based) for all containers classes. 
 
 
 
@@ -56,7 +61,7 @@ A testing framework consists of the following ingredients:
 
 ```pascal
   uses
-    libpasmyhtml;
+    libpasmyhtml, utils.api.cstring;
 
   const
     HTMLDocument = '<!DOCTYPE html>'                              + sLineBreak +
@@ -101,7 +106,7 @@ A testing framework consists of the following ingredients:
       TextNode := myhtml_node_child(ANode);
       if (TextNode <> nil) and (myhtml_tags_t(myhtml_node_tag_t(TextNode)) = MyHTML_TAG__TEXT) then
       begin
-        Result := myhtml_node_text(TextNode, nil);
+        Result := API.CString.Create(myhtml_node_text(TextNode, nil)).ToString;
       end else
         Result := '';
     end else
@@ -115,7 +120,8 @@ A testing framework consists of the following ingredients:
     myhtml_tree_init(Tree, HTML);
     myhtml_tree_parse_flags_set(Tree, MyHTML_TREE_PARSE_FLAGS_CLEAN);
 
-    Error := myhtml_parse(Tree, MyENCODING_UTF_8, PChar(HTMLDocument), Length(HTMLDocument));
+    Error := myhtml_parse(Tree, MyENCODING_UTF_8, 
+      API.CString.Create(HTMLDocument).ToPAnsiChar, Length(HTMLDocument));
     if Error = mystatus_t(MyHTML_STATUS_OK) then
     begin
       Node := myhtml_tree_get_node_head(Tree);
