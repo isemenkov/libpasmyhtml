@@ -1,18 +1,11 @@
 (******************************************************************************)
 (*                                libPasMyHTML                                *)
-(*                object pascal wrapper around MyHTML library                 *)
+(*           delphi and object pascal wrapper  around MyHTML library          *)
 (*                    https://github.com/lexborisov/myhtml                    *)
 (*                                                                            *)
-(* Copyright (c) 2019 - 2020                                Ivan Semenkov     *)
+(* Copyright (c) 2019 - 2021                                Ivan Semenkov     *)
 (* https://github.com/isemenkov/libpasmyhtml                ivan@semenkov.pro *)
 (*                                                          Ukraine           *)
-(******************************************************************************)
-(*                                                                            *)
-(* Module:          Unit 'pasmyhtml'                                          *)
-(* Functionality:   Provides  TParser   class  which   present  HTML  parser, *)
-(*                  TTagNode class which implements HTML tag and functions to *)
-(*                  operations with it.                                       *)
-(*                                                                            *)
 (******************************************************************************)
 (*                                                                            *)
 (* This source  is free software;  you can redistribute  it and/or modify  it *)
@@ -33,7 +26,9 @@
 
 unit pasmyhtml;
 
-{$mode objfpc}{$H+}
+{$IFDEF FPC}
+  {$mode objfpc}{$H+}
+{$ENDIF}
 {$IFOPT D+}
   {$DEFINE DEBUG}
 {$ENDIF}
@@ -41,7 +36,8 @@ unit pasmyhtml;
 interface
 
 uses
-  Classes, SysUtils, libpasmyhtml, fgl;
+  SysUtils, libpasmyhtml, container.list, container.arraylist, utils.functor,
+  utils.api.cstring;
 
 type
 
@@ -58,18 +54,26 @@ type
         DOCUMENT_BODY  { Start parse from BODY tag element }
       );
 
-      TTag = type myhtml_tags_t;
+      TTag = myhtml_tags_t;
 
       { Tag node attribute }
       { Class which implements HTML tag attribute and functions to operation
         with it }
       TTagNodeAttribute = class;
-      TTagNodeAttributeList = specialize TFPGObjectList<TTagNodeAttribute>;
+
+      TTagNodeAttributeCompareFunctor = {$IFDEF FPC}specialize{$ENDIF}
+        TUnsortableFunctor<TTagNodeAttribute>;
+      TTagNodeAttributeList = {$IFDEF FPC}specialize{$ENDIF} 
+        TList<TTagNodeAttribute, TTagNodeAttributeCompareFunctor>;
 
       { Tag node }
       { Class implements HTML tag and functions to operation with it }
       TTagNode = class;
-      TTagNodeList = specialize TFPGObjectList<TTagNode>;
+
+      TTagNodeCompareFunctor = {$IFDEF FPC}specialize{$ENDIF}
+        TUnsortableFunctor<TTagNode>;
+      TTagNodeList = {$IFDEF FPC}specialize{$ENDIF} 
+        TArrayList<TTagNode, TTagNodeCompareFunctor>;
 
       { Filter }
       { HTML tag filter callback }
@@ -92,11 +96,11 @@ type
       { Custom filter interface }
       IFilter = class
       protected
-        function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; virtual;
-          abstract; overload;
+        function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; overload;
+          virtual; abstract;
 
         function IsEqual (ANodeAttribute : pmyhtml_tree_attr_t) : Boolean;
-          virtual; abstract; overload;
+          overload; virtual; abstract;
       end;
 
       TFilter = class;
@@ -133,12 +137,14 @@ type
         { Apply AFilter to ANode element if it is. Return pmyhtml_tree_node_t if
           element find or nil }
         function FilterNode (ANode : pmyhtml_tree_node_t; AFilter : TFilter) :
-          pmyhtml_tree_node_t; {$IFNDEF DEBUG}inline;{$ENDIF}
+          pmyhtml_tree_node_t; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Apply AFilter to ANode element if it is. Return pmyhtml_tree_node_t if
           element find or nil. Try to find node is reverse direction }
         function ReverseFilterNode (ANode : pmyhtml_tree_node_t; AFilter :
-          TFilter) : pmyhtml_tree_Node_t; {$IFNDEF DEBUG}inline;{$ENDIF}
+          TFilter) : pmyhtml_tree_Node_t; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Apply AFilter to AAttribute if it is. Return filtered
           pmyhtml_tree_attr_t element if find or nil }
@@ -151,29 +157,38 @@ type
           AFilter : TFilter) : pmyhtml_tree_attr_t;}
       private
         { Return tag id }
-        function GetTag :  TTag; {$IFNDEF DEBUG}inline;{$ENDIF}
+        function GetTag :  TTag; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Return tag text value }
-        function GetValue : string; {$IFNDEF DEBUG}inline;{$ENDIF}
+        function GetValue : string; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Return node parent if exists, broken node overwise }
-        function GetParent : TTagNode; {$IFNDEF DEBUG}inline;{$ENDIF}
+        function GetParent : TTagNode; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Return TRUE if element is empty }
-        function GetIsEmpty : Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
+        function GetIsEmpty : Boolean; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Return TRUE if element is self-closed }
-        function GetIsSelfClose : Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
+        function GetIsSelfClose : Boolean; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Get/Set custom data from/to node }
-        function GetData : Pointer; {$IFNDEF DEBUG}inline;{$ENDIF}
-        procedure SetData (AData : Pointer); {$IFNDEF DEBUG}inline;{$ENDIF}
+        function GetData : Pointer; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
+
+        procedure SetData (AData : Pointer); 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
       public
         constructor Create (ANode : pmyhtml_tree_node_t);
         destructor Destroy; override;
 
         { Return TRUE if tag element is correct }
-        function IsOk : Boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
+        function IsOk : Boolean; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { If AFilter is set return first filtered node else return self }
         function FirstNode (AFilter : TFilter = nil) : TTagNode;
@@ -265,6 +280,9 @@ type
           {$IFNDEF DEBUG}inline;{$ENDIF}
       end;
 
+      TStringList = {$IFDEF FPC}specialize{$ENDIF} TArrayList<String, 
+        TCompareFunctorString>;
+
       { TTagNodeAttribute }
       { Class which implements HTML tag attribute and functions to operation
         with it }
@@ -278,13 +296,14 @@ type
         { Apply AFilter to AAttribute if it is. Return filtered
           pmyhtml_tree_attr_t element if find or nil }
         function FilterAttribute (AAttribute : pmyhtml_tree_attr_t; AFilter :
-          TFilter) : pmyhtml_tree_attr_t; {$IFNDEF DEBUG}inline;{$ENDIF}
+          TFilter) : pmyhtml_tree_attr_t; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Apply AFilter to AAttribute if it is. Return filtered
           pmyhtml_tree_attr_t element if find or nil }
         function ReverseFilterAttribute (AAttribute : pmyhtml_tree_attr_t;
-          AFilter : TFilter) : pmyhtml_tree_attr_t; {$IFNDEF DEBUG}inline;
-          {$ENDIF}
+          AFilter : TFilter) : pmyhtml_tree_attr_t; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
       private
         { Return attribute key }
         function GetKey : string; inline;
@@ -296,18 +315,19 @@ type
         function GetValueList : TStringList;
 
         { Filters node attribute to forward }
-        function Filter (AFilter : TFilter) : TTagNodeAttribute; {$IFNDEF DEBUG}
-          inline;{$ENDIF}
+        function Filter (AFilter : TFilter) : TTagNodeAttribute; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Filters node attirbute to backward }
         function ReverseFilter (AFilter : TFilter) : TTagNodeAttribute;
-        {$IFNDEF DEBUG}inline;{$ENDIF}
+          {$IFNDEF DEBUG}inline;{$ENDIF}
       public
         constructor Create (AAttribute : pmyhtml_tree_attr_t);
         destructor Destroy; override;
 
         { Check if attribute is correct }
-        function IsOk : boolean; {$IFNDEF DEBUG}inline;{$ENDIF}
+        function IsOk : boolean; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
       public
         { Return attribute key }
         property Key : string read GetKey;
@@ -337,10 +357,11 @@ type
           private
             FTag : TTag;
           protected
-            function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; override;
-              overload;
+            function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; overload;
+              override;
+
             function IsEqual ({%H-}ANodeAttribute : pmyhtml_tree_attr_t) :
-              Boolean; override; overload;
+              Boolean; overload; override;
           public
             constructor Create (ATag : TTag);
             destructor Destroy; override;
@@ -352,10 +373,11 @@ type
           private
             FTag : TTag;
           protected
-            function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; override;
-              overload;
+            function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; overload;
+              override;
+
             function IsEqual ({%H-}ANodeAttribute : pmyhtml_tree_attr_t) :
-              Boolean; override; overload;
+              Boolean; overload; override;
           public
             constructor Create (ATag : TTag);
             destructor Destroy; override;
@@ -368,10 +390,11 @@ type
             FCallback : TTagNodeFilterCallback;
             FData : Pointer;
           protected
-            function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; override;
-              overload;
+            function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; overload;
+              override;
+
             function IsEqual ({%H-}ANodeAttribute : pmyhtml_tree_attr_t) :
-              Boolean; override; overload;
+              Boolean; overload; override;
           public
             constructor Create (ACallback : TTagNodeFilterCallback; AData :
               Pointer);
@@ -385,9 +408,9 @@ type
             FTagNodeAttributeKey : string;
           protected
             function IsEqual ({%H-}ANode : pmyhtml_tree_node_t) : Boolean;
-              override; overload;
+              overload; override;
             function IsEqual (ANodeAttribute : pmyhtml_tree_attr_t) : Boolean;
-              override; overload;
+              overload; override;
           public
             constructor Create (AKey : string);
             destructor Destroy; override;
@@ -400,9 +423,9 @@ type
             FTagNodeAttributeValue : string;
           protected
             function IsEqual ({%H-}ANode : pmyhtml_tree_node_t) : Boolean;
-              override; overload;
+              overload; override;
             function IsEqual (ANodeAttribute : pmyhtml_tree_attr_t) : Boolean;
-              override; overload;
+              overload; override;
           public
             constructor Create (AValue : string);
             destructor Destroy; override;
@@ -416,9 +439,9 @@ type
             FTagNodeAttributeData : Pointer;
           protected
             function IsEqual ({%H-}ANode : pmyhtml_tree_node_t) : Boolean;
-              override; overload;
+              overload; override;
             function IsEqual (ANodeAttribute : pmyhtml_tree_attr_t) : Boolean;
-              override; overload;
+              overload; override;
           public
             constructor Create (ACallback : TTagNodeAttributeFilterCallback;
               AData : Pointer);
@@ -432,10 +455,11 @@ type
             FKey : string;
             FValue : string;
           protected
-            function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; override;
-              overload;
+            function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; overload;
+              override;
+
             function IsEqual ({%H-}ANodeAttribute : pmyhtml_tree_attr_t) :
-              Boolean; override; overload;
+              Boolean; overload; override;
           public
             constructor Create (AKey : string; AValue : string);
             destructor Destroy; override;
@@ -447,10 +471,11 @@ type
           private
             FFilter : TContainsAttributeOnlyValue;
           protected
-            function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; override;
-              overload;
+            function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean; overload;
+              override;
+
             function IsEqual ({%H-}ANodeAttribute : pmyhtml_tree_attr_t) :
-              Boolean; override; overload;
+              Boolean; overload; override;
           public
             constructor Create (AKey : string; AValue : string);
             destructor Destroy; override;
@@ -464,9 +489,9 @@ type
             FTagNodeAttributeValueList : TStringList;
           protected
             function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean;
-              override; overload;
+              overload; override;
             function IsEqual ({%H-}ANodeAttribute : pmyhtml_tree_attr_t) :
-              Boolean; override; overload;
+              Boolean; overload; override;
           public
             constructor Create (AKey : string; AValueList : string); overload;
             constructor Create (AKey : string; AValueList : TStringList);
@@ -482,9 +507,9 @@ type
             FTagNodeAttributeValueList : TStringList;
           protected
             function IsEqual (ANode : pmyhtml_tree_node_t) : Boolean;
-              override; overload;
+              overload; override;
             function IsEqual ({%H-}ANodeAttribute : pmyhtml_tree_attr_t) :
-              Boolean; override; overload;
+              Boolean; overload; override;
           public
             constructor Create (AKey : string; AValueList : string); overload;
             constructor Create (AKey : string; AValueList : TStringList);
@@ -494,44 +519,51 @@ type
 
       private
         type
-          TFiltersList = specialize TFPGObjectList<IFilter>;
+          TFilterCompareFunctor = {$IFDEF FPC}specialize {$ENDIF}
+            TUnsortableFunctor<IFilter>;
+          TFiltersList = {$IFDEF FPC}specialize{$ENDIF} TList<IFilter,
+            TFilterCompareFunctor>;
       private
         FFiltersList : TFiltersList;
 
         { Check if ANode is equal to defined filters list }
         function IsEqual (ANode : pmyhtml_tree_node_t = nil) : Boolean;
-          overload; {$IFNDEF DEBUG}inline;{$ENDIF}
+          overload; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Cheif if ANodeAttribute is equal to defined filters list }
         function IsEqual (ANodeAttribute : pmyhtml_tree_attr_t = nil) :
-          Boolean; overload; {$IFNDEF DEBUG}inline;{$ENDIF}
+          Boolean; overload; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Return TRUE if filter isn't empty }
-        function IsSet : Boolean; inline;
+        function IsSet : Boolean;
+          {$IFNDEF DEBUG}inline;{$ENDIF}
       public
         constructor Create;
         destructor Destroy; override;
 
         { Set custom filter }
-        function CustomFilter (AFilter : IFilter) : TFilter; {$IFNDEF DEBUG}
-          inline;{$ENDIF}
+        function CustomFilter (AFilter : IFilter) : TFilter; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Set tag id for filtering }
-        function Tag (ATag : TTag) : TFilter; {$IFNDEF DEBUG}inline;{$ENDIF}
+        function Tag (ATag : TTag) : TFilter; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Node tag id not equal ATag }
-        function ExcludeTag (ATag : TTag) : TFilter; {$IFNDEF DEBUG}inline;
-          {$ENDIF}
+        function ExcludeTag (ATag : TTag) : TFilter; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Set tag attribute key for filtering }
         {!!! Only for attributes filtrations, not tag nodes }
-        function AttributeKey (AKey : string) : TFilter; {$IFNDEF DEBUG}inline;
-          {$ENDIF}
+        function AttributeKey (AKey : string) : TFilter; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Set tag attribute value for filtering }
         {!!! Only for attributes filtrations, not tag nodes }
-        function AttributeValue (AValue : string) : TFilter; {$IFNDEF DEBUG}
-          inline;{$ENDIF}
+        function AttributeValue (AValue : string) : TFilter; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Set attribute key and value for filtering }
         {!!! Only for tag nodes filtrations, not attributes }
@@ -540,18 +572,18 @@ type
 
         { Set class which must be in attribute "class" list }
         { If "class" attribute is exists new class is added in list }
-        function ContainsClass (AClass : string) : TFilter; {$IFNDEF DEBUG}
-          inline;{$ENDIF}
+        function ContainsClass (AClass : string) : TFilter; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Set class which must not be in attribute "class" list }
         { If "class" attribute is exists new class is added in list }
-        function NotContainsClass (AClass : string) : TFilter; {$IFNDEF DEBUG}
-          inline;{$ENDIF}
+        function NotContainsClass (AClass : string) : TFilter; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Set class only which must be in attribute }
         { If "class" attribute is exists in list it is rewriting }
-        function ContainsClassOnly (AClass : string) : TFilter; {$IFNDEF DEBUG}
-          inline;{$ENDIF}
+        function ContainsClassOnly (AClass : string) : TFilter; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Set class only which must not be in attribute }
         { If "class" attribute is exists in list it is rewriting }
@@ -560,23 +592,23 @@ type
 
         { Set id which must be in attribute "id" list }
         { If "id" attribute is exists new id is added in list }
-        function ContainsId (AId : string) : TFilter; {$IFNDEF DEBUG}inline;
-          {$ENDIF}
+        function ContainsId (AId : string) : TFilter; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Set id which must not be in attribute "id" list }
         { If "id" attribute is exists new id is added in list }
-        function NotContainsId (AId : string) : TFilter; {$IFNDEF DEBUG}inline;
-          {$ENDIF}
+        function NotContainsId (AId : string) : TFilter; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Set id only which must be in attribute }
         { If "id" attribute is exists in list it is rewriting }
-        function ContainsIdOnly (AId : string) : TFilter; {$IFNDEF DEBUG}inline;
-          {$ENDIF}
+        function ContainsIdOnly (AId : string) : TFilter; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Set id only which must not be in attribute }
         { If "id" attribute is exists in list it is rewriting }
-        function NotContainsIdOnly (AId : string) : TFilter; {$IFNDEF DEBUG}
-          inline;{$ENDIF}
+        function NotContainsIdOnly (AId : string) : TFilter; 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Set tag filtering callback. Set AData pointer to pass it to callback.
           Return self }
@@ -600,8 +632,8 @@ type
         FTagNodeAttributeData : Pointer;
 
         { Run transform node callback }
-        procedure RunNodeCallback (ATagNode : TTagNode); {$IFNDEF DEBUG}inline;
-          {$ENDIF}
+        procedure RunNodeCallback (ATagNode : TTagNode); 
+          {$IFNDEF DEBUG}inline;{$ENDIF}
 
         { Run transform node attribute callback }
         procedure RunNodeAttributeCallback (ATagAttribute : TTagNodeAttribute);
@@ -629,19 +661,19 @@ type
     constructor Create(
       AParserOptions: myhtml_options_t = MyHTML_OPTIONS_PARSE_MODE_SEPARATELY;
       AEncoding: myencoding_t = MyENCODING_UTF_8;
-      AThreadCount: QWord = 1;
-      AQueueSize: QWord = 4096;
+      AThreadCount: Int64 = 1;
+      AQueueSize: Int64 = 4096;
       AFlags: myhtml_tree_parse_flags_t = MyHTML_TREE_PARSE_FLAGS_CLEAN);
     destructor Destroy; override;
 
-    (* Document parse *)
+    { Document parse }
     function Parse (AHTML : string; AParseFrom : TDocumentParseFrom =
       DOCUMENT_HTML) : TTagNode;
 
-    (* Return if parse has errors *)
+    { Return if parse has errors }
     function HasErrors : Boolean;
 
-    (* Return error message if it is, or empty string *)
+    { Return error message if it is, or empty string }
     function Error : string;
   end;
 
@@ -706,7 +738,8 @@ function TParser.TFilter.TNotContainsAttributeAllValues.IsEqual(
   begin
     Result := nil;
     if ANode <> nil then
-      Result := myhtml_attribute_by_key(ANode, PChar(FKey), Length(FKey));
+      Result := myhtml_attribute_by_key(ANode, API.CString.Create(FKey)
+        .ToPAnsiChar, Length(FKey));
   end;
 
   function CheckAttributeAllValues (AAttribute : pmyhtml_tree_attr_t) : Boolean;
@@ -731,7 +764,7 @@ function TParser.TFilter.TNotContainsAttributeAllValues.IsEqual(
 var
   NodeAttr : pmyhtml_tree_attr_t;
 begin
-  if FTagNodeAttributeValueList.Count > 0 then
+  if FTagNodeAttributeValueList.Length > 0 then
   begin
     NodeAttr := FindAttribute;
     if NodeAttr = nil then
@@ -803,7 +836,8 @@ function TParser.TFilter.TContainsAttributeAllValues.IsEqual(ANode:
   begin
     Result := nil;
     if ANode <> nil then
-      Result := myhtml_attribute_by_key(ANode, PChar(FKey), Length(FKey));
+      Result := myhtml_attribute_by_key(ANode, API.CString.Create(FKey)
+        .ToPAnsiChar, Length(FKey));
   end;
 
   function CheckAttributeAllValues (AAttribute : pmyhtml_tree_attr_t) : Boolean;
@@ -814,7 +848,7 @@ function TParser.TFilter.TContainsAttributeAllValues.IsEqual(ANode:
   begin
     ValueList := TTagNodeAttribute.StringTokenize(myhtml_attribute_value(
       AAttribute, nil));
-    if ValueList.Count >= FTagNodeAttributeValueList.Count then
+    if ValueList.Length >= FTagNodeAttributeValueList.Length then
     begin
       Result := True;
       for Value in FTagNodeAttributeValueList do
@@ -832,7 +866,7 @@ function TParser.TFilter.TContainsAttributeAllValues.IsEqual(ANode:
 var
   NodeAttr : pmyhtml_tree_attr_t;
 begin
-  if FTagNodeAttributeValueList.Count > 0 then
+  if FTagNodeAttributeValueList.Length > 0 then
   begin
     NodeAttr := FindAttribute;
     Result := (NodeAttr <> nil) and CheckAttributeAllValues(NodeAttr);
@@ -875,7 +909,8 @@ function TParser.TFilter.TContainsAttributeOnlyValue.IsEqual(ANode:
   begin
     Result := nil;
     if ANode <> nil then
-      Result := myhtml_attribute_by_key(ANode, PChar(FKey), Length(FKey));
+      Result := myhtml_attribute_by_key(ANode, API.CString.Create(FKey)
+        .ToPAnsiChar, Length(FKey));
   end;
 
 var
@@ -884,8 +919,8 @@ begin
   if (FKey <> '') and (FValue <> '') then
   begin
     NodeAttr := FindAttribute;
-    Result := (NodeAttr <> nil) and (myhtml_attribute_value(NodeAttr, nil) =
-      FValue);
+    Result := (NodeAttr <> nil) and (API.CString.Create(myhtml_attribute_value(
+      NodeAttr, nil)).ToString = FValue);
   end else
     Result := True;
 end;
@@ -957,8 +992,9 @@ end;
 function TParser.TFilter.TTagNodeAttributeValueEqual.IsEqual(
   ANodeAttribute: pmyhtml_tree_attr_t): Boolean;
 begin
-  Result := (ANodeAttribute <> nil) and (myhtml_attribute_value(ANodeAttribute,
-    nil) = FTagNodeAttributeValue);
+  Result := (ANodeAttribute <> nil) and 
+    (API.CString.Create(myhtml_attribute_value(ANodeAttribute, nil)).ToString = 
+    FTagNodeAttributeValue);
 end;
 
 constructor TParser.TFilter.TTagNodeAttributeValueEqual.Create(AValue: string);
@@ -977,7 +1013,8 @@ function TParser.TFilter.TTagNodeAttributeKeyEqual.IsEqual(
   ANode: pmyhtml_tree_node_t): Boolean;
 begin
   if ANode <> nil then
-    Result := myhtml_attribute_by_key(ANode, PChar(FTagNodeAttributeKey),
+    Result := myhtml_attribute_by_key(ANode, 
+      API.CString.Create(FTagNodeAttributeKey).ToPAnsiChar,
       Length(FTagNodeAttributeKey)) <> nil
   else
     Result := False;
@@ -986,8 +1023,9 @@ end;
 function TParser.TFilter.TTagNodeAttributeKeyEqual.IsEqual(
   ANodeAttribute: pmyhtml_tree_attr_t): Boolean;
 begin
-  Result := (ANodeAttribute <> nil) and (myhtml_attribute_key(ANodeAttribute,
-    nil) = FTagNodeAttributeKey);
+  Result := (ANodeAttribute <> nil) and 
+    (API.CString.Create(myhtml_attribute_key(ANodeAttribute, nil)).ToString = 
+    FTagNodeAttributeKey);
 end;
 
 constructor TParser.TFilter.TTagNodeAttributeKeyEqual.Create(AKey : string);
@@ -1038,8 +1076,8 @@ begin
     myhtml_tag_id_t(FTag));
 end;
 
-function TParser.TFilter.TTagIdEqual.IsEqual(ANodeAttribute: pmyhtml_tree_attr_t
-  ): Boolean;
+function TParser.TFilter.TTagIdEqual.IsEqual(ANodeAttribute: 
+  pmyhtml_tree_attr_t) : Boolean;
 begin
   Result := True; { not filtering by attribute }
 end;
@@ -1077,7 +1115,7 @@ end;
 
 function TParser.TFilter.IsSet : Boolean;
 begin
-  Result := FFiltersList.Count > 0;
+  Result := FFiltersList.Length > 0;
 end;
 
 constructor TParser.TFilter.Create;
@@ -1093,100 +1131,100 @@ end;
 
 function TParser.TFilter.CustomFilter(AFilter: IFilter): TFilter;
 begin
-  FFiltersList.Add(AFilter);
+  FFiltersList.Append(AFilter);
   Result := Self;
 end;
 
 function TParser.TFilter.Tag(ATag: TTag): TFilter;
 begin
-  FFiltersList.Add(TTagIdEqual.Create(ATag));
+  FFiltersList.Append(TTagIdEqual.Create(ATag));
   Result := Self;
 end;
 
 function TParser.TFilter.ExcludeTag(ATag: TTag): TFilter;
 begin
-  FFiltersList.Add(TTagIdExclude.Create(ATag));
+  FFiltersList.Append(TTagIdExclude.Create(ATag));
   Result := Self;
 end;
 
 function TParser.TFilter.AttributeKey(AKey: string): TFilter;
 begin
-  FFiltersList.Add(TTagNodeAttributeKeyEqual.Create(AKey));
+  FFiltersList.Append(TTagNodeAttributeKeyEqual.Create(AKey));
   Result := Self;
 end;
 
 function TParser.TFilter.AttributeValue(AValue: string): TFilter;
 begin
-  FFiltersList.Add(TTagNodeAttributeValueEqual.Create(AValue));
+  FFiltersList.Append(TTagNodeAttributeValueEqual.Create(AValue));
   Result := Self;
 end;
 
 function TParser.TFilter.AttributeKeyValue(AKey: string; AValue: string
   ): TFilter;
 begin
-  FFiltersList.Add(TContainsAttributeOnlyValue.Create(AKey, AValue));
+  FFiltersList.Append(TContainsAttributeOnlyValue.Create(AKey, AValue));
   Result := Self;
 end;
 
 function TParser.TFilter.ContainsClass(AClass: string): TFilter;
 begin
-  FFiltersList.Add(TContainsAttributeAllValues.Create('class', AClass));
+  FFiltersList.Append(TContainsAttributeAllValues.Create('class', AClass));
   Result := Self;
 end;
 
 function TParser.TFilter.NotContainsClass(AClass: string): TFilter;
 begin
-  FFiltersList.Add(TNotContainsAttributeAllValues.Create('class', AClass));
+  FFiltersList.Append(TNotContainsAttributeAllValues.Create('class', AClass));
   Result := Self;
 end;
 
 function TParser.TFilter.ContainsClassOnly(AClass: string): TFilter;
 begin
-  FFiltersList.Add(TContainsAttributeOnlyValue.Create('class', AClass));
+  FFiltersList.Append(TContainsAttributeOnlyValue.Create('class', AClass));
   Result := Self;
 end;
 
 function TParser.TFilter.NotContainsClassOnly(AClass: string): TFilter;
 begin
-  FFiltersList.Add(TNotContainsAttributeOnlyValue.Create('class', AClass));
+  FFiltersList.Append(TNotContainsAttributeOnlyValue.Create('class', AClass));
   Result := Self;
 end;
 
 function TParser.TFilter.ContainsId(AId: string): TFilter;
 begin
-  FFiltersList.Add(TContainsAttributeAllValues.Create('id', AId));
+  FFiltersList.Append(TContainsAttributeAllValues.Create('id', AId));
   Result := Self;
 end;
 
 function TParser.TFilter.NotContainsId(AId: string): TFilter;
 begin
-  FFiltersList.Add(TNotContainsAttributeAllValues.Create('id', AId));
+  FFiltersList.Append(TNotContainsAttributeAllValues.Create('id', AId));
   Result := Self;
 end;
 
 function TParser.TFilter.ContainsIdOnly(AId: string): TFilter;
 begin
-  FFiltersList.Add(TContainsAttributeOnlyValue.Create('id', AId));
+  FFiltersList.Append(TContainsAttributeOnlyValue.Create('id', AId));
   Result := Self;
 end;
 
 function TParser.TFilter.NotContainsIdOnly(AId: string): TFilter;
 begin
-  FFiltersList.Add(TNotContainsAttributeOnlyValue.Create('id', AId));
+  FFiltersList.Append(TNotContainsAttributeOnlyValue.Create('id', AId));
   Result := Self;
 end;
 
 function TParser.TFilter.TagNodeCallback(
   ACallback: TTagNodeFilterCallback; AData: Pointer): TFilter;
 begin
-  FFiltersList.Add(TTagNodeEqualCallback.Create(ACallback, AData));
+  FFiltersList.Append(TTagNodeEqualCallback.Create(ACallback, AData));
   Result := Self;
 end;
 
 function TParser.TFilter.TagNodeAttributeCallback(
   ACallback: TTagNodeAttributeFilterCallback; AData: Pointer): TFilter;
 begin
-  FFiltersList.Add(TTagNodeAttributeEqualCallback.Create(ACallback, AData));
+  FFiltersList.Append(TTagNodeAttributeEqualCallback.Create(ACallback, AData));
   Result := Self;
 end;
 
@@ -1292,7 +1330,7 @@ begin
     if (TextNode <> nil) and (myhtml_tags_t(myhtml_node_tag_id(TextNode)) =
       MyHTML_TAG__TEXT) then
     begin
-      Result := myhtml_node_text(TextNode, nil);
+      Result := API.CString.Create(myhtml_node_text(TextNode, nil)).ToString;
     end else
       Result := '';
   end else
@@ -1433,7 +1471,7 @@ begin
     Node := FirstNode(AFilter);
     while Node.IsOk do
     begin
-      Result.Add(Node);
+      Result.Append(Node);
       Node := Node.NextNode(AFilter);
     end;
 
@@ -1488,7 +1526,7 @@ begin
     Node := FirstChildrenNode(AFilter);
     while Node.IsOk do
     begin
-      Result.Add(Node);
+      Result.Append(Node);
       Node := Node.NextNode(AFilter);
     end;
   end else
@@ -1546,7 +1584,7 @@ begin
     Attribute := FirstNodeAttribute(AFilter);
     while Attribute.IsOk do
     begin
-      Result.Add(Attribute);
+      Result.Append(Attribute);
       Attribute := Attribute.Next(AFilter);
     end;
   end else
@@ -1558,7 +1596,7 @@ end;
 class function TParser.TTagNodeAttribute.StringTokenize(AString: string):
   TStringList;
 var
-  Index : SizeInt;
+  Index : Integer;
 begin
   Result := TStringList.Create;
   while AString <> '' do
@@ -1568,11 +1606,11 @@ begin
 
     if Index <> 0 then
     begin
-      Result.Add(Trim(Copy(AString, 0, Index)));
+      Result.Append(Trim(Copy(AString, 0, Index)));
       AString := Copy(AString, Index, Length(AString) - Index + 1);
     end else
     begin
-      Result.Add(AString);
+      Result.Append(AString);
       AString := '';
     end;
   end;
@@ -1612,7 +1650,8 @@ function TParser.TTagNodeAttribute.GetKey: string;
 begin
   if IsOk then
   begin
-    Result := myhtml_attribute_key(FAttribute, nil);
+    Result := API.CString.Create(myhtml_attribute_key(FAttribute, nil))
+      .ToString;
   end else
     Result := '';
 end;
@@ -1621,7 +1660,8 @@ function TParser.TTagNodeAttribute.GetValue: string;
 begin
   if IsOk then
   begin
-    Result := myhtml_attribute_value(FAttribute, nil);
+    Result := API.CString.Create(myhtml_attribute_value(FAttribute, nil))
+      .ToString;
   end else
     Result := '';
 end;
@@ -1630,7 +1670,8 @@ function TParser.TTagNodeAttribute.GetValueList: TStringList;
 begin
   if IsOk then
   begin
-    Result := StringTokenize(myhtml_attribute_value(FAttribute, nil));
+    Result := StringTokenize(API.CString.Create(myhtml_attribute_value(
+      FAttribute, nil)).ToString);
   end else
     Result := TStringList.Create;
 end;
@@ -1687,7 +1728,7 @@ end;
 { TParser }
 
 constructor TParser.Create(AParserOptions: myhtml_options_t;
-  AEncoding: myencoding_t; AThreadCount: QWord; AQueueSize: QWord;
+  AEncoding: myencoding_t; AThreadCount: Int64; AQueueSize: Int64;
   AFlags: myhtml_tree_parse_flags_t);
 begin
   FHTML := myhtml_create;
@@ -1714,17 +1755,18 @@ begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
 
-  FError := myhtml_status_t(myhtml_parse(FTree, FEncoding, PChar(AHTML),
+  FError := myhtml_status_t(myhtml_parse(FTree, FEncoding, 
+    API.CString.Create(AHTML).ToPAnsiChar,
     Length(AHTML)));
   if FError = MyHTML_STATUS_OK then
   begin
     case AParseFrom of
       DOCUMENT_ROOT :
-        Result := TTagNode.Create(myhtml_tree_get_document(FTree));
+        Exit(TTagNode.Create(myhtml_tree_get_document(FTree)));
       DOCUMENT_HTML :
-        Result := TTagNode.Create(myhtml_tree_get_node_html(FTree));
+        Exit(TTagNode.Create(myhtml_tree_get_node_html(FTree)));
       DOCUMENT_HEAD :
-        Result := TTagNode.Create(myhtml_tree_get_node_head(FTree));
+        Exit(TTagNode.Create(myhtml_tree_get_node_head(FTree)));
      DOCUMENT_BODY :
      begin
        { Function myhtml_tree_get_node_body contains bug }
@@ -1732,10 +1774,12 @@ begin
        { Result := TTagNode.Create(myhtml_tree_get_node_body(FTree)); }
        Result := TTagNode.Create(myhtml_tree_get_node_html(FTree));
        Result := Result.FirstChildrenNode(TFilter.Create.Tag(MyHTML_TAG_BODY));
+       Exit;
      end;
     end;
-  end else
-    Result := TTagNode.Create(nil);
+  end;
+
+  Result := TTagNode.Create(nil);
 end;
 
 function TParser.HasErrors: Boolean;

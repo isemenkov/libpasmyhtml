@@ -1,9 +1,9 @@
 (******************************************************************************)
 (*                                libPasMyHTML                                *)
-(*                object pascal wrapper around MyHTML library                 *)
+(*           delphi and object pascal wrapper  around MyHTML library          *)
 (*                    https://github.com/lexborisov/myhtml                    *)
 (*                                                                            *)
-(* Copyright (c) 2019                                       Ivan Semenkov     *)
+(* Copyright (c) 2019 - 2021                                Ivan Semenkov     *)
 (* https://github.com/isemenkov/libpasmyhtml                ivan@semenkov.pro *)
 (*                                                          Ukraine           *)
 (******************************************************************************)
@@ -26,7 +26,9 @@
 
 unit libpasmyhtml;
 
-{$mode objfpc}{$H+}
+{$IFDEF FPC}
+  {$mode objfpc}{$H+}
+{$ENDIF}
 
 interface
 
@@ -38,30 +40,36 @@ uses
 {$ENDIF}
 
 const
-  {$IFDEF WIN32}
-    MyHTMLLib = 'libmyhtml.dll';
-  {$ENDIF}
-  {$IFDEF WIN64}
-    MyHTMLLib = 'libmyhtml-x64.dll';
-  {$ENDIF}
-  {$IFDEF LINUX}
-    MyHTMLLib = 'libmyhtml.so';
+  {$IFDEF FPC}
+    {$IFDEF WINDOWS}
+      MyHTMLLib = 'myhtml.dll';
+    {$ENDIF}
+    {$IFDEF LINUX}
+      MyHTMLLib = 'libmyhtml.so';
+    {$ENDIF}
+  {$ELSE}
+    {$IFDEF MSWINDOWS OR defined(MSWINDOWS)}
+      MyHTMLLib = 'myhtml.dll';
+    {$ENDIF}
+    {$IFDEF LINUX}
+      MyHTMLLib = 'libmyhtml.so';
+    {$ENDIF}
   {$ENDIF}
 
 type
-  PPChar = ^PChar;
+  PPAnsiChar = ^PAnsiChar;
 
   pmystatus_t = ^mystatus_t;
   mystatus_t = type Cardinal;
 
   pmythread_id_t = ^mythread_id_t;
-  mythread_id_t = type QWord;
+  mythread_id_t = type Cardinal;
 
   pmcobject_chunk_t = ^mcobject_chunk_t;
   mcobject_chunk_t = record
     start : PByte;
-    length : QWord;
-    size : QWord;
+    length : Cardinal;
+    size : Cardinal;
 
     next : pmcobject_chunk_t;
     prev : pmcobject_chunk_t;
@@ -71,18 +79,18 @@ type
   mcobject_t = record
     chunk : pmcobject_chunk_t;
     cache : Pointer;
-    cache_size : QWord;
-    cache_length : QWord;
+    cache_size : Cardinal;
+    cache_length : Cardinal;
 
-    struct_size : QWord;
-    chunk_size : QWord;
+    struct_size : Cardinal;
+    chunk_size : Cardinal;
   end;
 
   ppmycore_utils_avl_tree_node_t = ^pmycore_utils_avl_tree_node_t;
   pmycore_utils_avl_tree_node_t = ^mycore_utils_avl_tree_node_t;
   mycore_utils_avl_tree_node_t = record
     value : Pointer;
-    node_type : QWord;
+    node_type : Cardinal;
 
     left : pmycore_utils_avl_tree_node_t;
     rigth : pmycore_utils_avl_tree_node_t;
@@ -101,13 +109,13 @@ type
 
   pmcsimple_t = ^mcsimple_t;
   mcsimple_t = record
-    struct_size : QWord;
+    struct_size : Cardinal;
     list : PByte;
-    list_pos_size : QWord;
-    list_pos_length : QWord;
-    list_pos_length_used : QWord;
-    list_size : QWord;
-    list_length : QWord;
+    list_pos_size : Cardinal;
+    list_pos_length : Cardinal;
+    list_pos_length_used : Cardinal;
+    list_size : Cardinal;
+    list_length : Cardinal;
   end;
 
   pmcsync_status_t = ^mcsync_status_t;
@@ -138,8 +146,8 @@ type
   pmcobject_async_chunk_t = ^mcobject_async_chunk_t;
   mcobject_async_chunk_t = record
     start : PByte;
-    length : QWord;
-    size : QWord;
+    length : Cardinal;
+    size : Cardinal;
 
     next : pmcobject_async_chunk_t;
     prev : pmcobject_async_chunk_t;
@@ -149,51 +157,51 @@ type
   mcobject_async_node_t = record
     chunk : pmcobject_async_chunk_t;
     cache : Pointer;
-    cache_size : QWord;
-    cache_length : QWord;
+    cache_size : Cardinal;
+    cache_length : Cardinal;
   end;
 
   pmcobject_async_t = ^mcobject_async_t;
   mcobject_async_t = record
-    origin_size : QWord;
-    struct_size : QWord;
-    struct_size_sn : QWord;
+    origin_size : Cardinal;
+    struct_size : Cardinal;
+    struct_size_sn : Cardinal;
 
     chunk_cache : ppmcobject_async_chunk_t;
-    chunk_cache_size : QWord;
-    chunk_cache_length : QWord;
+    chunk_cache_size : Cardinal;
+    chunk_cache_length : Cardinal;
 
     chunks : ppmcobject_async_chunk_t;
-    chunks_pos_size : QWord;
-    chunks_pos_length : QWord;
-    chunks_size : QWord;
-    chunks_length : QWord;
+    chunks_pos_size : Cardinal;
+    chunks_pos_length : Cardinal;
+    chunks_size : Cardinal;
+    chunks_length : Cardinal;
 
     nodes : pmcobject_async_node_t;
-    nodes_length : QWord;
-    nodes_size : QWord;
+    nodes_length : Cardinal;
+    nodes_size : Cardinal;
 
-    nodes_cache : PQWord;
-    nodes_cache_length : QWord;
-    nodes_cache_size : QWord;
+    nodes_cache : PCardinal;
+    nodes_cache_length : Cardinal;
+    nodes_cache_size : Cardinal;
   end;
 
   pmchar_async_cache_node_t = ^mchar_async_cache_node_t;
   mchar_async_cache_node_t = record
     value : Pointer;
-    size : QWord;
+    size : Cardinal;
 
-    left : QWord;
-    right : QWord;
-    parent : QWord;
+    left : Cardinal;
+    right : Cardinal;
+    parent : Cardinal;
   end;
 
   ppmchar_async_chunk_t = ^pmchar_async_chunk_t;
   pmchar_async_chunk_t = ^mchar_async_chunk_t;
   mchar_async_chunk_t = record
-    start : PChar;
-    length : QWord;
-    size : QWord;
+    start : PAnsiChar;
+    length : Cardinal;
+    size : Cardinal;
 
     next : pmchar_async_chunk_t;
     prev : pmchar_async_chunk_t;
@@ -202,13 +210,13 @@ type
   pmchar_async_cache_t = ^mchar_async_cache_t;
   mchar_async_cache_t = record
     nodes : pmchar_async_cache_node_t;
-    nodes_size : QWord;
-    nodes_length : QWord;
-    nodes_root : QWord;
-    count : QWord;
-    index : PQWord;
-    index_length : QWord;
-    index_size : QWord;
+    nodes_size : Cardinal;
+    nodes_length : Cardinal;
+    nodes_root : Cardinal;
+    count : Cardinal;
+    index : PCardinal;
+    index_length : Cardinal;
+    index_size : Cardinal;
   end;
 
   pmchar_async_node_t = ^mchar_async_node_t;
@@ -219,23 +227,23 @@ type
 
   pmchar_async_t = ^mchar_async_t;
   mchar_async_t = record
-    origin_size : QWord;
+    origin_size : Cardinal;
 
     chunks : ppmchar_async_chunk_t;
-    chunks_pos_size : QWord;
-    chunks_pos_length : QWord;
-    chunks_size : QWord;
-    chunks_length : QWord;
+    chunks_pos_size : Cardinal;
+    chunks_pos_length : Cardinal;
+    chunks_size : Cardinal;
+    chunks_length : Cardinal;
 
     chunk_cache : mchar_async_cache_t;
 
     nodes : pmchar_async_node_t;
-    nodes_length : QWord;
-    nodes_size : QWord;
+    nodes_length : Cardinal;
+    nodes_size : Cardinal;
 
-    nodes_cache : PQWord;
-    nodes_cache_length : QWord;
-    nodes_cache_size : QWord;
+    nodes_cache : PCardinal;
+    nodes_cache_length : Cardinal;
+    nodes_cache_size : Cardinal;
 
     mcsync : pmcsync_t;
   end;
@@ -243,8 +251,8 @@ type
   ppmycore_utils_mhash_entry_t = ^pmycore_utils_mhash_entry_t;
   pmycore_utils_mhash_entry_t = ^mycore_utils_mhash_entry_t;
   mycore_utils_mhash_entry_t = record
-    key : PChar;
-    key_length : QWord;
+    key : PAnsiChar;
+    key_length : Cardinal;
 
     value : Pointer;
 
@@ -254,25 +262,25 @@ type
   pmycore_utils_mhash_t = ^mycore_utils_mhash_t;
   mycore_utils_mhash_t = record
     mchar_obj : pmchar_async_t;
-    mchar_node : QWord;
+    mchar_node : Cardinal;
 
     table : ppmycore_utils_mhash_entry_t;
-    table_size : QWord;
-    table_length : QWord;
+    table_size : Cardinal;
+    table_length : Cardinal;
 
-    table_max_depth : QWord;
+    table_max_depth : Cardinal;
   end;
 
   pmctree_index_t = ^mctree_index_t;
-   mctree_index_t = type QWord;
+   mctree_index_t = type Cardinal;
 
   pmctree_node_t = ^mctree_node_t;
   mctree_node_t = record
-    str : PChar;
-    str_size : QWord;
+    str : PAnsiChar;
+    str_size : Cardinal;
     value : Pointer;
 
-    child_count : QWord;
+    child_count : Cardinal;
     prev : mctree_index_t;
     next : mctree_index_t;
     child : mctree_index_t;
@@ -281,21 +289,21 @@ type
   pmctree_t = ^mctree_t;
   mctree_t = record
     nodes : pmctree_node_t;
-    nodes_length : QWord;
-    nodes_size : QWord;
-    start_size : QWord;
+    nodes_length : Cardinal;
+    nodes_size : Cardinal;
+    start_size : Cardinal;
   end;
 
-  mctree_before_insert_f = procedure (const key : PChar; key_size : QWord;
+  mctree_before_insert_f = procedure (const key : PAnsiChar; key_size : Cardinal;
     value : Pointer) of object;
 
   ppmycore_incoming_buffer_t = ^pmycore_incoming_buffer_t;
   pmycore_incoming_buffer_t = ^mycore_incoming_buffer_t;
   mycore_incoming_buffer_t = record
-    data : PChar;
-    length : QWord;             { use of data }
-    size : QWord;               { size of data }
-    offset : QWord;             { begin global offset }
+    data : PAnsiChar;
+    length : Cardinal;             { use of data }
+    size : Cardinal;               { size of data }
+    offset : Cardinal;             { begin global offset }
 
     prev : pmycore_incoming_buffer_t;
     next : pmycore_incoming_buffer_t;
@@ -303,22 +311,22 @@ type
 
   pmycore_string_t = ^mycore_string_t;
   mycore_string_t = record
-    data : PChar;
-    size : QWord;
-    length : QWord;
+    data : PAnsiChar;
+    size : Cardinal;
+    length : Cardinal;
 
     mchar : pmchar_async_t;
-    node_idx :  QWord;
+    node_idx :  Cardinal;
   end;
 
   pmycore_string_raw_t = ^mycore_string_raw_t;
   mycore_string_raw_t = record
-    data : PChar;
-    size : QWord;
-    length : QWord;
+    data : PAnsiChar;
+    size : Cardinal;
+    length : Cardinal;
   end;
 
-  mycore_string_index_t = type QWord;
+  mycore_string_index_t = type Cardinal;
 
 {$IFDEF MyCORE_BUILD_WITHOUT_THREADS}
   pmythread_t = ^mythread_t;
@@ -358,7 +366,7 @@ type
     id : mythread_id_t;
     func : mythread_work_f;
 
-    count : QWord;
+    count : Cardinal;
     opt : mythread_thread_opt_t;
 
     status : mystatus_t;
@@ -377,9 +385,9 @@ type
 
   mythread_t = record
     entries : pmythread_entry_t;
-    entries_length : QWord;
-    entries_size : QWord;
-    id_increase : QWord;
+    entries_length : Cardinal;
+    entries_size : Cardinal;
+    id_increase : Cardinal;
 
     context : Pointer;
     attr : Pointer;
@@ -405,25 +413,25 @@ type
   mythread_queue_t = record
     nodes : ppmythread_queue_node_t;
 
-    nodes_pos : QWord;
-    nodes_pos_size : QWord;
-    nodes_length : QWord;
+    nodes_pos : Cardinal;
+    nodes_pos_size : Cardinal;
+    nodes_length : Cardinal;
 
-    nodes_uses : QWord;
-    nodes_size : QWord;
-    nodes_root : QWord;
+    nodes_uses : Cardinal;
+    nodes_size : Cardinal;
+    nodes_root : Cardinal;
   end;
 
   pmythread_queue_thread_param_t = ^mythread_queue_thread_param_t;
   mythread_queue_thread_param_t = record
-    use : QWord;
+    use : Cardinal;
   end;
 
   pmythread_queue_list_entry_t = ^mythread_queue_list_entry_t;
   mythread_queue_list_entry_t = record
     queue : pmythread_queue_t;
     thread_param : pmythread_queue_thread_param_t;
-    thread_param_size : QWord;
+    thread_param_size : Cardinal;
 
     next : pmythread_queue_list_entry_t;
     prev : pmythread_queue_list_entry_t;
@@ -434,7 +442,7 @@ type
     first : pmythread_queue_list_entry_t;
     last : pmythread_queue_list_entry_t;
 
-    count : QWord;
+    count : Cardinal;
   end;
 
   mycore_status_t = (
@@ -473,7 +481,7 @@ type
     MyCORE_STATUS_ERROR_NO_FREE_SLOT                                    = $0062
   );
 
-  mycore_callback_serialize_f = function (const buffer : PChar; size : QWord;
+  mycore_callback_serialize_f = function (const buffer : PAnsiChar; size : Cardinal;
     ctx : Pointer) : mystatus_t of object;
 
 
@@ -546,49 +554,49 @@ type
   pmyencoding_trigram_t = ^myencoding_trigram_t;
   myencoding_trigram_t = record
     trigram : array [0 .. 2] of Byte;
-    value : QWord;
+    value : Cardinal;
   end;
 
   pmyencoding_trigram_result_t = ^myencoding_trigram_result_t;
   myencoding_trigram_result_t = record
-    count : QWord;
-    vaule : QWord;
+    count : Cardinal;
+    vaule : Cardinal;
   end;
 
   pmyencoding_unicode_result_t = ^myencoding_unicode_result_t;
   myencoding_unicode_result_t = record
-    count_ascii : QWord;
-    count_good : QWord;
-    count_bad : QWord;
+    count_ascii : Cardinal;
+    count_good : Cardinal;
+    count_bad : Cardinal;
   end;
 
   pmyencoding_detect_name_entry_t = ^myencoding_detect_name_entry_t;
   myencoding_detect_name_entry_t = record
-    name : PChar;
-    name_length : QWord;
-    label_name : PChar;
-    label_length : QWord;
+    name : PAnsiChar;
+    name_length : Cardinal;
+    label_name : PAnsiChar;
+    label_length : Cardinal;
 
     encoding : myencoding_t;
 
-    next : QWord;
-    curr : QWord;
+    next : Cardinal;
+    curr : Cardinal;
   end;
 
   pmyencoding_detect_attr_t = ^myencoding_detect_attr_t;
   myencoding_detect_attr_t = record
-    key_begin : QWord;
-    key_length : QWord;
-    value_begin : QWord;
-    value_length : QWord;
+    key_begin : Cardinal;
+    key_length : Cardinal;
+    value_begin : Cardinal;
+    value_length : Cardinal;
 
     next : pmyencoding_detect_attr_t;
   end;
 
   pmyencoding_entry_name_index_t = ^myencoding_entry_name_index_t;
   myencoding_entry_name_index_t = record
-    name : PChar;
-    length : QWord;
+    name : PAnsiChar;
+    length : Cardinal;
   end;
 
   myencoding_custom_f = function (const data : Byte; res : pmyencoding_result_t)
@@ -604,7 +612,7 @@ type
   pmyhtml_tag_t = ^myhtml_tag_t;
 
   pmyhtml_tag_id_t = ^myhtml_tag_id_t;
-  myhtml_tag_id_t = type QWord;
+  myhtml_tag_id_t = type Cardinal;
 
   pmyhtml_tags_t = ^myhtml_tags_t;
   myhtml_tags_t = (
@@ -911,10 +919,10 @@ type
   );
 
   pmyhtml_token_index_t = ^myhtml_token_index_t;
-  myhtml_token_index_t = type QWord;
+  myhtml_token_index_t = type Cardinal;
 
   pmyhtml_token_attr_index_t = ^myhtml_token_attr_index_t;
-  myhtml_token_attr_index_t = type QWord;
+  myhtml_token_attr_index_t = type Cardinal;
 
   { tags }
   pmyhtml_tag_categories_t = ^myhtml_tag_categories_t;
@@ -1090,8 +1098,8 @@ type
 
   pmyhtml_position_t = ^myhtml_position_t;
   myhtml_position_t = record
-    start : QWord;
-    length : QWord;
+    start : Cardinal;
+    length : Cardinal;
   end;
 
   pmyhtml_version_t = ^myhtml_version_t;
@@ -1103,20 +1111,20 @@ type
 
   pmyhtml_token_replacement_entry_t = ^myhtml_token_replacement_entry_t;
   myhtml_token_replacement_entry_t = record
-    from : PChar;
-    from_size : QWord;
+    from : PAnsiChar;
+    from_size : Cardinal;
 
-    to_str : PChar;
-    to_size : QWord;
+    to_str : PAnsiChar;
+    to_size : Cardinal;
   end;
 
   pmyhtml_token_namespace_replacement_t = ^myhtml_token_namespace_replacement_t;
   myhtml_token_namespace_replacement_t = record
-    from : PChar;
-    from_size : QWord;
+    from : PAnsiChar;
+    from_size : Cardinal;
 
-    to_str : PChar;
-    to_size : QWord;
+    to_str : PAnsiChar;
+    to_size : Cardinal;
 
     ns : myhtml_namespace_t;
   end;
@@ -1129,10 +1137,10 @@ type
     key : mycore_string_t;
     value : mycore_string_t;
 
-    raw_key_begin : QWord;
-    raw_key_length : QWord;
-    raw_value_begin : QWord;
-    raw_value_length : QWord;
+    raw_key_begin : Cardinal;
+    raw_key_length : Cardinal;
+    raw_value_begin : Cardinal;
+    raw_value_length : Cardinal;
 
     ns : myhtml_namespace_t;
   end;
@@ -1142,11 +1150,11 @@ type
 
     str : mycore_string_t;
 
-    raw_begin : QWord;
-    raw_length : QWord;
+    raw_begin : Cardinal;
+    raw_length : Cardinal;
 
-    element_begin : QWord;
-    element_length : QWord;
+    element_begin : Cardinal;
+    element_length : Cardinal;
 
     attr_first : pmyhtml_token_attr_t;
     attr_last : pmyhtml_token_attr_t;
@@ -1159,16 +1167,16 @@ type
 
   pmyhtml_stream_buffer_entry_t = ^myhtml_stream_buffer_entry_t;
   myhtml_stream_buffer_entry_t = record
-    data : PChar;
-    length : QWord;
-    size : QWord;
+    data : PAnsiChar;
+    length : Cardinal;
+    size : Cardinal;
   end;
 
   pmyhtml_stream_buffer_t = ^myhtml_stream_buffer_t;
   myhtml_stream_buffer_t = record
     entries : pmyhtml_stream_buffer_entry_t;
-    length : QWord;
-    size : QWord;
+    length : Cardinal;
+    size : Cardinal;
 
     res : myencoding_result_t;
   end;
@@ -1241,44 +1249,44 @@ type
 
   pmyhtml_async_args_t = ^myhtml_async_args_t;
   myhtml_async_args_t = record
-    mchar_node_id : QWord;
+    mchar_node_id : Cardinal;
   end;
 
   pmyhtml_tree_doctype_t = ^myhtml_tree_doctype_t;
   myhtml_tree_doctype_t = record
     is_html : Boolean;
-    attr_name : PChar;
-    attr_public : PChar;
-    attr_system : PChar;
+    attr_name : PAnsiChar;
+    attr_public : PAnsiChar;
+    attr_system : PAnsiChar;
   end;
 
   pmyhtml_tree_list_t = ^myhtml_tree_list_t;
   myhtml_tree_list_t = record
     list : ppmyhtml_tree_node_t;
-    length : QWord;
-    size : QWord;
+    length : Cardinal;
+    size : Cardinal;
   end;
 
   pmyhtml_tree_token_list_t = ^myhtml_tree_token_list_t;
   myhtml_tree_token_list_t = record
     list : ppmyhtml_token_node_t;
-    length : QWord;
-    size : QWord;
+    length : Cardinal;
+    size : Cardinal;
   end;
 
   pmyhtml_tree_insertion_list_t = ^myhtml_tree_insertion_list_t;
   myhtml_tree_insertion_list_t = record
     list : pmyhtml_insertion_mode_t;
-    length : QWord;
-    size : QWord;
+    length : Cardinal;
+    size : Cardinal;
   end;
 
   ppmyhtml_tree_temp_tag_name_t = ^pmyhtml_tree_temp_tag_name_t;
   pmyhtml_tree_temp_tag_name_t = ^myhtml_tree_temp_tag_name_t;
   myhtml_tree_temp_tag_name_t = record
-    data : PChar;
-    length : QWord;
-    size : QWord;
+    data : PAnsiChar;
+    length : Cardinal;
+    size : Cardinal;
   end;
 
   pmyhtml_tree_special_token_t = ^myhtml_tree_special_token_t;
@@ -1290,15 +1298,15 @@ type
   pmyhtml_tree_special_token_list_t = ^myhtml_tree_special_token_list_t;
   myhtml_tree_special_token_list_t = record
     list : pmyhtml_tree_special_token_t;
-    length : QWord;
-    size : QWord;
+    length : Cardinal;
+    size : Cardinal;
   end;
 
   pmyhtml_tree_temp_stream_t = ^myhtml_tree_stream_t;
   myhtml_tree_stream_t = record
     data : ppmyhtml_tree_temp_tag_name_t;
-    length : QWord;
-    size : QWord;
+    length : Cardinal;
+    size : Cardinal;
 
     res : myencoding_result_t;
     current : pmyhtml_tree_temp_tag_name_t;
@@ -1318,14 +1326,14 @@ type
     context : Pointer;
 
     { init id's }
-    mcasync_rules_token_id : QWord;
-    mcasync_rules_attr_id : QWord;
-    mcasync_tree_id : QWord;
+    mcasync_rules_token_id : Cardinal;
+    mcasync_rules_attr_id : Cardinal;
+    mcasync_tree_id : Cardinal;
 
     { mchar_node_id }
     { for rules, or if single mode. }
     { or for main thread only after parsing }
-    mchar_node_id : QWord;
+    mchar_node_id : Cardinal;
     attr_current : pmyhtml_token_attr_t;
     tmp_tag_id : myhtml_tag_id_t;
     current_token_node : pmyhtml_token_node_t;
@@ -1366,7 +1374,7 @@ type
     flags : myhtml_tree_flags;
     parse_flags : myhtml_tree_parse_flags_t;
     foster_parenting : Boolean;
-    global_offset : QWord;
+    global_offset : Cardinal;
     tokenizer_status : mystatus_t;
 
     encoding : myencoding_t;
@@ -1394,26 +1402,26 @@ type
     attr_obj : pmcobject_async_t;  { myhtml_token_attr_t }
 
     { def thread node_id }
-    mcasync_token_id : QWord;
-    mcasync_attr_id : QWord;
+    mcasync_token_id : Cardinal;
+    mcasync_attr_id : Cardinal;
 
     is_new_tmp : Boolean;
   end;
 
-  pcharef_entry_t = ^charef_entry_t;
+  PAnsiCharef_entry_t = ^charef_entry_t;
   charef_entry_t = record
     ch : Byte;
-    next : QWord;
-    cur_pos : QWord;
-    codepoints : array [0 .. 1] of QWord;
-    codepoints_len : QWord;
+    next : Cardinal;
+    cur_pos : Cardinal;
+    codepoints : array [0 .. 1] of Cardinal;
+    codepoints_len : Cardinal;
   end;
 
-  pcharef_entry_result_t = ^charef_entry_result_t;
+  PAnsiCharef_entry_result_t = ^charef_entry_result_t;
   charef_entry_result_t = record
-    curr_entry : pcharef_entry_t;
-    last_entry : pcharef_entry_t;
-    last_offset : QWord;
+    curr_entry : PAnsiCharef_entry_t;
+    last_entry : PAnsiCharef_entry_t;
+    last_offset : Cardinal;
     is_done : Integer;
   end;
 
@@ -1421,8 +1429,8 @@ type
 
   { parser state function }
   myhtml_tokenizer_state_f = function (tree : pmyhtml_tree_t; token_node :
-    pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
-    QWord) : QWord of object;
+    pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal; html_size :
+    Cardinal) : Cardinal of object;
 
   { parser insertion mode function }
   myhtml_insertion_f = function (tree : pmyhtml_tree_t; token :
@@ -1430,12 +1438,12 @@ type
 
   { char references state }
   myhtml_data_process_state_f = function (chref : pmyhtml_data_process_entry_t;
-    str : pmycore_string_t; const data : PChar; offset : QWord; size : QWord) :
-    QWord of object;
+    str : pmycore_string_t; const data : PAnsiChar; offset : Cardinal; size : Cardinal) :
+    Cardinal of object;
 
   { find attribute value functions }
   myhtml_attribute_value_find_f = function (str_key : pmycore_string_t;
-    const value : PChar; value_len : QWord) : Boolean of object;
+    const value : PAnsiChar; value_len : Cardinal) : Boolean of object;
 
   myhtml_data_process_entry_t = record
     { current state for process data }
@@ -1446,9 +1454,9 @@ type
     res : myencoding_result_t;
 
     { temp }
-    tmp_str_pos_proc : QWord;
-    tmp_str_pos : QWord;
-    tmp_num : QWord;
+    tmp_str_pos_proc : Cardinal;
+    tmp_str_pos : Cardinal;
+    tmp_num : Cardinal;
 
     { current result }
     charef_res : charef_entry_result_t;
@@ -1460,19 +1468,19 @@ type
 
   pmyhtml_namespace_detect_name_entry_t = ^myhtml_namespace_detect_name_entry_t;
   myhtml_namespace_detect_name_entry_t = record
-    name : PChar;
-    name_length : QWord;
+    name : PAnsiChar;
+    name_length : Cardinal;
 
     ns : myhtml_namespace_t;
 
-    next : QWord;
-    curr : QWord;
+    next : Cardinal;
+    curr : Cardinal;
   end;
 
   pmyhtml_namespace_detect_url_entry_t = ^myhtml_namespace_detect_url_entry_t;
   myhtml_namespace_detect_url_entry_t = record
-    url : PChar;
-    url_length : QWord;
+    url : PAnsiChar;
+    url_length : Cardinal;
 
     ns : myhtml_namespace_t;
   end;
@@ -1481,8 +1489,8 @@ type
   myhtml_tag_context_t = record
     id : myhtml_tag_id_t;
 
-    name : PChar;
-    name_length : QWord;
+    name : PAnsiChar;
+    name_length : Cardinal;
 
     data_parser : myhtml_tokenizer_state_t;
     cats : array [0 .. Longint(MyHTML_NAMESPACE_LAST_ENTRY)]
@@ -1492,16 +1500,16 @@ type
   pmyhtml_tag_static_list_t = ^myhtml_tag_static_list_t;
   myhtml_tag_static_list_t = record
     ctx : pmyhtml_tag_context_t;
-    next : QWord;
-    cur : QWord;
+    next : Cardinal;
+    cur : Cardinal;
   end;
 
   myhtml_tag_t = record
     tree : pmctree_t;
     mcsimple_context : pmcsimple_t;
 
-    tags_count : QWord;
-    mchar_node : QWord;
+    tags_count : Cardinal;
+    mchar_node : Cardinal;
 
     mchar : pmchar_async_t;
   end;
@@ -1509,15 +1517,15 @@ type
   pmyhtml_collection_t = ^myhtml_collection_t;
   myhtml_collection_t = record
     list : ppmyhtml_tree_node_t;
-    size : QWord;
-    length : QWord;
+    size : Cardinal;
+    length : Cardinal;
   end;
 
   myhtml_t = record
     thread_stream : pmythread_t;
     thread_batch : pmythread_t;
     thread_list : array [0 .. 2] of pmythread_t;
-    thread_total : QWord;
+    thread_total : Cardinal;
 
     parse_state_func : myhtml_tokenizer_state_f;
     insertion_func : myhtml_insertion_f;
@@ -1528,12 +1536,12 @@ type
 
 (*mycore/utils.h***************************************************************)
 
-function mycore_power (t : QWord; k : QWord) : QWord; cdecl; external MyHTMLLib;
-function mycore_strncmp (const str1 : PChar; const str2 : PChar; size :
-  QWord) : QWord; cdecl; external MyHTMLLib;
-function mycore_strcmp (const str1 : PChar; const str2 : PChar) : QWord; cdecl;
+function mycore_power (t : Cardinal; k : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
+function mycore_strncmp (const str1 : PAnsiChar; const str2 : PAnsiChar; size :
+  Cardinal) : Cardinal; cdecl; external MyHTMLLib;
+function mycore_strcmp (const str1 : PAnsiChar; const str2 : PAnsiChar) : Cardinal; cdecl;
   external MyHTMLLib;
-function mycore_strcmp_ws (const str1 : PChar; const str2 : PChar) : QWord;
+function mycore_strcmp_ws (const str1 : PAnsiChar; const str2 : PAnsiChar) : Cardinal;
   cdecl; external MyHTMLLib;
 function mycore_ustrcasecmp_without_checks_by_secondary (const ustr1 : PByte;
   const ustr2 : PByte) : Boolean; cdecl; external MyHTMLLib;
@@ -1541,8 +1549,8 @@ function mycore_ustrcasecmp_without_checks_by_secondary (const ustr1 : PByte;
 (*mycore/utils/mcobject.h******************************************************)
 
 function mcobject_create : pmcobject_t; cdecl; external MyHTMLLib;
-function mcobject_init (mcobject : pmcobject_t; chunk_size : QWord;
-  struct_size : QWord ) : mystatus_t; cdecl; external MyHTMLLib;
+function mcobject_init (mcobject : pmcobject_t; chunk_size : Cardinal;
+  struct_size : Cardinal ) : mystatus_t; cdecl; external MyHTMLLib;
 procedure mcobject_clean (mcobject : pmcobject_t); cdecl; external MyHTMLLib;
 function mcobject_destroy (mcobject : pmcobject_t; destroy_self : Boolean) :
   pmcobject_t; cdecl; external MyHTMLLib;
@@ -1564,17 +1572,17 @@ procedure mycore_utils_avl_tree_clean (avl_tree : pmycore_utils_avl_tree_t);
 function mycore_utils_avl_tree_destroy (avl_tree : pmycore_utils_avl_tree_t;
   self_destroy : Boolean) : pmycore_utils_avl_tree_t; cdecl; external MyHTMLLib;
 function mycore_utils_avl_tree_node_create_root (avl_tree :
-  pmycore_utils_avl_tree_t; node_type : QWord; value : Pointer)
+  pmycore_utils_avl_tree_t; node_type : Cardinal; value : Pointer)
   : pmycore_utils_avl_tree_node_t; cdecl; external MyHTMLLib;
 procedure mycore_utils_avl_tree_add (avl_tree : pmycore_utils_avl_tree_t;
-  root : ppmycore_utils_avl_tree_node_t; node_type : QWord; value : Pointer);
+  root : ppmycore_utils_avl_tree_node_t; node_type : Cardinal; value : Pointer);
   cdecl; external MyHTMLLib;
 function mycore_utils_avl_tree_delete (avl_tree : pmycore_utils_avl_tree_t;
-  root : ppmycore_utils_avl_tree_node_t; node_type : QWord) : Pointer; cdecl;
+  root : ppmycore_utils_avl_tree_node_t; node_type : Cardinal) : Pointer; cdecl;
   external MyHTMLLib;
 function mycore_utils_avl_tree_search_by_type (avl_tree :
   pmycore_utils_avl_tree_t; node : pmycore_utils_avl_tree_node_t; node_type :
-  QWord) : pmycore_utils_avl_tree_node_t; cdecl; external MyHTMLLib;
+  Cardinal) : pmycore_utils_avl_tree_node_t; cdecl; external MyHTMLLib;
 procedure mycore_utils_avl_tree_list_all_nodes (avl_tree :
   pmycore_utils_avl_tree_t; root : pmycore_utils_avl_tree_node_t; callback :
   mycore_utils_avl_tree_node_callback_f; ctx : Pointer); cdecl;
@@ -1583,17 +1591,17 @@ procedure mycore_utils_avl_tree_list_all_nodes (avl_tree :
 (*mycore/utils/mcsimple.h******************************************************)
 
 function mcsimple_create : pmcsimple_t; cdecl; external MyHTMLLib;
-procedure mcsimple_init (mcsimple : pmcsimple_t; pos_size : QWord;
-  list_size : QWord; struct_size : QWord); cdecl; external MyHTMLLib;
+procedure mcsimple_init (mcsimple : pmcsimple_t; pos_size : Cardinal;
+  list_size : Cardinal; struct_size : Cardinal); cdecl; external MyHTMLLib;
 procedure mcsimple_clean (mcsimple : pmcsimple_t); cdecl; external MyHTMLLib;
 function mcsimple_destroy (mcsimple : pmcsimple_t; destroy_self : Boolean)
   : pmcsimple_t; cdecl; external MyHTMLLib;
-function mcsimple_init_list_entries (mcsimple : pmcsimple_t; pos : QWord)
+function mcsimple_init_list_entries (mcsimple : pmcsimple_t; pos : Cardinal)
   : PByte; cdecl; external MyHTMLLib;
 function mcsimple_malloc (mcsimple : pmcsimple_t) : Pointer; cdecl;
   external MyHTMLLib;
 function mcsimple_get_by_absolute_position (mcsimple : pmcsimple_t;
-  pos : QWord) : Pointer; cdecl; external MyHTMLLib;
+  pos : Cardinal) : Pointer; cdecl; external MyHTMLLib;
 
 (*mycore/utils/mcsync.h********************************************************)
 
@@ -1635,62 +1643,62 @@ procedure mcsync_mutex_destroy (mutex : Pointer); cdecl; external MyHTMLLib;
 
 function mcobject_async_create : pmcobject_async_t; cdecl; external MyHTMLLib;
 function mcobject_async_init (mcobj_async : pmcobject_async_t; chunk_len :
-  QWord; obj_size_by_one_chunk : QWord; struct_size : QWord) :
+  Cardinal; obj_size_by_one_chunk : Cardinal; struct_size : Cardinal) :
   pmcobject_async_status_t; cdecl; external MyHTMLLib;
 procedure mcobject_async_clean (mcobj_async : pmcobject_async_t); cdecl;
   external MyHTMLLib;
 function mcobject_async_destroy (mcobj_async : pmcobject_async_t; destroy_self :
   Integer) : pmcobject_async_t; cdecl; external MyHTMLLib;
 function mcobject_async_node_add (mcobj_async : pmcobject_async_t; status :
-  pmcobject_async_status_t) : QWord; cdecl; external MyHTMLLib;
+  pmcobject_async_status_t) : Cardinal; cdecl; external MyHTMLLib;
 procedure mcobject_async_node_clean (mcobj_async : pmcobject_async_t; node_idx :
-  QWord); cdecl; external MyHTMLLib;
+  Cardinal); cdecl; external MyHTMLLib;
 procedure mcobject_async_node_all_clean (mcobj_async : pmcobject_async_t);
   cdecl; external MyHTMLLib;
 procedure mcobject_async_node_delete (mcobj_async : pmcobject_async_t;
-  node_idx : QWord); cdecl; external MyHTMLLib;
+  node_idx : Cardinal); cdecl; external MyHTMLLib;
 function mcobject_async_malloc (mcobj_async : pmcobject_async_t; node_idx :
-  QWord; status : pmcobject_async_status_t) : Pointer; cdecl;
+  Cardinal; status : pmcobject_async_status_t) : Pointer; cdecl;
   external MyHTMLLib;
 function mcobject_async_free (mcobj_async : pmcobject_async_t; entry : Pointer)
   : mcobject_async_status_t; cdecl; external MyHTMLLib;
 function mcobject_async_chunk_malloc (mcobj_async : pmcobject_async_t; length :
-  QWord; status : pmcobject_async_status_t) : pmcobject_async_chunk_t; cdecl;
+  Cardinal; status : pmcobject_async_status_t) : pmcobject_async_chunk_t; cdecl;
   external MyHTMLLib;
 function mcobject_async_chunk_malloc_without_lock (mcobj_async :
-  pmcobject_async_t; length : QWord; status : pmcobject_async_status_t) :
+  pmcobject_async_t; length : Cardinal; status : pmcobject_async_status_t) :
   pmcobject_async_chunk_t; cdecl; external MyHTMLLib;
 
 (*mycore/utils/mchar_async.h***************************************************)
 
 function mchar_async_create : pmchar_async_t; cdecl; external MyHTMLLib;
-function mchar_async_init (mchar_async : pmchar_async_t; chunk_len : QWord;
-  char_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+function mchar_async_init (mchar_async : pmchar_async_t; chunk_len : Cardinal;
+  char_size : Cardinal) : mystatus_t; cdecl; external MyHTMLLib;
 function mchar_async_clean (mchar_async : pmchar_async_t) : mystatus_t; cdecl;
   external MyHTMLLib;
 function mchar_async_destroy (mchar_async : pmchar_async_t; destroy_self :
   Integer) : pmchar_async_t; cdecl; external MyHTMLLib;
-function mchar_async_malloc (mchar_async : pmchar_async_t; node_idx : QWord;
-  size : QWord) : PChar; cdecl; external MyHTMLLib;
-function mchar_async_realloc (mchar_async : pmchar_async_t; node_idx : QWord;
-  data : PChar; data_len : QWord; new_size : QWord) : PChar; cdecl;
+function mchar_async_malloc (mchar_async : pmchar_async_t; node_idx : Cardinal;
+  size : Cardinal) : PAnsiChar; cdecl; external MyHTMLLib;
+function mchar_async_realloc (mchar_async : pmchar_async_t; node_idx : Cardinal;
+  data : PAnsiChar; data_len : Cardinal; new_size : Cardinal) : PAnsiChar; cdecl;
   external MyHTMLLib;
-procedure mchar_async_free (mchar_async : pmchar_async_t; node_idx : QWord;
-  entry : PChar); cdecl; external MyHTMLLib;
+procedure mchar_async_free (mchar_async : pmchar_async_t; node_idx : Cardinal;
+  entry : PAnsiChar); cdecl; external MyHTMLLib;
 function mchar_async_node_add (mchar_async : pmchar_async_t; status :
-  pmystatus_t) : QWord; cdecl; external MyHTMLLib;
+  pmystatus_t) : Cardinal; cdecl; external MyHTMLLib;
 procedure mchar_async_node_clean (mchar_async : pmchar_async_t; node_idx :
-  QWord); cdecl; external MyHTMLLib;
+  Cardinal); cdecl; external MyHTMLLib;
 procedure mchar_async_node_delete (mchar_async : pmchar_async_t; node_idx :
-  QWord); cdecl; external MyHTMLLib;
+  Cardinal); cdecl; external MyHTMLLib;
 function mchar_async_chunk_malloc (mchar_async : pmchar_async_t; node :
-  pmchar_async_node_t; length : QWord) : pmchar_async_chunk_t; cdecl;
+  pmchar_async_node_t; length : Cardinal) : pmchar_async_chunk_t; cdecl;
   external MyHTMLLib;
 function mchar_async_crop_first_chars (mchar_async : pmchar_async_t; node_idx :
-  QWord; data : PChar; crop_len : QWord) : PChar; cdecl; external MyHTMLLib;
-function mchar_async_crop_first_chars_without_cache (data : PChar; crop_len :
-  QWord) : PChar; cdecl; external MyHTMLLib;
-function mchar_async_get_size_by_data (const data : PChar) : QWord; cdecl;
+  Cardinal; data : PAnsiChar; crop_len : Cardinal) : PAnsiChar; cdecl; external MyHTMLLib;
+function mchar_async_crop_first_chars_without_cache (data : PAnsiChar; crop_len :
+  Cardinal) : PAnsiChar; cdecl; external MyHTMLLib;
+function mchar_async_get_size_by_data (const data : PAnsiChar) : Cardinal; cdecl;
   external MyHTMLLib;
 
 { cache }
@@ -1701,106 +1709,103 @@ function mchar_async_cache_destroy (cache : pmchar_async_cache_t; self_destroy :
 procedure mchar_async_cache_clean (cache : pmchar_async_cache_t); cdecl;
   external MyHTMLLib;
 procedure mchar_async_cache_add (cache : pmchar_async_cache_t; value : Pointer;
-  size : QWord); cdecl; external MyHTMLLib;
-function mchar_async_cache_delete (cache : pmchar_async_cache_t; size : QWord) :
-  QWord; cdecl; external MyHTMLLib;
+  size : Cardinal); cdecl; external MyHTMLLib;
+function mchar_async_cache_delete (cache : pmchar_async_cache_t; size : Cardinal) :
+  Cardinal; cdecl; external MyHTMLLib;
 
 (*mycore/utils/mhash.h*********************************************************)
 
 function mycore_utils_mhash_create : pmycore_utils_mhash_t; cdecl;
   external MyHTMLLib;
 function mycore_utils_mhash_init (mhash : pmycore_utils_mhash_t; table_size :
-  QWord; depth : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+  Cardinal; depth : Cardinal) : mystatus_t; cdecl; external MyHTMLLib;
 procedure mycore_utils_mhash_clean (mhash : pmycore_utils_mhash_t); cdecl;
   external MyHTMLLib;
 function mycore_utils_mhash_destroy (mhash : pmycore_utils_mhash_t;
   self_destroy : Boolean) : pmycore_utils_mhash_t; cdecl; external MyHTMLLib;
 function mycore_utils_mhash_create_entry (mhash : pmycore_utils_mhash_t;
-  const key : PChar; key_size : QWord; value : Pointer) :
+  const key : PAnsiChar; key_size : Cardinal; value : Pointer) :
   pmycore_utils_mhash_entry_t; cdecl; external MyHTMLLib;
 function mycore_utils_mhash_add (mhash : pmycore_utils_mhash_t; const key :
-  PChar; key_size : QWord; value : Pointer) : pmycore_utils_mhash_entry_t;
+  PAnsiChar; key_size : Cardinal; value : Pointer) : pmycore_utils_mhash_entry_t;
   cdecl; external MyHTMLLib;
 function mycore_utils_mhash_search (mhash : pmycore_utils_mhash_t; const key :
-  PChar; key_size : QWord; value : Pointer) : pmycore_utils_mhash_entry_t;
+  PAnsiChar; key_size : Cardinal; value : Pointer) : pmycore_utils_mhash_entry_t;
   cdecl; external MyHTMLLib;
 function mycore_utils_mhash_add_with_choice (mhash : pmycore_utils_mhash_t;
-  const key : PChar; key_size : QWord) : pmycore_utils_mhash_entry_t; cdecl;
+  const key : PAnsiChar; key_size : Cardinal) : pmycore_utils_mhash_entry_t; cdecl;
   external MyHTMLLib;
 function mycore_utils_mhash_entry_by_id (mhash : pmycore_utils_mhash_t; id :
-  QWord) : pmycore_utils_mhash_entry_t; cdecl; external MyHTMLLib;
+  Cardinal) : pmycore_utils_mhash_entry_t; cdecl; external MyHTMLLib;
 function mycore_utils_mhash_get_table_size (mhash : pmycore_utils_mhash_t) :
-  QWord; cdecl; external MyHTMLLib;
+  Cardinal; cdecl; external MyHTMLLib;
 function mycore_utils_mhash_rebuld (mhash : pmycore_utils_mhash_t) :
   ppmycore_utils_mhash_entry_t; cdecl; external MyHTMLLib;
 
 (*mycore/utils/mctree.h********************************************************)
 
-function mctree_create (start_size : QWord) : pmctree_t; cdecl;
+function mctree_create (start_size : Cardinal) : pmctree_t; cdecl;
   external MyHTMLLib;
 procedure mctree_clean (mctree : pmctree_t); cdecl; external MyHTMLLib;
 function mctree_destroy (mctree : pmctree_t) : pmctree_t; cdecl;
   external MyHTMLLib;
-function mctree_insert (mctree : pmctree_t; const key : PChar; key_size : QWord;
+function mctree_insert (mctree : pmctree_t; const key : PAnsiChar; key_size : Cardinal;
   value : Pointer; b_insert : mctree_before_insert_f) : mctree_index_t; cdecl;
   external MyHTMLLib;
-function mctree_search (mctree : pmctree_t; const key : PChar; key_size : QWord)
+function mctree_search (mctree : pmctree_t; const key : PAnsiChar; key_size : Cardinal)
   : mctree_index_t; cdecl; external MyHTMLLib;
-function mctree_search_lowercase (mctree : pmctree_t; const key : PChar;
-  key_size : QWord) : mctree_index_t; cdecl; external MyHTMLLib;
+function mctree_search_lowercase (mctree : pmctree_t; const key : PAnsiChar;
+  key_size : Cardinal) : mctree_index_t; cdecl; external MyHTMLLib;
 
 (*mycore/incoming.h************************************************************)
 
 function mycore_incoming_buffer_add (current : pmycore_incoming_buffer_t;
-  mcobject : pmcobject_t; const html : PChar; html_size : QWord) :
+  mcobject : pmcobject_t; const html : PAnsiChar; html_size : Cardinal) :
   pmycore_incoming_buffer_t; cdecl external MyHTMLLib;
 procedure mycore_incoming_buffer_clean (current : pmycore_incoming_buffer_t);
   cdecl; external MyHTMLLib;
 function mycore_incoming_buffer_split (current : pmycore_incoming_buffer_t;
-  mcobject : pmcobject_t; global_pos : QWord) : pmycore_incoming_buffer_t;
+  mcobject : pmcobject_t; global_pos : Cardinal) : pmycore_incoming_buffer_t;
   cdecl; external MyHTMLLib;
 function mycore_incoming_buffer_convert_one_escape_to_code_point (inc_buf :
-  ppmycore_incoming_buffer_t; relative_pos : PQword) : QWord; cdecl;
+  ppmycore_incoming_buffer_t; relative_pos : PCardinal) : Cardinal; cdecl;
   external MyHTMLLib;
 function mycore_incoming_buffer_escaped_case_cmp (inc_buf :
-  ppmycore_incoming_buffer_t; const to_ : PChar; to_size : QWord; relative_pos :
-  PQWord) : QWord; cdecl; external MyHTMLLib;
+  ppmycore_incoming_buffer_t; const to_ : PAnsiChar; to_size : Cardinal; relative_pos :
+  PCardinal) : Cardinal; cdecl; external MyHTMLLib;
 
 (*mycore/mystring.h************************************************************)
 
-function mycore_string_destroy (str : pmycore_string_t; destroy_obj : Boolean) :
-  pmycore_string_raw_t; cdecl; external MyHTMLLib;
-
 (* append *)
-procedure mycore_string_append (str : pmycore_string_t; const data : PChar;
-  length : QWord); cdecl; external MyHTMLLib;
+procedure mycore_string_append (str : pmycore_string_t; const data : PAnsiChar;
+  length : Cardinal); cdecl; external MyHTMLLib;
 procedure mycore_string_append_one (str : pmycore_string_t; const data : Char);
   cdecl; external MyHTMLLib;
 procedure mycore_string_append_lowercase (str : pmycore_string_t; const data :
-  PChar; length : QWord); cdecl; external MyHTMLLib;
+  PAnsiChar; length : Cardinal); cdecl; external MyHTMLLib;
 procedure mycore_string_append_with_replacement_null_characters (str :
-  pmycore_string_t; const buff : PChar; length : QWord); cdecl;
+  pmycore_string_t; const buff : PAnsiChar; length : Cardinal); cdecl;
   external MyHTMLLib;
 function mycore_string_raw_set_replacement_character (target : pmycore_string_t;
-  position : QWord) : QWord; cdecl; external MyHTMLLib;
+  position : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 
 (* other functions *)
 procedure mycore_string_copy (dest : pmycore_string_t; target :
   pmycore_string_t); cdecl; external MyHTMLLib;
-function mycore_string_raw_copy (str1 : PChar; str2 : PChar; size : QWord) :
-  QWord; cdecl; external MyHTMLLib;
+function mycore_string_raw_copy (str1 : PAnsiChar; str2 : PAnsiChar; size : Cardinal) :
+  Cardinal; cdecl; external MyHTMLLib;
 procedure mycore_string_stay_only_whitespace (target : pmycore_string_t); cdecl;
   external MyHTMLLib;
 function mycore_string_crop_whitespace_from_begin (target : pmycore_string_t) :
-  QWord; cdecl; external MyHTMLLib;
+  Cardinal; cdecl; external MyHTMLLib;
 function mycore_string_whitespace_from_begin (target : pmycore_string_t) :
-  QWord; cdecl; external MyHTMLLib;
+  Cardinal; cdecl; external MyHTMLLib;
 
 (*mycore/mythread.h************************************************************)
 
 function mythread_create : pmythread_t; cdecl; external MyHTMLLib;
 function mythread_init (mythread : pmythread_t; thread_type : mythread_type_t;
-  threads_count : QWord; id_increase : QWord) : mystatus_t; cdecl;
+  threads_count : Cardinal; id_increase : Cardinal) : mystatus_t; cdecl;
   external MyHTMLLib;
 procedure mythread_clean (mythread : pmythread_t); cdecl; external MyHTMLLib;
 function mythread_destroy (mythread : pmythread_t; before_join :
@@ -1890,7 +1895,7 @@ procedure mythread_callback_quit (mythread : pmythread_t; entry :
 (*mycore/thread_queue.h********************************************************)
 
 function mythread_queue_create : pmythread_queue_t; cdecl; external MyHTMLLib;
-function mythread_queue_init (queue : pmythread_queue_t; size : QWord) :
+function mythread_queue_init (queue : pmythread_queue_t; size : Cardinal) :
   mystatus_t; cdecl; external MyHTMLLib;
 procedure mythread_queue_clean (queue : pmythread_queue_t); cdecl;
   external MyHTMLLib;
@@ -1898,7 +1903,7 @@ function mythread_queue_destroy (token : pmythread_queue_t) : pmythread_queue_t;
   cdecl; external MyHTMLLib;
 procedure mythread_queue_node_clean (qnode : pmythread_queue_node_t); cdecl;
   external MyHTMLLib;
-function mythread_queue_count_used_node (queue : pmythread_queue_t) : QWord;
+function mythread_queue_count_used_node (queue : pmythread_queue_t) : Cardinal;
   cdecl; external MyHTMLLib;
 function mythread_queue_get_first_node (queue : pmythread_queue_t) :
   pmythread_queue_node_t; cdecl; external MyHTMLLib;
@@ -1910,7 +1915,7 @@ function mythread_queue_node_malloc (mythread : pmythread_t; queue :
   pmythread_queue_t; status : pmystatus_t) : pmythread_queue_node_t; cdecl;
   external MyHTMLLib;
 function mythread_queue_node_malloc_limit (mythread : pmythread_t; queue :
-  pmythread_queue_t; limit : QWord; status : pmystatus_t) :
+  pmythread_queue_t; limit : Cardinal; status : pmystatus_t) :
   pmythread_queue_node_t; cdecl; external MyHTMLLib;
 {$IFNDEF MyCORE_BUILD_WITHOUT_THREADS}
 function mythread_queue_node_malloc_round (mythread : pmythread_t; entry :
@@ -1921,7 +1926,7 @@ function mythread_queue_list_create (status : pmystatus_t) :
 procedure mythread_queue_list_destroy (queue_list : pmythread_queue_list_t);
   cdecl; external MyHTMLLib;
 function mythread_queue_list_get_count (queue_list : pmythread_queue_list_t) :
-  QWord; cdecl; external MyHTMLLib;
+  Cardinal; cdecl; external MyHTMLLib;
 procedure mythread_queue_list_wait_for_done (mythread : pmythread_t;
   queue_list : pmythread_queue_list_t); cdecl; external MyHTMLLib;
 function mythread_queue_list_see_for_done (mythread : pmythread_t;
@@ -1930,11 +1935,11 @@ function mythread_queue_list_see_for_done_by_thread (mythread : pmythread_t;
   queue_list : pmythread_queue_list_t; thread_id : mythread_id_t) : Boolean;
   cdecl; external MyHTMLLib;
 function mythread_queue_list_entry_push (mythread_list : ppmythread_t;
-  list_size : QWord; queue_list : pmythread_queue_list_t; queue :
-  pmythread_queue_t; thread_param_size : QWord; status : pmystatus_t) :
+  list_size : Cardinal; queue_list : pmythread_queue_list_t; queue :
+  pmythread_queue_t; thread_param_size : Cardinal; status : pmystatus_t) :
   pmythread_queue_list_t; cdecl; external MyHTMLLib;
 function mythread_queue_list_entry_delete (mythread_list : ppmythread_t;
-  list_size : QWord; queue_list : pmythread_queue_list_t; entry :
+  list_size : Cardinal; queue_list : pmythread_queue_list_t; entry :
   pmythread_queue_list_entry_t; destroy_queue : Boolean) :
   pmythread_queue_list_entry_t; cdecl; external MyHTMLLib;
 procedure mythread_queue_list_entry_clean (entry :
@@ -1949,27 +1954,27 @@ procedure mythread_queue_list_entry_make_stream (mythread : pmythread_t;
 
 (*mycore/myosi.h***************************************************************)
 
-function mycore_malloc (size : QWord) : Pointer; cdecl; external MyHTMLLib;
-function mycore_realloc (dst : Pointer; size : QWord) : Pointer; cdecl;
+function mycore_malloc (size : Cardinal) : Pointer; cdecl; external MyHTMLLib;
+function mycore_realloc (dst : Pointer; size : Cardinal) : Pointer; cdecl;
   external MyHTMLLib;
-function mycore_calloc (num : QWord; size : QWord) : Pointer; cdecl;
+function mycore_calloc (num : Cardinal; size : Cardinal) : Pointer; cdecl;
   external MyHTMLLib;
 function mycore_free (dst : Pointer) : Pointer; cdecl; external MyHTMLLib;
 
 { io }
-function mycore_fopen (const filename : PChar; const mode : PChar) : Pointer;
+function mycore_fopen (const filename : PAnsiChar; const mode : PAnsiChar) : Pointer;
   cdecl; external MyHTMLLib;
 function mycore_fclose (stream : Pointer) : Integer; cdecl; external MyHTMLLib;
-function mycore_fread (buffer : Pointer; size : QWord; count : QWord; stream :
-  Pointer) : QWord; cdecl; external MyHTMLLib;
-function mycore_fwrite (const buffer : Pointer; size : QWord; count : QWord;
-  stream : Pointer) : QWord; cdecl; external MyHTMLLib;
+function mycore_fread (buffer : Pointer; size : Cardinal; count : Cardinal; stream :
+  Pointer) : Cardinal; cdecl; external MyHTMLLib;
+function mycore_fwrite (const buffer : Pointer; size : Cardinal; count : Cardinal;
+  stream : Pointer) : Cardinal; cdecl; external MyHTMLLib;
 function mycore_fflush (stream : Pointer) : Integer; cdecl; external MyHTMLLib;
 function mycore_fseek (stream : Pointer; offset : Longint; origin : Integer) :
   Integer; cdecl; external MyHTMLLib;
 function mycore_ftell (stream : Pointer) : Longint; cdecl; external MyHTMLLib;
 function mycore_ferror (stream : Pointer) : Integer; cdecl; external MyHTMLLib;
-procedure mycore_setbuf (stream : Pointer; buffer : PChar); cdecl;
+procedure mycore_setbuf (stream : Pointer; buffer : PAnsiChar); cdecl;
   external MyHTMLLib;
 
 (*mycore/perf.h****************************************************************)
@@ -1984,8 +1989,8 @@ function mycore_perf_end (perf : Pointer) : mycore_status_t; cdecl;
   external MyHTMLLib;
 function mycore_pref_in_sec (perf : Pointer) : Double; cdecl;
   external MyHTMLLib;
-function mycore_perf_clock : QWord; cdecl; external MyHTMLLib;
-function mycore_perf_frequency : QWord; cdecl; external MyHTMLLib;
+function mycore_perf_clock : Cardinal; cdecl; external MyHTMLLib;
+function mycore_perf_frequency : Cardinal; cdecl; external MyHTMLLib;
 {$ENDIF}{MyHTML_WITH_PERF}
 
 (*myencoding/encoding.h********************************************************)
@@ -2072,40 +2077,37 @@ function myencoding_decode_utf_16le (const data : Byte; res :
   pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
 function myencoding_decode_x_user_defined (const data : Byte; res :
   pmyencoding_result_t) : myencoding_status_t; cdecl; external MyHTMLLib;
-function myencoding_codepoint_ascii_length (codepoint : QWord) :  QWord; cdecl;
+function myencoding_codepoint_ascii_length (codepoint : Cardinal) :  Cardinal; cdecl;
   external MyHTMLLib;
-function myencoding_ascii_utf_8_length (const data : Byte) : QWord; cdecl;
+function myencoding_ascii_utf_8_length (const data : Byte) : Cardinal; cdecl;
   external MyHTMLLib;
-function myencoding_codepoint_to_ascii_utf_8 (codepoint : QWord; data : PChar) :
-  QWord; cdecl; external MyHTMLLib;
-function myencoding_codepoint_to_lowercase_ascii_utf_8 (codepoint : QWord;
-  data : PChar) : QWord; cdecl; external MyHTMLLib;
-function myencoding_codepoint_to_ascii_utf_16 (codepoint : QWord; data : PChar)
-  : QWord; cdecl; external MyHTMLLib;
+function myencoding_codepoint_to_ascii_utf_8 (codepoint : Cardinal; data : PAnsiChar) :
+  Cardinal; cdecl; external MyHTMLLib;
+function myencoding_codepoint_to_lowercase_ascii_utf_8 (codepoint : Cardinal;
+  data : PAnsiChar) : Cardinal; cdecl; external MyHTMLLib;
+function myencoding_codepoint_to_ascii_utf_16 (codepoint : Cardinal; data : PAnsiChar)
+  : Cardinal; cdecl; external MyHTMLLib;
 function myencoding_ascii_utf_8_to_codepoint (const data : PByte; codepoint :
-  PQWord) : QWord; cdecl; external MyHTMLLib;
+  PCardinal) : Cardinal; cdecl; external MyHTMLLib;
 procedure myencoding_result_clean (res : pmyencoding_result_t); cdecl;
   external MyHTMLLib;
-function myencoding_detect_and_cut_bom (const text : PChar; length : PChar;
-  encoding : pmyencoding_t; const new_text : PPChar; new_size : QWord) :
-  Boolean; cdecl; external MyHTMLLib;
 function myencoding_convert_to_ascii_utf_8 (raw_str : pmycore_string_raw_t;
-  const buff : PChar; length : QWord; encoding : myencoding_t) : QWord; cdecl;
+  const buff : PAnsiChar; length : Cardinal; encoding : myencoding_t) : Cardinal; cdecl;
   external MyHTMLLib;
-function myencoding_name_entry_by_name (const name : PChar; length : QWord) :
+function myencoding_name_entry_by_name (const name : PAnsiChar; length : Cardinal) :
   pmyencoding_detect_name_entry_t; cdecl; external MyHTMLLib;
 function myencoding_extracting_character_encoding_from_charset_with_found (
-  const data : PChar; data_size : QWord; encoding : pmyencoding_t; const found :
-  PPChar; found_length : PQWord) : Boolean; cdecl; external MyHTMLLib;
+  const data : PAnsiChar; data_size : Cardinal; encoding : pmyencoding_t; const found :
+  PPAnsiChar; found_length : PCardinal) : Boolean; cdecl; external MyHTMLLib;
 
 (*myencoding/mystring.h********************************************************)
 
 procedure myencoding_string_append (str : pmycore_string_t; const buff :
-  PChar; length : QWord; encoding : myencoding_t); cdecl; external MyHTMLLib;
+  PAnsiChar; length : Cardinal; encoding : myencoding_t); cdecl; external MyHTMLLib;
 
 { append with convert encoding }
 procedure myencoding_string_append_chunk (str : pmycore_string_t; res :
-  pmyencoding_result_t; const buff : PChar; length : QWord; encoding :
+  pmyencoding_result_t; const buff : PAnsiChar; length : Cardinal; encoding :
   myencoding_t); cdecl; external MyHTMLLib;
 procedure myencoding_string_append_one (str : pmycore_string_t; res :
   pmyencoding_result_t; const data : Char; encoding : myencoding_t); cdecl;
@@ -2113,30 +2115,30 @@ procedure myencoding_string_append_one (str : pmycore_string_t; res :
 
 { append with convert encoding lowercase }
 procedure myencoding_string_append_lowercase_ascii (str : pmycore_string_t;
-  const buff : PChar; length : QWord; encoding : myencoding_t); cdecl;
+  const buff : PAnsiChar; length : Cardinal; encoding : myencoding_t); cdecl;
   external MyHTMLLib;
 procedure myencoding_string_append_chunk_lowercase_ascii (str :
-  pmycore_string_t; res : pmyencoding_result_t; const buff : PChar; length :
-  QWord; encoding : myencoding_t); cdecl; external MyHTMLLib;
+  pmycore_string_t; res : pmyencoding_result_t; const buff : PAnsiChar; length :
+  Cardinal; encoding : myencoding_t); cdecl; external MyHTMLLib;
 
 (*myhtml/stream.h**************************************************************)
 
 function myhtml_stream_buffer_create : pmyhtml_stream_buffer_t; cdecl;
   external MyHTMLLib;
 function myhtml_stream_buffer_init (stream_buffer : pmyhtml_stream_buffer_t;
-  entries_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+  entries_size : Cardinal) : mystatus_t; cdecl; external MyHTMLLib;
 procedure myhtml_stream_buffer_clean (stream_buffer : pmyhtml_stream_buffer_t);
   cdecl; external MyHTMLLib;
 function myhtml_stream_buffer_destroy (stream_buffer : pmyhtml_stream_buffer_t;
   self_destroy : Boolean) : pmyhtml_stream_buffer_t; cdecl; external MyHTMLLib;
 function myhtml_stream_buffer_add_entry (stream_buffer :
-  pmyhtml_stream_buffer_t; entry_data_size : QWord) :
+  pmyhtml_stream_buffer_t; entry_data_size : Cardinal) :
   pmyhtml_stream_buffer_entry_t; cdecl; external MyHTMLLib;
 function myhtml_stream_buffer_current_entry (stream_buffer :
   pmyhtml_stream_buffer_t) : pmyhtml_stream_buffer_entry_t; cdecl;
   external MyHTMLLib;
 function myhtml_stream_buffer_entry_init (stream_buffer_entry :
-  pmyhtml_stream_buffer_entry_t; size : QWord) : mystatus_t; cdecl;
+  pmyhtml_stream_buffer_entry_t; size : Cardinal) : mystatus_t; cdecl;
   external MyHTMLLib;
 procedure myhtml_stream_buffer_entry_clean (stream_buffer_entry :
   pmyhtml_stream_buffer_entry_t); cdecl; external MyHTMLLib;
@@ -2155,9 +2157,9 @@ function myhtml_tree_list_destroy (list : pmyhtml_tree_list_t; destroy_self :
 procedure myhtml_tree_list_append (list : pmyhtml_tree_list_t; node :
   pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
 procedure myhtml_tree_list_append_after_index (list : pmyhtml_tree_list_t;
-  node : pmyhtml_tree_node_t; index : QWord); cdecl; external MyHTMLLib;
+  node : pmyhtml_tree_node_t; index : Cardinal); cdecl; external MyHTMLLib;
 procedure myhtml_tree_list_insert_by_index (list : pmyhtml_tree_list_t;
-  node : pmyhtml_tree_node_t; index : QWord); cdecl; external MyHTMLLib;
+  node : pmyhtml_tree_node_t; index : Cardinal); cdecl; external MyHTMLLib;
 function myhtml_tree_list_current_node (list : pmyhtml_tree_list_t) :
   pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
 
@@ -2172,7 +2174,7 @@ function myhtml_tree_token_list_destroy (list : pmyhtml_tree_token_list_t;
 procedure myhtml_tree_token_list_append (list : pmyhtml_tree_token_list_t;
   token : pmyhtml_token_node_t); cdecl; external MyHTMLLib;
 procedure myhtml_tree_token_list_append_after_index (list :
-  pmyhtml_tree_token_list_t; token : pmyhtml_token_node_t; index : QWord);
+  pmyhtml_tree_token_list_t; token : pmyhtml_token_node_t; index : Cardinal);
   cdecl; external MyHTMLLib;
 function myhtml_tree_token_list_current_node (list : pmyhtml_tree_token_list_t)
   : pmyhtml_token_node_t; cdecl; external MyHTMLLib;
@@ -2187,7 +2189,7 @@ function myhtml_tree_active_formatting_destroy (tree : pmyhtml_tree_t) :
 function myhtml_tree_active_formatting_is_marker (tree : pmyhtml_tree_t; idx :
   pmyhtml_tree_node_t) : Boolean; cdecl; external MyHTMLLib;
 function myhtml_tree_active_formatting_between_last_marker (tree :
-  pmyhtml_tree_t; tag_idx : myhtml_tag_id_t; return_idx : PQWord) :
+  pmyhtml_tree_t; tag_idx : myhtml_tag_id_t; return_idx : PCardinal) :
   pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
 procedure myhtml_tree_active_formatting_append (tree : pmyhtml_tree_t;
   node : pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
@@ -2198,13 +2200,13 @@ procedure myhtml_tree_active_formatting_pop (tree : pmyhtml_tree_t); cdecl;
 procedure myhtml_tree_active_formatting_remove (tree : pmyhtml_tree_t; node :
   pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
 procedure myhtml_tree_active_formatting_remove_by_index (tree :pmyhtml_tree_t;
-  idx : QWord); cdecl; external MyHTMLLib;
+  idx : Cardinal); cdecl; external MyHTMLLib;
 procedure myhtml_tree_active_formatting_reconstruction (tree : pmyhtml_tree_t);
   cdecl; external MyHTMLLib;
 procedure myhtml_tree_active_formatting_up_to_last_marker (tree :
   pmyhtml_tree_t); cdecl; external MyHTMLLib;
 function myhtml_tree_active_formatting_find (tree : pmyhtml_tree_t; idx :
-  pmyhtml_tree_node_t; return_idx : PQWord) : Boolean; cdecl;
+  pmyhtml_tree_node_t; return_idx : PCardinal) : Boolean; cdecl;
   external MyHTMLLib;
 function myhtml_tree_active_formatting_current_node (tree : pmyhtml_tree_t) :
   pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
@@ -2223,7 +2225,7 @@ function myhtml_tree_adjusted_current_node (tree : pmyhtml_tree_t) :
 procedure myhtml_tree_open_elements_append (tree : pmyhtml_tree_t; node :
   pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
 procedure myhtml_tree_open_elements_append_after_index (tree : pmyhtml_tree_t;
-  node : pmyhtml_tree_node_t; index : QWord); cdecl; external MyHTMLLib;
+  node : pmyhtml_tree_node_t; index : Cardinal); cdecl; external MyHTMLLib;
 procedure myhtml_tree_open_elements_pop (tree : pmyhtml_tree_t); cdecl;
   external MyHTMLLib;
 procedure myhtml_tree_open_elements_pop_until (tree : pmyhtml_tree_t; tag_idx :
@@ -2233,19 +2235,19 @@ procedure myhtml_tree_open_elements_pop_until_by_node (tree : pmyhtml_tree_t;
   node_idx : pmyhtml_tree_node_t; is_exclude : Boolean); cdecl;
   external MyHTMLLib;
 procedure myhtml_tree_open_elements_pop_until_by_index (tree : pmyhtml_tree_t;
-  idx : QWord; is_exclude : Boolean); cdecl; external MyHTMLLib;
+  idx : Cardinal; is_exclude : Boolean); cdecl; external MyHTMLLib;
 procedure myhtml_tree_open_elements_remove (tree : pmyhtml_tree_t; node :
   pmyhtml_tree_node_t); cdecl; external MyHTMLLib;
 function myhtml_tree_open_elements_find (tree : pmyhtml_tree_t; idx :
-  pmyhtml_tree_node_t; pos : PQWord) : Boolean; cdecl; external MyHTMLLib;
+  pmyhtml_tree_node_t; pos : PCardinal) : Boolean; cdecl; external MyHTMLLib;
 function myhtml_tree_open_elements_find_reverse (tree : pmyhtml_tree_t; idx :
-  pmyhtml_tree_node_t; pos : PQWord) : Boolean; cdecl; external MyHTMLLib;
+  pmyhtml_tree_node_t; pos : PCardinal) : Boolean; cdecl; external MyHTMLLib;
 function myhtml_tree_open_elements_find_by_tag_idx (tree : pmyhtml_tree_t;
   tag_idx : myhtml_tag_id_t; mynamespace : myhtml_namespace_t; return_index :
-  PQWord) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+  PCardinal) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
 function myhtml_tree_open_elements_find_by_tag_idx_reverse (tree :
   pmyhtml_tree_t; tag_idx : myhtml_tag_id_t; mynamespace : myhtml_namespace_t;
-  return_index : PQWord) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
+  return_index : PCardinal) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
 function myhtml_tree_element_in_scope (tree : pmyhtml_tree_t; tag_idx :
   myhtml_tag_id_t; mynamespace : myhtml_namespace_t; category :
   myhtml_tag_categories_t) : pmyhtml_tree_node_t; cdecl; external MyHTMLLib;
@@ -2280,7 +2282,7 @@ procedure myhtml_tree_reset_insertion_mode_appropriately (tree :
 function myhtml_tree_adoption_agency_algorithm (tree : pmyhtml_tree_t; token :
   pmyhtml_token_node_t; subject_tag_idx : myhtml_tag_id_t) : Boolean; cdecl;
   external MyHTMLLib;
-function myhtml_tree_template_insertion_length (tree : pmyhtml_tree_t) : QWord;
+function myhtml_tree_template_insertion_length (tree : pmyhtml_tree_t) : Cardinal;
   cdecl; external MyHTMLLib;
 
 { other for a tree }
@@ -2356,7 +2358,7 @@ function myhtml_tree_temp_tag_name_destroy (temp_tag_name :
   pmyhtml_tree_temp_tag_name_t; self_destroy : Boolean) :
   pmyhtml_tree_temp_tag_name_t; cdecl; external MyHTMLLib;
 function myhtml_tree_temp_tag_name_append (temp_tag_name :
-  pmyhtml_tree_temp_tag_name_t; const name : PChar; name_len : QWord) :
+  pmyhtml_tree_temp_tag_name_t; const name : PAnsiChar; name_len : Cardinal) :
   mystatus_t; cdecl; external MyHTMLLib;
 function myhtml_tree_temp_tag_name_append_one (temp_tag_name :
   pmyhtml_tree_temp_tag_name_t; const name : Char) : mystatus_t; cdecl;
@@ -2369,20 +2371,20 @@ function myhtml_tree_special_list_append (special :
   pmyhtml_tree_special_token_list_t; token : pmyhtml_token_node_t; ns :
   myhtml_namespace_t) : mystatus_t; cdecl; external MyHTMLLib;
 function myhtml_tree_special_list_length (special :
-  pmyhtml_tree_special_token_list_t) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_special_token_list_t) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tree_special_list_get_last (special :
   pmyhtml_tree_special_token_list_t) : pmyhtml_tree_special_token_t; cdecl;
   external MyHTMLLib;
 function myhtml_tree_special_list_pop (special :
-  pmyhtml_tree_special_token_list_t) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_special_token_list_t) : Cardinal; cdecl; external MyHTMLLib;
 
 { incoming buffer }
 function myhtml_tree_incoming_buffer_make_data (tree : pmyhtml_tree_t;
-  start : QWord; length : QWord) : PChar; cdecl; external MyHTMLLib;
+  start : Cardinal; length : Cardinal) : PAnsiChar; cdecl; external MyHTMLLib;
 
 (*myhtml/token.h***************************************************************)
 
-function myhtml_token_create (tree : pmyhtml_tree_t; size : QWord) :
+function myhtml_token_create (tree : pmyhtml_tree_t; size : Cardinal) :
   pmyhtml_token_t; cdecl; external MyHTMLLib;
 procedure myhtml_token_clean (token : pmyhtml_token_t); cdecl;
   external MyHTMLLib;
@@ -2391,17 +2393,17 @@ procedure myhtml_token_clean_all (token : pmyhtml_token_t); cdecl;
 function myhtml_token_destroy (token : pmyhtml_token_t) : pmyhtml_token_t;
   cdecl; external MyHTMLLib;
 function myhtml_token_node_create (token : pmyhtml_token_t; async_node_id :
-  QWord) : pmyhtml_token_node_t; cdecl; external MyHTMLLib;
+  Cardinal) : pmyhtml_token_node_t; cdecl; external MyHTMLLib;
 procedure myhtml_token_node_clean (node : pmyhtml_token_node_t); cdecl;
   external MyHTMLLib;
 function myhtml_token_attr_create (token : pmyhtml_token_t; async_node_id :
-  QWord) : pmyhtml_token_attr_t; cdecl; external MyHTMLLib;
+  Cardinal) : pmyhtml_token_attr_t; cdecl; external MyHTMLLib;
 procedure myhtml_token_attr_clean (attr : pmyhtml_token_attr_t); cdecl;
   external MyHTMLLib;
 function myhtml_token_attr_remove (node : pmyhtml_token_node_t; attr :
   pmyhtml_token_attr_t) : pmyhtml_token_attr_t; cdecl; external MyHTMLLib;
 function myhtml_token_attr_remove_by_name (node : pmyhtml_token_node_t;
-  const name : PChar; name_length : QWord) : pmyhtml_token_attr_t; cdecl;
+  const name : PAnsiChar; name_length : Cardinal) : pmyhtml_token_attr_t; cdecl;
   external MyHTMLLib;
 procedure myhtml_token_attr_delete_all (token : pmyhtml_token_t; node :
   pmyhtml_token_node_t); cdecl; external MyHTMLLib;
@@ -2410,11 +2412,11 @@ procedure myhtml_token_delete (token : pmyhtml_token_t; node :
 procedure myhtml_token_set_done (node : pmyhtml_token_node_t); cdecl;
   external MyHTMLLib;
 function myhtml_token_attr_match (token : myhtml_token_t; target :
-  pmyhtml_token_node_t; const key : PChar; key_size : QWord; const value :
-  PChar; value_size : QWord) : pmyhtml_token_attr_t; cdecl; external MyHTMLLib;
+  pmyhtml_token_node_t; const key : PAnsiChar; key_size : Cardinal; const value :
+  PAnsiChar; value_size : Cardinal) : pmyhtml_token_attr_t; cdecl; external MyHTMLLib;
 function myhtml_token_attr_match_case (token : pmyhtml_token_t; target :
-  pmyhtml_token_node_t; const key : PChar; key_size : QWord; const value :
-  PChar; value_size : QWord) : pmyhtml_token_attr_t; cdecl; external MyHTMLLib;
+  pmyhtml_token_node_t; const key : PAnsiChar; key_size : Cardinal; const value :
+  PAnsiChar; value_size : Cardinal) : pmyhtml_token_attr_t; cdecl; external MyHTMLLib;
 function myhtml_token_release_and_check_doctype_attributes (token :
   pmyhtml_token_t; target : pmyhtml_token_node_t; return_doctype :
   pmyhtml_tree_doctype_t) : Boolean; cdecl; external MyHTMLLib;
@@ -2425,30 +2427,30 @@ procedure myhtml_token_adjust_svg_attributes (target : pmyhtml_token_node_t);
 procedure myhtml_token_adjust_foreign_attributes (target :
   pmyhtml_token_node_t); cdecl; external MyHTMLLib;
 function myhtml_token_node_attr_append (token : pmyhtml_token_t; dest :
-  pmyhtml_token_node_t; const key : PChar; key_len : QWord; const value : PChar;
-  value_len : QWord; thread_idx : QWord) : pmyhtml_token_attr_t; cdecl;
+  pmyhtml_token_node_t; const key : PAnsiChar; key_len : Cardinal; const value : PAnsiChar;
+  value_len : Cardinal; thread_idx : Cardinal) : pmyhtml_token_attr_t; cdecl;
   external MyHTMLLib;
 function myhtml_token_node_attr_append_with_convert_encoding (token :
-  pmyhtml_token_t; dest : pmyhtml_token_node_t; const key : PChar; key_len :
-  QWord; const value : PChar; value_len : QWord; thread_idx : QWord; encoding :
+  pmyhtml_token_t; dest : pmyhtml_token_node_t; const key : PAnsiChar; key_len :
+  Cardinal; const value : PAnsiChar; value_len : Cardinal; thread_idx : Cardinal; encoding :
   myencoding_t) : pmyhtml_token_attr_t; cdecl; external MyHTMLLib;
 procedure myhtml_token_node_text_append (token : pmyhtml_token_t; dest :
-  pmyhtml_token_node_t; const text : PChar; text_len : QWord); cdecl;
+  pmyhtml_token_node_t; const text : PAnsiChar; text_len : Cardinal); cdecl;
   external MyHTMLLib;
 procedure myhtml_token_node_attr_copy (token : pmyhtml_token_t; target :
-  pmyhtml_token_node_t; dest : pmyhtml_token_node_t; thread_idx : QWord); cdecl;
+  pmyhtml_token_node_t; dest : pmyhtml_token_node_t; thread_idx : Cardinal); cdecl;
   external MyHTMLLib;
 procedure myhtml_token_node_attr_copy_with_check (token : pmyhtml_token_t;
   target : pmyhtml_token_node_t; dest : pmyhtml_token_node_t; thread_idx :
-  QWord); cdecl; external MyHTMLLib;
+  Cardinal); cdecl; external MyHTMLLib;
 function myhtml_token_node_clone (token : pmyhtml_token_t; node :
-  pmyhtml_token_node_t; token_thread_idx : QWord; attr_thread_idx : QWord) :
+  pmyhtml_token_node_t; token_thread_idx : Cardinal; attr_thread_idx : Cardinal) :
   pmyhtml_token_node_t; cdecl; external MyHTMLLib;
 function myhtml_token_attr_copy (token : pmyhtml_token_t; attr :
-  pmyhtml_token_attr_t; dest : pmyhtml_token_node_t; thread_idx : QWord) :
+  pmyhtml_token_attr_t; dest : pmyhtml_token_node_t; thread_idx : Cardinal) :
   Boolean; cdecl; external MyHTMLLib;
 function myhtml_token_attr_by_name (node : pmyhtml_token_node_t; const name :
-  PChar; name_size : QWord) : pmyhtml_token_attr_t; cdecl; external MyHTMLLib;
+  PAnsiChar; name_size : Cardinal) : pmyhtml_token_attr_t; cdecl; external MyHTMLLib;
 function myhtml_token_attr_compare (target : pmyhtml_token_node_t; dest :
   pmyhtml_token_node_t) : Boolean; cdecl; external MyHTMLLib;
 function myhtml_token_merge_two_token_string (tree : pmyhtml_tree_t; token_to :
@@ -2459,84 +2461,84 @@ procedure myhtml_token_set_replacement_character_for_null_token (tree :
 
 (*myhtml/charef.h**************************************************************)
 
-function myhtml_charef_find (const start : PChar; offset : PQWord; size :
-  QWord; data_size : PQWord) : pcharef_entry_t; cdecl; external MyHTMLLib;
-function myhtml_charef_find_by_pos (pos : QWord; const start : PChar; offset :
-  PQWord; size : QWord; result : pcharef_entry_result_t) : pcharef_entry_t;
+function myhtml_charef_find (const start : PAnsiChar; offset : PCardinal; size :
+  Cardinal; data_size : PCardinal) : PAnsiCharef_entry_t; cdecl; external MyHTMLLib;
+function myhtml_charef_find_by_pos (pos : Cardinal; const start : PAnsiChar; offset :
+  PCardinal; size : Cardinal; result : PAnsiCharef_entry_result_t) : PAnsiCharef_entry_t;
   cdecl; external MyHTMLLib;
 function myhtml_charef_get_first_position (const start : Char) :
-  pcharef_entry_t; cdecl; external MyHTMLLib;
+  PAnsiCharef_entry_t; cdecl; external MyHTMLLib;
 
 (*myhtml/data_process.h********************************************************)
 
 procedure myhtml_data_process_entry_clean (proc_entry :
   pmyhtml_data_process_entry_t); cdecl; external MyHTMLLib;
 procedure myhtml_data_process (proc_entry : pmyhtml_data_process_entry_t; str :
-  pmycore_string_t; const data : PChar; size : QWord); cdecl;
+  pmycore_string_t; const data : PAnsiChar; size : Cardinal); cdecl;
   external MyHTMLLib;
 procedure myhtml_data_process_end (proc_entry : pmyhtml_data_process_entry_t;
   str : pmycore_string_t); cdecl; external MyHTMLLib;
 function myhtml_data_process_state_data (proc_entry :
-  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PChar;
-  offset : QWord; size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PAnsiChar;
+  offset : Cardinal; size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_data_process_state_ampersand (proc_entry :
-  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PChar;
-  offset : QWord; size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PAnsiChar;
+  offset : Cardinal; size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_data_process_state_ampersand_data (proc_entry :
-  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PChar;
-  offset : QWord; size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PAnsiChar;
+  offset : Cardinal; size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_data_process_state_ampersand_hash (proc_entry :
-  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PChar;
-  offset : QWord; size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PAnsiChar;
+  offset : Cardinal; size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_data_process_state_ampersand_hash_data (proc_entry :
-  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PChar;
-  offset : QWord; size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PAnsiChar;
+  offset : Cardinal; size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_data_process_state_ampersand_hash_x_data (proc_entry :
-  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PChar;
-  offset : QWord; size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_data_process_entry_t; str : pmycore_string_t; const data : PAnsiChar;
+  offset : Cardinal; size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 procedure myhtml_data_process_state_end (proc_entry :
   pmyhtml_data_process_entry_t; str : pmycore_string_t); cdecl;
   external MyHTMLLib;
 
 (*myhtml/mynamespace.h*********************************************************)
 
-function myhtml_namespace_url_by_id (ns : myhtml_namespace_t; length : PQWord) :
-  PChar; cdecl; external MyHTMLLib;
-function myhtml_namespace_id_by_url (const url : PChar; length : QWord) :
+function myhtml_namespace_url_by_id (ns : myhtml_namespace_t; length : PCardinal) :
+  PAnsiChar; cdecl; external MyHTMLLib;
+function myhtml_namespace_id_by_url (const url : PAnsiChar; length : Cardinal) :
   myhtml_namespace_t; cdecl; external MyHTMLLib;
-function myhtml_namespace_name_entry_by_name (const name : PChar; length :
-  QWord) : pmyhtml_namespace_detect_name_entry_t; cdecl; external MyHTMLLib;
+function myhtml_namespace_name_entry_by_name (const name : PAnsiChar; length :
+  Cardinal) : pmyhtml_namespace_detect_name_entry_t; cdecl; external MyHTMLLib;
 
 (*myhtml/mystring.h************************************************************)
 
 { append with convert encoding with preprocessing }
 function myhtml_string_append_with_convert_encoding_with_preprocessing (str :
-  pmycore_string_t; const buff : PChar; length : QWord; encoding : myencoding_t;
-  emit_null_chars : Boolean) : QWord; cdecl; external MyHTMLLib;
+  pmycore_string_t; const buff : PAnsiChar; length : Cardinal; encoding : myencoding_t;
+  emit_null_chars : Boolean) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_string_append_chunk_with_convert_encoding_with_preprocessing
-  (str : pmycore_string_t; res : pmyencoding_result_t; const buff : PChar;
-  length : QWord; encoding : myencoding_t; emit_null_chars : Boolean) : QWord;
+  (str : pmycore_string_t; res : pmyencoding_result_t; const buff : PAnsiChar;
+  length : Cardinal; encoding : myencoding_t; emit_null_chars : Boolean) : Cardinal;
   cdecl; external MyHTMLLib;
 
 { append with convert encoding lowercase with preprocessing }
 function myhtml_string_append_lowercase_with_convert_encoding_with_preprocessing
-  (str : pmycore_string_t; const buff : PChar; length : QWord; encoding :
-  myencoding_t; emit_null_chars : Boolean) : QWord; cdecl; external MyHTMLLib;
+  (str : pmycore_string_t; const buff : PAnsiChar; length : Cardinal; encoding :
+  myencoding_t; emit_null_chars : Boolean) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_string_append_lowercase_chunk_with_convert_encoding_with_preprocessing
-  (str : pmycore_string_t; res : pmyencoding_result_t; const buff : PChar;
-  length : QWord; encoding : myencoding_t; emit_null_chars : Boolean) :QWord;
+  (str : pmycore_string_t; res : pmyencoding_result_t; const buff : PAnsiChar;
+  length : Cardinal; encoding : myencoding_t; emit_null_chars : Boolean) :Cardinal;
   cdecl; external MyHTMLLib;
 
 { append with preprocessing }
 function myhtml_string_before_append_any_preprocessing (str : pmycore_string_t;
-  const buff : PChar; length : QWord; last_position : QWord) : QWord; cdecl;
+  const buff : PAnsiChar; length : Cardinal; last_position : Cardinal) : Cardinal; cdecl;
   external MyHTMLLib;
 function myhtml_string_append_with_preprocessing (str : pmycore_string_t;
-  const buff : PChar; length : QWord; emit_null_chars : Boolean) : QWord; cdecl;
+  const buff : PAnsiChar; length : Cardinal; emit_null_chars : Boolean) : Cardinal; cdecl;
   external MyHTMLLib;
 function myhtml_string_append_lowercase_with_preprocessing (str :
-  pmycore_string_t; const buff : PChar; length : QWord; emit_null_chars :
-  Boolean) : QWord; cdecl; external MyHTMLLib;
+  pmycore_string_t; const buff : PAnsiChar; length : Cardinal; emit_null_chars :
+  Boolean) : Cardinal; cdecl; external MyHTMLLib;
 
 (*myhtml/parser.h**************************************************************)
 
@@ -2547,14 +2549,14 @@ procedure myhtml_parser_worker (thread_id : mythread_id_t; ctx : Pointer);
 procedure myhtml_parser_worker_stream (thread_id : mythread_id_t;
   ctx : Pointer); cdecl; external MyHTMLLib;
 function myhtml_parser_token_data_to_string (tree : pmyhtml_tree_t; str :
-  pmycore_string_t; proc_entry : pmyhtml_data_process_entry_t; start : QWord;
-  length : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmycore_string_t; proc_entry : pmyhtml_data_process_entry_t; start : Cardinal;
+  length : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_parser_token_data_to_string_lowercase (tree : pmyhtml_tree_t;
   str : mycore_string_t; proc_entry : pmyhtml_data_process_entry_t; start :
-  QWord; length : QWord) : QWord; cdecl; external MyHTMLLib;
+  Cardinal; length : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_parser_token_data_to_string_charef (tree : pmyhtml_tree_t; str :
-  mycore_string_t; proc_entry : pmyhtml_data_process_entry_t; start : QWord;
-  length : QWord) : QWord; cdecl; external MyHTMLLib;
+  mycore_string_t; proc_entry : pmyhtml_data_process_entry_t; start : Cardinal;
+  length : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 
 (*myhtml/rules.h***************************************************************)
 
@@ -2579,29 +2581,29 @@ function myhtml_tag_init (tree : pmyhtml_tree_t; tags : pmyhtml_tag_t) :
 procedure myhtml_tag_clean (tags : pmyhtml_tag_t); cdecl; external MyHTMLLib;
 function myhtml_tag_destroy (tags : pmyhtml_tag_t) : pmyhtml_tag_t; cdecl;
   external MyHTMLLib;
-function myhtml_tag_add (tags : pmyhtml_tag_t; const key : PChar; key_size :
-  QWord; data_parser : myhtml_tokenizer_state_t; to_lcase : Boolean) :
+function myhtml_tag_add (tags : pmyhtml_tag_t; const key : PAnsiChar; key_size :
+  Cardinal; data_parser : myhtml_tokenizer_state_t; to_lcase : Boolean) :
   myhtml_tag_id_t; cdecl; external MyHTMLLib;
 procedure myhtml_tag_set_category (tags : pmyhtml_tag_t; tag_idx :
   myhtml_tag_id_t; ns : myhtml_namespace_t; cats : myhtml_tag_categories_t);
   cdecl; external MyHTMLLib;
 function myhtml_tag_get_by_id (tags : pmyhtml_tag_t; tag_id : myhtml_tag_id_t) :
   pmyhtml_tag_context_t; cdecl; external MyHTMLLib;
-function myhtml_tag_get_by_name (tags : pmyhtml_tag_t; const name : PChar;
-  length : QWord) : pmyhtml_tag_context_t; cdecl; external MyHTMLLib;
-function myhtml_tag_static_get_by_id (idx : QWord) : pmyhtml_tag_context_t;
+function myhtml_tag_get_by_name (tags : pmyhtml_tag_t; const name : PAnsiChar;
+  length : Cardinal) : pmyhtml_tag_context_t; cdecl; external MyHTMLLib;
+function myhtml_tag_static_get_by_id (idx : Cardinal) : pmyhtml_tag_context_t;
   cdecl; external MyHTMLLib;
-function myhtml_tag_static_search (const name : PChar; length : QWord) :
+function myhtml_tag_static_search (const name : PAnsiChar; length : Cardinal) :
   pmyhtml_tag_context_t; cdecl; external MyHTMLLib;
 
 (*myhtml/tokenizer.h***********************************************************)
 
-function myhtml_tokenizer_begin (tree : pmyhtml_tree_t; const html : PChar;
-  html_length : QWord) : mystatus_t; cdecl; external MyHTMLLib;
-function myhtml_tokenizer_chunk (tree : pmyhtml_tree_t; const html : PChar;
-  html_length : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_begin (tree : pmyhtml_tree_t; const html : PAnsiChar;
+  html_length : Cardinal) : mystatus_t; cdecl; external MyHTMLLib;
+function myhtml_tokenizer_chunk (tree : pmyhtml_tree_t; const html : PAnsiChar;
+  html_length : Cardinal) : mystatus_t; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_chunk_with_stream_buffer (tree : pmyhtml_tree_t;
-  const html : PChar; html_length : QWord) : mystatus_t; cdecl;
+  const html : PAnsiChar; html_length : Cardinal) : mystatus_t; cdecl;
   external MyHTMLLib;
 function myhtml_tokenizer_end (tree : pmyhtml_tree_t) : mystatus_t; cdecl;
   external MyHTMLLib;
@@ -2623,306 +2625,306 @@ function myhtml_tokenizer_state_init (myhtml : pmyhtml_t) : mystatus_t; cdecl;
 procedure myhtml_tokenizer_state_destroy (myhtml : pmyhtml_t); cdecl;
   external MyHTMLLib;
 function myhtml_tokenizer_queue_create_text_node_if_need (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; absolute_html_offset :
-  QWord; token_type : myhtml_token_type_t) : pmyhtml_token_node_t; cdecl;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; absolute_html_offset :
+  Cardinal; token_type : myhtml_token_type_t) : pmyhtml_token_node_t; cdecl;
   external MyHTMLLib;
 procedure myhtml_check_tag_parser (tree : pmyhtml_tree_t; token_node :
-  pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
-  QWord); cdecl; external MyHTMLLib;
+  pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal; html_size :
+  Cardinal); cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_bogus_comment (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 
 (*myhtml/tokenizer_doctype.h***************************************************)
 
 function myhtml_tokenizer_state_doctype (tree : pmyhtml_tree_t; token_node :
-  pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
-  QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal; html_size :
+  Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_before_doctype_name (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_doctype_name (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_after_doctype_name (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_custom_after_doctype_name_a_z (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_before_doctype_public_identifier (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_doctype_public_identifier_double_quoted (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_doctype_public_identifier_single_quoted (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_after_doctype_public_identifier (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_doctype_system_identifier_double_quoted (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_doctype_system_identifier_single_quoted (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_after_doctype_system_identifier (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_bogus_doctype (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 
 (*myhtml/tokenizer_end.h*******************************************************)
 
 function myhtml_tokenizer_end_state_data (tree : pmyhtml_tree_t; token_node :
-  pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
-  QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal; html_size :
+  Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_tag_open (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_tag_name (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_end_tag_open (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_self_closing_start_tag (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_markup_declaration_open (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_before_attribute_name (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_attribute_name (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_after_attribute_name (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_before_attribute_value (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_attribute_value_double_quoted (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_attribute_value_single_quoted (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_attribute_value_unquoted (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_after_attribute_value_quoted (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_comment_start (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_comment_start_dash (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_comment (tree : pmyhtml_tree_t; token_node :
-  pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
-  QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal; html_size :
+  Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_comment_end (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_comment_end_dash (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_comment_end_bang (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_bogus_comment (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_cdata_section (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_rcdata (tree : pmyhtml_tree_t; token_node :
-  pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
-  QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal; html_size :
+  Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_rcdata_less_than_sign (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_rcdata_end_tag_open (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_rcdata_end_tag_name (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_rawtext (tree : pmyhtml_tree_t; token_node :
-  pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
-  QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal; html_size :
+  Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_rawtext_less_than_sign (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_rawtext_end_tag_open (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_rawtext_end_tag_name (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_plaintext (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_doctype (tree : pmyhtml_tree_t; token_node :
-  pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
-  QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal; html_size :
+  Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_before_doctype_name (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_doctype_name (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_after_doctype_name (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_custom_after_doctype_name_a_z (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_before_doctype_public_identifier (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_doctype_public_identifier_double_quoted
-  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_doctype_public_identifier_single_quoted
-  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_after_doctype_public_identifier (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_doctype_system_identifier_double_quoted
-  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_doctype_system_identifier_single_quoted
-  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_after_doctype_system_identifier (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_bogus_doctype (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_less_than_sign (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_end_tag_open (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_end_tag_name (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_escape_start (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_escape_start_dash (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_escaped (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_escaped_dash (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_escaped_dash_dash (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_escaped_less_than_sign (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_escaped_end_tag_open (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_escaped_end_tag_name (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_double_escape_start (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_double_escaped (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_double_escaped_dash (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_double_escaped_dash_dash (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_double_escaped_less_than_sign
-  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_script_data_double_escape_end (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_end_state_parse_error_stop (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 
 (*myhtml/tokenizer_script.h****************************************************)
 
 function myhtml_tokenizer_state_script_data (tree : pmyhtml_tree_t; token_node :
-  pmyhtml_token_node_t; const html : PChar; html_offset : QWord; html_size :
-  QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal; html_size :
+  Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_script_data_less_than_sign (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_script_data_end_tag_open (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_script_data_end_tag_name (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_script_data_escape_start (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_script_data_escape_start_dash (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_script_data_escaped (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_script_data_escaped_dash (tree : pmyhtml_tree_t;
-  token_node : pmyhtml_token_node_t; const html : PChar; html_offset : QWord;
-  html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  token_node : pmyhtml_token_node_t; const html : PAnsiChar; html_offset : Cardinal;
+  html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_script_data_escaped_dash_dash (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_script_data_escaped_less_than_sign (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_script_data_escaped_end_tag_open (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_script_data_escaped_end_tag_name (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_script_data_double_escape_start (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_script_data_double_escaped (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_script_data_double_escaped_dash (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_script_data_double_escaped_dash_dash (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_script_data_double_escaped_less_than_sign
-  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  (tree : pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 function myhtml_tokenizer_state_script_data_double_escape_end (tree :
-  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PChar;
-  html_offset : QWord; html_size : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmyhtml_tree_t; token_node : pmyhtml_token_node_t; const html : PAnsiChar;
+  html_offset : Cardinal; html_size : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 
 (*myhtml/api.h*****************************************************************)
 
@@ -2951,7 +2953,7 @@ function myhtml_create : pmyhtml_t; cdecl; external MyHTMLLib;
 
   @return MyHTML_STATUS_OK if successful, otherwise an error status value. }
 function myhtml_init (myhtml : pmyhtml_t; opt : myhtml_options_t; thread_count :
-  QWord; queue_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+  Cardinal; queue_size : Cardinal) : mystatus_t; cdecl; external MyHTMLLib;
 
 { Clears queue and threads resources
 
@@ -2977,7 +2979,7 @@ function myhtml_destroy (myhtml : pmyhtml_t) : pmyhtml_t; cdecl;
 
   @return MyHTML_STATUS_OK if successful, otherwise an error status }
 function myhtml_parse (tree : pmyhtml_tree_t; encoding : myencoding_t;
-  const html : PChar; html_size : QWord) : mystatus_t; cdecl;
+  const html : PAnsiChar; html_size : Cardinal) : mystatus_t; cdecl;
   external MyHTMLLib;
 
 { Parsing fragment of HTML
@@ -2994,7 +2996,7 @@ function myhtml_parse (tree : pmyhtml_tree_t; encoding : myencoding_t;
 
   @return MyHTML_STATUS_OK if successful, otherwise an error status }
 function myhtml_parse_fragment (tree : pmyhtml_tree_t; encoding : myencoding_t;
-  const html : PChar; html_size : QWord; tag_id : myhtml_tag_id_t; ns :
+  const html : PAnsiChar; html_size : Cardinal; tag_id : myhtml_tag_id_t; ns :
   myhtml_namespace_t) : mystatus_t; cdecl; external MyHTMLLib;
 
 { Parsing HTML in Single Mode.
@@ -3010,7 +3012,7 @@ function myhtml_parse_fragment (tree : pmyhtml_tree_t; encoding : myencoding_t;
 
   @return MyHTML_STATUS_OK if successful, otherwise an error status }
 function myhtml_parse_single (tree : pmyhtml_tree_t; encoding : myencoding_t;
-  const html : PChar; html_size : QWord) : mystatus_t; cdecl;
+  const html : PAnsiChar; html_size : Cardinal) : mystatus_t; cdecl;
   external MyHTMLLib;
 
 { Parsing fragment of HTML in Single Mode.
@@ -3028,7 +3030,7 @@ function myhtml_parse_single (tree : pmyhtml_tree_t; encoding : myencoding_t;
 
   @return MyHTML_STATUS_OK if successful, otherwise an error status }
 function myhtml_parse_fragment_single (tree : pmyhtml_tree_t; encoding :
-  myencoding_t; const html : PChar; html_size : QWord; tag_id : myhtml_tag_id_t;
+  myencoding_t; const html : PAnsiChar; html_size : Cardinal; tag_id : myhtml_tag_id_t;
   ns : myhtml_namespace_t) : mystatus_t; cdecl; external MyHTMLLib;
 
 { Parsing HTML chunk. For end parsing call myhtml_parse_chunk_end function
@@ -3038,8 +3040,8 @@ function myhtml_parse_fragment_single (tree : pmyhtml_tree_t; encoding :
   @param[in] HTML size
 
   @return MyHTML_STATUS_OK if successful, otherwise an error status }
-function myhtml_parse_chunk (tree : pmyhtml_tree_t; const html : PChar;
-  html_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+function myhtml_parse_chunk (tree : pmyhtml_tree_t; const html : PAnsiChar;
+  html_size : Cardinal) : mystatus_t; cdecl; external MyHTMLLib;
 
 { Parsing chunk of fragment HTML. For end parsing call myhtml_parse_chunk_end
   function
@@ -3051,8 +3053,8 @@ function myhtml_parse_chunk (tree : pmyhtml_tree_t; const html : PChar;
   @param[in] fragment NAMESPACE. Default: MyHTML_NAMESPACE_HTML if set 0
 
   @return MyHTML_STATUS_OK if successful, otherwise an error status }
-function myhtml_parse_chunk_fragment (tree : pmyhtml_tree_t; const html : PChar;
-  html_size : QWord; tag_id : myhtml_tag_id_t; ns : myhtml_namespace_t) :
+function myhtml_parse_chunk_fragment (tree : pmyhtml_tree_t; const html : PAnsiChar;
+  html_size : Cardinal; tag_id : myhtml_tag_id_t; ns : myhtml_namespace_t) :
   mystatus_t; cdecl; external MyHTMLLib;
 
 { Parsing HTML chunk in Single Mode.
@@ -3063,8 +3065,8 @@ function myhtml_parse_chunk_fragment (tree : pmyhtml_tree_t; const html : PChar;
   @param[in] HTML size
 
   @return MyHTML_STATUS_OK if successful, otherwise an error status }
-function myhtml_parse_chunk_single (tree : pmyhtml_tree_t; const html : PChar;
-  html_size : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+function myhtml_parse_chunk_single (tree : pmyhtml_tree_t; const html : PAnsiChar;
+  html_size : Cardinal) : mystatus_t; cdecl; external MyHTMLLib;
 
 { Parsing chunk of fragment of HTML in Single Mode.
   No matter what was said during initialization MyHTML
@@ -3077,7 +3079,7 @@ function myhtml_parse_chunk_single (tree : pmyhtml_tree_t; const html : PChar;
 
   @return MyHTML_STATUS_OK if successful, otherwise an error status }
 function myhtml_parse_chunk_fragment_single (tree : pmyhtml_tree_t; const html :
-  PChar; html_size : QWord; tag_id : myhtml_tag_id_t; ns : myhtml_namespace_t) :
+  PAnsiChar; html_size : Cardinal; tag_id : myhtml_tag_id_t; ns : myhtml_namespace_t) :
   mystatus_t; cdecl; external MyHTMLLib;
 
 { End of parsing HTML chunks
@@ -3224,8 +3226,8 @@ function myhtml_tree_get_mchar (tree : pmyhtml_tree_t) : pmchar_async_t; cdecl;
 
   @param[in] pmyhtml_tree_t
 
-  @return QWord, node id }
-function myhtml_tree_get_mchar_node_id (tree : pmyhtml_tree_t) : QWord; cdecl;
+  @return Cardinal, node id }
+function myhtml_tree_get_mchar_node_id (tree : pmyhtml_tree_t) : Cardinal; cdecl;
   external MyHTMLLib;
 
 { Get first Incoming Buffer
@@ -3272,7 +3274,7 @@ function myhtml_get_nodes_by_tag_id (tree : pmyhtml_tree_t; collection :
 
   @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_name (tree : pmyhtml_tree_t; collection :
-  pmyhtml_collection_t; const name : PChar; length : QWord; status :
+  pmyhtml_collection_t; const name : PAnsiChar; length : Cardinal; status :
   pmystatus_t) : pmyhtml_collection_t; cdecl; external MyHTMLLib;
 
 { Get nodes by attribute key
@@ -3286,8 +3288,8 @@ function myhtml_get_nodes_by_name (tree : pmyhtml_tree_t; collection :
 
   @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_attributes_key (tree : pmyhtml_tree_t; collection :
-  pmyhtml_collection_t; scope_node : pmyhtml_tree_node_t; const key : PChar;
-  key_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
+  pmyhtml_collection_t; scope_node : pmyhtml_tree_node_t; const key : PAnsiChar;
+  key_len : Cardinal; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
   external MyHTMLLib;
 
 { Get nodes by attribute value; exactly equal; like a [foo="bar"]
@@ -3305,8 +3307,8 @@ function myhtml_get_nodes_by_attributes_key (tree : pmyhtml_tree_t; collection :
   @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_attribute_value (tree : pmyhtml_tree_t;
   collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
-  case_insensitive : Boolean; const key : PChar; key_len : QWord; const value :
-  PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
+  case_insensitive : Boolean; const key : PAnsiChar; key_len : Cardinal; const value :
+  PAnsiChar; value_len : Cardinal; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
   external MyHTMLLib;
 
 { Get nodes by attribute value; whitespace separated; like a [foo~="bar"]
@@ -3327,8 +3329,8 @@ function myhtml_get_nodes_by_attribute_value (tree : pmyhtml_tree_t;
   @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_attribute_value_whitespace_separated (tree :
   pmyhtml_tree_t; collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
-  case_sensitive : Boolean; const key : PChar; key_len : QWord; const value :
-  PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
+  case_sensitive : Boolean; const key : PAnsiChar; key_len : Cardinal; const value :
+  PAnsiChar; value_len : Cardinal; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
   external MyHTMLLib;
 
 { Get nodes by attribute value; value begins exactly with the string; like a
@@ -3350,8 +3352,8 @@ function myhtml_get_nodes_by_attribute_value_whitespace_separated (tree :
   @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_attribute_value_begin (tree : pmyhtml_tree_t;
   collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
-  case_insensitive : Boolean; const key : PChar; key_len : QWord; const value :
-  PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
+  case_insensitive : Boolean; const key : PAnsiChar; key_len : Cardinal; const value :
+  PAnsiChar; value_len : Cardinal; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
   external MyHTMLLib;
 
 { Get nodes by attribute value; value ends exactly with the string; like a
@@ -3373,8 +3375,8 @@ function myhtml_get_nodes_by_attribute_value_begin (tree : pmyhtml_tree_t;
   @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_attribute_value_end (tree : pmyhtml_tree_t;
   collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
-  case_insensitive : Boolean; const key : PChar; key_len : QWord; const value :
-  PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
+  case_insensitive : Boolean; const key : PAnsiChar; key_len : Cardinal; const value :
+  PAnsiChar; value_len : Cardinal; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
   external MyHTMLLib;
 
 { Get nodes by attribute value; value contains the substring; like a
@@ -3396,8 +3398,8 @@ function myhtml_get_nodes_by_attribute_value_end (tree : pmyhtml_tree_t;
   @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_attribute_value_contain (tree : pmyhtml_tree_t;
   collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
-  case_insensitive : Boolean; const key : PChar; key_len : QWord; const value :
-  PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
+  case_insensitive : Boolean; const key : PAnsiChar; key_len : Cardinal; const value :
+  PAnsiChar; value_len : Cardinal; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
   external MyHTMLLib;
 
 { Get nodes by attribute value; attribute value is a hyphen-separated list of
@@ -3417,8 +3419,8 @@ function myhtml_get_nodes_by_attribute_value_contain (tree : pmyhtml_tree_t;
   @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_attribute_value_hyphen_separated (tree :
   pmyhtml_tree_t; collection : pmyhtml_collection_t; node : pmyhtml_tree_node_t;
-  case_insensitive : Boolean; const key : PChar; key_len : QWord; const value :
-  PChar; value_len : QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
+  case_insensitive : Boolean; const key : PAnsiChar; key_len : Cardinal; const value :
+  PAnsiChar; value_len : Cardinal; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
   external MyHTMLLib;
 
 { Get nodes by tag id in node scope
@@ -3445,8 +3447,8 @@ function myhtml_get_nodes_by_tag_id_in_scope (tree : pmyhtml_tree_t; collection
 
   @return pmyhtml_collection_t if successful, otherwise an NULL value }
 function myhtml_get_nodes_by_name_in_scope (tree : pmyhtml_tree_t; collection :
-  pmyhtml_collection_t; node : pmyhtml_tree_node_t; const html : PChar; length :
-  QWord; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
+  pmyhtml_collection_t; node : pmyhtml_tree_node_t; const html : PAnsiChar; length :
+  Cardinal; status : pmystatus_t) : pmyhtml_collection_t; cdecl;
   external MyHTMLLib;
 
 { Get next sibling node
@@ -3571,8 +3573,8 @@ function myhtml_node_insert_before (target : pmyhtml_tree_node_t; node :
   @param[in] character encoding
 
   @return pmycore_string_t if successful, otherwise a NULL value }
-function myhtml_node_text_set (node : pmyhtml_tree_node_t; const text : PChar;
-  length : QWord; encoding : myencoding_t) : pmycore_string_t; cdecl;
+function myhtml_node_text_set (node : pmyhtml_tree_node_t; const text : PAnsiChar;
+  length : Cardinal; encoding : myencoding_t) : pmycore_string_t; cdecl;
   external MyHTMLLib;
 
 { Add text for a node with convert character encoding.
@@ -3584,7 +3586,7 @@ function myhtml_node_text_set (node : pmyhtml_tree_node_t; const text : PChar;
 
   @return pmycore_string_t if successful, otherwise a NULL value }
 function myhtml_node_text_set_with_charef (node : pmyhtml_tree_node_t;
-  const text : PChar; length : QWord; encoding : myencoding_t) :
+  const text : PAnsiChar; length : Cardinal; encoding : myencoding_t) :
   pmycore_string_t; cdecl; external MyHTMLLib;
 
 { Get token node
@@ -3656,7 +3658,7 @@ function myhtml_node_attribute_last (node : pmyhtml_tree_node_t) :
   @param[out] optional, text length
 
   @return const char* if exists, otherwise an NULL value }
-function myhtml_node_text (node : pmyhtml_tree_node_t; length : PQWord) : PChar;
+function myhtml_node_text (node : pmyhtml_tree_node_t; length : PCardinal) : PAnsiChar;
   cdecl; external MyHTMLLib;
 
 { Get mycore_string_t object by Tree node
@@ -3753,8 +3755,8 @@ procedure myhtml_attribute_namespace_set (attr : pmyhtml_tree_attr_t; ns :
   @param[out] optional, name length
 
   @return const char* if exists, otherwise an NULL value }
-function myhtml_attribute_key (attr : pmyhtml_tree_attr_t; length : PQWord) :
-  PChar; cdecl; external MyHTMLLib;
+function myhtml_attribute_key (attr : pmyhtml_tree_attr_t; length : PCardinal) :
+  PAnsiChar; cdecl; external MyHTMLLib;
 
 { Get attribute value
 
@@ -3762,8 +3764,8 @@ function myhtml_attribute_key (attr : pmyhtml_tree_attr_t; length : PQWord) :
   @param[out] optional, value length
 
   @return const char* if exists, otherwise an NULL value }
-function myhtml_attribute_value (attr : pmyhtml_tree_attr_t; length : PQWord) :
-  PChar; cdecl; external MyHTMLLib;
+function myhtml_attribute_value (attr : pmyhtml_tree_attr_t; length : PCardinal) :
+  PAnsiChar; cdecl; external MyHTMLLib;
 
 { Get attribute key string
 
@@ -3788,8 +3790,8 @@ function myhtml_attribute_value_string (attr : pmyhtml_tree_attr_t) :
   @param[in] attr key name length
 
   @return pmyhtml_tree_attr_t if exists, otherwise a NULL value }
-function myhtml_attribute_by_key (node : pmyhtml_tree_node_t; const key : PChar;
-  key_len : QWord) : pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
+function myhtml_attribute_by_key (node : pmyhtml_tree_node_t; const key : PAnsiChar;
+  key_len : Cardinal) : pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
 
 { Added attribute to tree node
 
@@ -3802,8 +3804,8 @@ function myhtml_attribute_by_key (node : pmyhtml_tree_node_t; const key : PChar;
              MyENCODING_DEFAULT or 0
 
   @return created pmyhtml_tree_attr_t if successful, otherwise a NULL value }
-function myhtml_attribute_add (node : pmyhtml_tree_node_t; const key : PChar;
-  key_len : QWord; const value : PChar; value_len : QWord; encoding :
+function myhtml_attribute_add (node : pmyhtml_tree_node_t; const key : PAnsiChar;
+  key_len : Cardinal; const value : PAnsiChar; value_len : Cardinal; encoding :
   myencoding_t) : pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
 
 { Remove attribute reference. Not release the resources
@@ -3823,7 +3825,7 @@ function myhtml_attribute_remove (node : pmyhtml_tree_node_t; attr :
 
   @return pmyhtml_tree_attr_t if successful, otherwise a NULL value }
 function myhtml_attribute_remove_by_key (node : pmyhtml_tree_node_t; const key :
-  PChar; key_len : QWord) : pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
+  PAnsiChar; key_len : Cardinal) : pmyhtml_tree_attr_t; cdecl; external MyHTMLLib;
 
 { Remove attribute and release allocated resources
 
@@ -3916,7 +3918,7 @@ function myhtml_token_node_attribute_last (token_node : pmyhtml_token_node_t) :
 
   @return const char* if exists, otherwise an NULL value }
 function myhtml_token_node_text (token_node : pmyhtml_token_node_t; length :
-  PQWord) : PChar; cdecl; external MyHTMLLib;
+  PCardinal) : PAnsiChar; cdecl; external MyHTMLLib;
 
 { Get mycore_string_t object by token node
 
@@ -3963,7 +3965,7 @@ procedure myhtml_token_node_wait_for_done (token : pmyhtml_token_t; node :
 
   @return const char* if exists, otherwise a NULL value }
 function myhtml_tag_name_by_id (tree : pmyhtml_tree_t; tag_id : myhtml_tag_id_t;
-  length : PQWord) : PChar; cdecl; external MyHTMLLib;
+  length : PCardinal) : PAnsiChar; cdecl; external MyHTMLLib;
 
 { Get tag id by name
 
@@ -3972,8 +3974,8 @@ function myhtml_tag_name_by_id (tree : pmyhtml_tree_t; tag_id : myhtml_tag_id_t;
   @param[in] tag name length
 
   @return tag id }
-function myhtml_tag_id_by_name (tree : pmyhtml_tree_t; const tag_name : PChar;
-  length : QWord) : myhtml_tag_id_t; cdecl; external MyHTMLLib;
+function myhtml_tag_id_by_name (tree : pmyhtml_tree_t; const tag_name : PAnsiChar;
+  length : Cardinal) : myhtml_tag_id_t; cdecl; external MyHTMLLib;
 
 (******************************************************************************)
 (*                                                                            *)
@@ -3987,7 +3989,7 @@ function myhtml_tag_id_by_name (tree : pmyhtml_tree_t; const tag_name : PChar;
   @param[out] optional, status of operation
 
   @return pmyhtml_collection_t if successful, otherwise an NULL value }
-function myhtml_collection_create (size : QWord; status : pmystatus_t) :
+function myhtml_collection_create (size : Cardinal; status : pmystatus_t) :
   pmyhtml_collection_t; cdecl; external MyHTMLLib;
 
 { Clears collection
@@ -4013,7 +4015,7 @@ function myhtml_collection_destroy (collection : pmyhtml_collection_t) :
 
   @return NULL if successful, otherwise an pmyhtml_collection_t structure }
 function myhtml_collection_check_size (collection : pmyhtml_collection_t; need :
-  QWord; upto_length : QWord) : mystatus_t; cdecl; external MyHTMLLib;
+  Cardinal; upto_length : Cardinal) : mystatus_t; cdecl; external MyHTMLLib;
 
 (******************************************************************************)
 (*                                                                            *)
@@ -4043,8 +4045,8 @@ function myhtml_encoding_get (tree : pmyhtml_tree_t) : myencoding_t; cdecl;
              4 byte data length must be always available 4 bytes
 
   @return size character set }
-function myencoding_codepoint_to_ascii_utf8 (codepoint : QWord; data : PChar) :
-  QWord; cdecl; external MyHTMLLib;
+function myencoding_codepoint_to_ascii_utf8 (codepoint : Cardinal; data : PAnsiChar) :
+  Cardinal; cdecl; external MyHTMLLib;
 
 { Convert Unicode Codepoint to UTF-16LE
 
@@ -4055,8 +4057,8 @@ function myencoding_codepoint_to_ascii_utf8 (codepoint : QWord; data : PChar) :
              must be always available 4 bytes
 
   @return size character set }
-function myencoding_codepoint_to_ascii_utf16 (codepoint : QWord; data : PChar) :
-  QWord; cdecl; external MyHTMLLib;
+function myencoding_codepoint_to_ascii_utf16 (codepoint : Cardinal; data : PAnsiChar) :
+  Cardinal; cdecl; external MyHTMLLib;
 
 { Detect character encoding
 
@@ -4069,7 +4071,7 @@ function myencoding_codepoint_to_ascii_utf16 (codepoint : QWord; data : PChar) :
   @param[out] detected encoding
 
   @return true if encoding found, otherwise false }
-function myencoding_detect (const text : PChar; length : QWord; encoding :
+function myencoding_detect (const text : PAnsiChar; length : Cardinal; encoding :
   pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
 
 { Detect Russian character encoding
@@ -4082,7 +4084,7 @@ function myencoding_detect (const text : PChar; length : QWord; encoding :
   @param[out] detected encoding
 
   @return true if encoding found, otherwise false }
-function myencoding_detect_russian (const text : PChar; length : QWord;
+function myencoding_detect_russian (const text : PAnsiChar; length : Cardinal;
   encoding : pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
 
 { Detect Unicode character encoding
@@ -4094,7 +4096,7 @@ function myencoding_detect_russian (const text : PChar; length : QWord;
   @param[out] detected encoding
 
   @return true if encoding found, otherwise false }
-function myencoding_detect_unicode (const text : PChar; length : QWord;
+function myencoding_detect_unicode (const text : PAnsiChar; length : Cardinal;
   encoding : pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
 
 { Detect Unicode character encoding by BOM
@@ -4106,7 +4108,7 @@ function myencoding_detect_unicode (const text : PChar; length : QWord;
   @param[out] detected encoding
 
   @return true if encoding found, otherwise false }
-function myencoding_detect_bom (const text : PChar; length : QWord;
+function myencoding_detect_bom (const text : PAnsiChar; length : Cardinal;
   encoding : pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
 
 { Detect Unicode character encoding by BOM. Cut BOM if will be found
@@ -4120,8 +4122,8 @@ function myencoding_detect_bom (const text : PChar; length : QWord;
   @param[out] new size position
 
   @return true if encoding found, otherwise false }
-function myencoding_detect_and_cut_bom (const text : PChar; length : QWord;
-  encoding : pmyencoding_t; const new_text : PPChar; new_size : PQWord) :
+function myencoding_detect_and_cut_bom (const text : PAnsiChar; length : Cardinal;
+  encoding : pmyencoding_t; const new_text : PPAnsiChar; new_size : PCardinal) :
   Boolean; cdecl; external MyHTMLLib;
 
 { Detect encoding by name
@@ -4135,7 +4137,7 @@ function myencoding_detect_and_cut_bom (const text : PChar; length : QWord;
   @param[out] detected encoding
 
   @return true if encoding found, otherwise false }
-function myencoding_by_name (const name : PChar; length : QWord; encoding :
+function myencoding_by_name (const name : PAnsiChar; length : Cardinal; encoding :
   pmyencoding_t) : Boolean; cdecl; external MyHTMLLib;
 
 { Get Encoding name by myencoding_t (by id)
@@ -4144,8 +4146,8 @@ function myencoding_by_name (const name : PChar; length : QWord; encoding :
   @param[out] return name length
 
   @return encoding name, otherwise NULL value }
-function myencoding_name_by_id (encoding : myencoding_t; length : PQWord) :
-  PChar; cdecl; external MyHTMLLib;
+function myencoding_name_by_id (encoding : myencoding_t; length : PCardinal) :
+  PAnsiChar; cdecl; external MyHTMLLib;
 
 { Detect encoding in meta tag (<meta ...>) before start parsing
 
@@ -4157,8 +4159,8 @@ function myencoding_name_by_id (encoding : myencoding_t; length : PQWord) :
 
   @return detected encoding if encoding found, otherwise
           MyENCODING_NOT_DETERMINED }
-function myencoding_prescan_stream_to_determine_encoding (const data : PChar;
-  data_size : QWord) : myencoding_t; cdecl; external MyHTMLLib;
+function myencoding_prescan_stream_to_determine_encoding (const data : PAnsiChar;
+  data_size : Cardinal) : myencoding_t; cdecl; external MyHTMLLib;
 
 { Extracting character encoding from string. Find "charset=" and see encoding.
   For example: "text/html; charset=windows-1251".
@@ -4173,7 +4175,7 @@ function myencoding_prescan_stream_to_determine_encoding (const data : PChar;
 
   @return true if encoding found }
 function myencoding_extracting_character_encoding_from_charset (const data :
-  PChar; data_size : QWord; encoding : pmyencoding_t) : Boolean; cdecl;
+  PAnsiChar; data_size : Cardinal; encoding : pmyencoding_t) : Boolean; cdecl;
   external MyHTMLLib;
 
 { Detect encoding in meta tag (<meta ...>) before start parsing and return
@@ -4190,8 +4192,8 @@ function myencoding_extracting_character_encoding_from_charset (const data :
   @return detected encoding if encoding found, otherwise
           MyENCODING_NOT_DETERMINED }
 function myencoding_prescan_stream_to_determine_encoding_with_found
-  (const data : PChar; data_size : QWord; const found : PPChar; found_length :
-  PQWord) : myencoding_t; cdecl; external MyHTMLLib;
+  (const data : PAnsiChar; data_size : Cardinal; const found : PPAnsiChar; found_length :
+  PCardinal) : myencoding_t; cdecl; external MyHTMLLib;
 
 { Extracting character encoding from string. Find "charset=" and see encoding.
   Return found raw data.
@@ -4208,8 +4210,8 @@ function myencoding_prescan_stream_to_determine_encoding_with_found
 
   @return true if encoding found }
 function myencoding_extracting_character_encoding_from_character_with_found
-  (const data : PChar; data_size : QWord; encoding : pmyencoding_t;
-  const found : PPChar; found_length : PQWord) : Boolean; cdecl;
+  (const data : PAnsiChar; data_size : Cardinal; encoding : pmyencoding_t;
+  const found : PPAnsiChar; found_length : PCardinal) : Boolean; cdecl;
   external MyHTMLLib;
 
 (******************************************************************************)
@@ -4235,8 +4237,8 @@ function myencoding_extracting_character_encoding_from_character_with_found
   @param[in] data size. Set the size you want for char*
 
   @return char* of the size if successful, otherwise a NULL value }
-function mycore_string_init (mchar : pmchar_async_t; node_id : QWord; str :
-  pmycore_string_t; size : QWord) : PChar; cdecl; external MyHTMLLib;
+function mycore_string_init (mchar : pmchar_async_t; node_id : Cardinal; str :
+  pmycore_string_t; size : Cardinal) : PAnsiChar; cdecl; external MyHTMLLib;
 
 { Increase the current size for mycore_string_t object
 
@@ -4244,8 +4246,8 @@ function mycore_string_init (mchar : pmchar_async_t; node_id : QWord; str :
   @param[in] data size. Set the new size you want for mycore_string_t object
 
   @return char* of the size if successful, otherwise a NULL value }
-function mycore_string_realloc (str : pmycore_string_t; new_size : QWord) :
-  PChar; cdecl; external MyHTMLLib;
+function mycore_string_realloc (str : pmycore_string_t; new_size : Cardinal) :
+  PAnsiChar; cdecl; external MyHTMLLib;
 
 { Clean mycore_string_t object. In reality, data length set to 0
   Equivalently: mycore_string_length_set(str, 0);
@@ -4276,7 +4278,7 @@ function mycore_string_destroy (str : pmycore_string_t; destroy_obj : Boolean) :
   @param[in] pmycore_string_t. See description for mycore_string_init function
 
   @return char* if exists, otherwise a NULL value }
-function mycore_string_data (str : pmycore_string_t) : PChar; cdecl;
+function mycore_string_data (str : pmycore_string_t) : PAnsiChar; cdecl;
   external MyHTMLLib;
 
 { Get data length from a mycore_string_t object
@@ -4284,7 +4286,7 @@ function mycore_string_data (str : pmycore_string_t) : PChar; cdecl;
   @param[in] pmycore_string_t. See description for mycore_string_init function
 
   @return data length }
-function mycore_string_length (str : pmycore_string_t) : QWord; cdecl;
+function mycore_string_length (str : pmycore_string_t) : Cardinal; cdecl;
   external MyHTMLLib;
 
 { Get data size from a mycore_string_t object
@@ -4292,7 +4294,7 @@ function mycore_string_length (str : pmycore_string_t) : QWord; cdecl;
   @param[in] pmycore_string_t. See description for mycore_string_init function
 
   @return data size }
-function mycore_string_size (str : pmycore_string_t) : QWord; cdecl;
+function mycore_string_size (str : pmycore_string_t) : Cardinal; cdecl;
   external MyHTMLLib;
 
 { Set data (char * ) for a mycore_string_t object.
@@ -4310,7 +4312,7 @@ function mycore_string_size (str : pmycore_string_t) : QWord; cdecl;
   @param[in] you data to want assign
 
   @return assigned data if successful, otherwise a NULL value }
-function mycore_string_data_set (str : pmycore_string_t; data : PChar) : PChar;
+function mycore_string_data_set (str : pmycore_string_t; data : PAnsiChar) : PAnsiChar;
   cdecl; external MyHTMLLib;
 
 { Set data size for a mycore_string_t object.
@@ -4319,7 +4321,7 @@ function mycore_string_data_set (str : pmycore_string_t; data : PChar) : PChar;
   @param[in] you size to want assign
 
   @return assigned size }
-function mycore_string_size_set (str : pmycore_string_t; size : QWord) : QWord;
+function mycore_string_size_set (str : pmycore_string_t; size : Cardinal) : Cardinal;
   cdecl; external MyHTMLLib;
 
 { Set data length for a mycore_string_t object.
@@ -4328,8 +4330,8 @@ function mycore_string_size_set (str : pmycore_string_t; size : QWord) : QWord;
   @param[in] you length to want assign
 
   @return assigned length }
-function mycore_string_length_set (str : pmycore_string_t; length : QWord) :
-  QWord; cdecl; external MyHTMLLib;
+function mycore_string_length_set (str : pmycore_string_t; length : Cardinal) :
+  Cardinal; cdecl; external MyHTMLLib;
 
 { Allocate data (char* ) from a mchar_async_t object
 
@@ -4338,8 +4340,8 @@ function mycore_string_length_set (str : pmycore_string_t; length : QWord) :
   @param[in] you size to want assign
 
   @return data if successful, otherwise a NULL value }
-function mycore_string_data_alloc (mchar : pmchar_async_t; node_id : QWord;
-  size : QWord) : PChar; cdecl; external MyHTMLLib;
+function mycore_string_data_alloc (mchar : pmchar_async_t; node_id : Cardinal;
+  size : Cardinal) : PAnsiChar; cdecl; external MyHTMLLib;
 
 { Allocate data (char* ) from a mchar_async_t object
 
@@ -4350,8 +4352,8 @@ function mycore_string_data_alloc (mchar : pmchar_async_t; node_id : QWord;
   @param[in] new size
 
   @return data if successful, otherwise a NULL value }
-function mycore_string_data_realloc (mchar : pmchar_async_t; node_id : QWord;
-  data : PChar; len_to_copy : QWord; size : QWord) : PChar; cdecl;
+function mycore_string_data_realloc (mchar : pmchar_async_t; node_id : Cardinal;
+  data : PAnsiChar; len_to_copy : Cardinal; size : Cardinal) : PAnsiChar; cdecl;
   external MyHTMLLib;
 
 { Release allocated data
@@ -4361,8 +4363,8 @@ function mycore_string_data_realloc (mchar : pmchar_async_t; node_id : QWord;
   @param[in] data to release
 
   @return data if successful, otherwise a NULL value }
-procedure mycore_string_data_free (mchar : pmchar_async_t; node_id : QWord;
-  data : PChar); cdecl; external MyHTMLLib;
+procedure mycore_string_data_free (mchar : pmchar_async_t; node_id : Cardinal;
+  data : PAnsiChar); cdecl; external MyHTMLLib;
 
 (******************************************************************************)
 (*                                                                            *)
@@ -4412,7 +4414,7 @@ function mycore_string_raw_destroy (str_raw : pmycore_string_raw_t;
 
   @return mycore_incoming_buffer_t if successful, otherwise a NULL value }
 function mycore_incoming_buffer_find_by_position (inc_buf :
-  pmycore_incoming_buffer_t; start : QWord) : pmycore_incoming_buffer_t; cdecl;
+  pmycore_incoming_buffer_t; start : Cardinal) : pmycore_incoming_buffer_t; cdecl;
   external MyHTMLLib;
 
 { Get data of Incoming Buffer
@@ -4421,7 +4423,7 @@ function mycore_incoming_buffer_find_by_position (inc_buf :
 
   @return const char* if successful, otherwise a NULL value }
 function mycore_incoming_buffer_data (inc_buf : pmycore_incoming_buffer_t) :
-  PChar; cdecl; external MyHTMLLib;
+  PAnsiChar; cdecl; external MyHTMLLib;
 
 { Get data length of Incoming Buffer
 
@@ -4429,7 +4431,7 @@ function mycore_incoming_buffer_data (inc_buf : pmycore_incoming_buffer_t) :
 
   @return size_t }
 function mycore_incoming_buffer_length (inc_buf : pmycore_incoming_buffer_t) :
-  QWord; cdecl; external MyHTMLLib;
+  Cardinal; cdecl; external MyHTMLLib;
 
 { Get data size of Incoming Buffer
 
@@ -4437,7 +4439,7 @@ function mycore_incoming_buffer_length (inc_buf : pmycore_incoming_buffer_t) :
 
   @return size_t }
 function mycore_incoming_buffer_size (inc_buf : pmycore_incoming_buffer_t) :
-  QWord; cdecl; external MyHTMLLib;
+  Cardinal; cdecl; external MyHTMLLib;
 
 { Get data offset of Incoming Buffer. Global position of begin Incoming Buffer.
   See description for MyHTML_INCOMING title
@@ -4446,7 +4448,7 @@ function mycore_incoming_buffer_size (inc_buf : pmycore_incoming_buffer_t) :
 
   @return size_t }
 function mycore_incoming_buffer_offset (inc_buf : pmycore_incoming_buffer_t) :
-  QWord; cdecl; external MyHTMLLib;
+  Cardinal; cdecl; external MyHTMLLib;
 
 { Get Relative Position for Incoming Buffer.
   Incoming Buffer should be prepared by mycore_incoming_buffer_find_by_position
@@ -4456,7 +4458,7 @@ function mycore_incoming_buffer_offset (inc_buf : pmycore_incoming_buffer_t) :
 
   @return size_t }
 function mycore_incoming_buffer_relative_begin (inc_buf :
-  pmycore_incoming_buffer_t; start : QWord) : QWord; cdecl; external MyHTMLLib;
+  pmycore_incoming_buffer_t; start : Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 
 { This function returns number of available data by Incoming Buffer
   Incoming buffer may be incomplete. See mycore_incoming_buffer_next
@@ -4466,7 +4468,7 @@ function mycore_incoming_buffer_relative_begin (inc_buf :
 
   @return size_t }
 function mycore_incoming_buffer_available_length (inc_buf :
-  pmycore_incoming_buffer_t; relative_begin : QWord; length : QWord) : QWord;
+  pmycore_incoming_buffer_t; relative_begin : Cardinal; length : Cardinal) : Cardinal;
   cdecl; external MyHTMLLib;
 
 { Get next buffer
@@ -4498,7 +4500,7 @@ function mycore_incoming_buffer_prev (inc_buf : pmycore_incoming_buffer_t) :
 
   @return text if successful, otherwise a NULL value }
 function myhtml_namespace_name_by_id (ns : myhtml_namespace_t; length :
-  PQWord) : PChar; cdecl; external MyHTMLLib;
+  PCardinal) : PAnsiChar; cdecl; external MyHTMLLib;
 
 { Get namespace type (id) by namespace text
 
@@ -4507,7 +4509,7 @@ function myhtml_namespace_name_by_id (ns : myhtml_namespace_t; length :
   @param[out] detected namespace type (id)
 
   @return true if detect, otherwise false }
-function myhtml_namespace_id_by_name (const name : PChar; length : QWord; ns :
+function myhtml_namespace_id_by_name (const name : PAnsiChar; length : Cardinal; ns :
   pmyhtml_namespace_t) : Boolean; cdecl; external MyHTMLLib;
 
 (******************************************************************************)
@@ -4622,7 +4624,7 @@ procedure myhtml_callback_tree_node_remove_set (tree : pmyhtml_tree_t; func :
   @param[in] count of add nodes
 
   @return 0 if match, otherwise index of break position }
-function mycore_strcasecmp (const str1 : PChar; const str2 : PChar) : QWord;
+function mycore_strcasecmp (const str1 : PAnsiChar; const str2 : PAnsiChar) : Cardinal;
   cdecl; external MyHTMLLib;
 
 { Compare two strings ignoring case
@@ -4631,13 +4633,13 @@ function mycore_strcasecmp (const str1 : PChar; const str2 : PChar) : QWord;
   @param[in] count of add nodes
 
   @return 0 if match, otherwise index of break position }
-function mycore_strncasecmp (const str1 : PChar; const str2 : PChar; size :
-  QWord) : QWord; cdecl; external MyHTMLLib;
+function mycore_strncasecmp (const str1 : PAnsiChar; const str2 : PAnsiChar; size :
+  Cardinal) : Cardinal; cdecl; external MyHTMLLib;
 
 function myhtml_is_html_node (node : pmyhtml_tree_node_t; tag_id :
   myhtml_tag_id_t) : Boolean; cdecl; external MyHTMLLib;
 
-function myhtml_queue_add (tree : pmyhtml_tree_t; start : QWord; token :
+function myhtml_queue_add (tree : pmyhtml_tree_t; start : Cardinal; token :
   pmyhtml_token_node_t) : mystatus_t; cdecl; external MyHTMLLib;
 
 (******************************************************************************)

@@ -31,7 +31,7 @@
         <PackageName Value="FCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="8">
+    <Units Count="10">
       <Unit0>
         <Filename Value="libpasmyhtml_testproject.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -64,6 +64,14 @@
         <Filename Value="htmldocuments/Html5TestPage.inc"/>
         <IsPartOfProject Value="True"/>
       </Unit7>
+      <Unit8>
+        <Filename Value="../libpasc-algorithms/source/container.list.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="../pascalutils/source/utils.functor.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit9>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -73,7 +81,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir);htmldocuments"/>
-      <OtherUnitFiles Value="../source"/>
+      <OtherUnitFiles Value="../source;../libpasc-algorithms/source;../pascalutils/source"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>

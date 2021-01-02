@@ -1,6 +1,8 @@
 unit myhtmltestcase;
 
-{$mode objfpc}{$H+}
+{$IFDEF FPC}
+  {$mode objfpc}{$H+}
+{$ENDIF}
 {$IFOPT D+}
   {$DEFINE DEBUG}
 {$ENDIF}
@@ -9,7 +11,10 @@ unit myhtmltestcase;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, libpasmyhtml, pasmyhtml, fgl;
+  Classes, SysUtils, libpasmyhtml, pasmyhtml, container.arraylist, 
+  utils.functor, utils.api.cstring
+  {$IFDEF FPC}, fpcunit, testregistry
+  {$ELSE}, TestFramework, System.AnsiStrings{$ENDIF};
 
 type
 
@@ -23,8 +28,8 @@ type
     FError : mystatus_t;
 
     FParserOptions : myhtml_options_t;
-    FThreadCount : QWord;
-    FQueueSize : QWord;
+    FThreadCount : Int64;
+    FQueueSize : Int64;
     FFlags : myhtml_tree_parse_flags_t;
   protected
     procedure SetUp; override;
@@ -32,6 +37,10 @@ type
 
     function StringTokenize (AString : string) : TStringList;
       {$IFNDEF DEBUG}inline;{$ENDIF}
+  public
+    {$IFNDEF FPC}
+    procedure AssertTrue (AMessage : String; ACondition : Boolean);
+    {$ENDIF}
   published
     procedure TestParseDocument;
     procedure TestTitleTag;
@@ -54,6 +63,10 @@ type
       Boolean;
     function TagAttributeKeyEqualCallback (ANodeAttribute :
       TParser.TTagNodeAttribute; AData : Pointer) : Boolean;
+  public
+    {$IFNDEF FPC}
+    procedure AssertTrue (AMessage : String; ACondition : Boolean);
+    {$ENDIF}
   published
     procedure TestParseDocument;
     procedure TestTitleTag;
@@ -81,6 +94,10 @@ type
 
     procedure TestEachLinkTagCallback (ANode : TParser.TTagNode;
       AData : Pointer);
+  public
+    {$IFNDEF FPC}
+    procedure AssertTrue (AMessage : String; ACondition : Boolean);
+    {$ENDIF}
   published
     procedure TestTitleTag;
     procedure TestEachLinkTag;
@@ -99,7 +116,10 @@ type
         Manager : string;
       end;
 
-      TZoneInfoList = specialize TFPGObjectList<TZoneInfo>;
+      TZoneInfoCompareFunctor = {$IFDEF FPC}specialize{$ENDIF}
+        TUnsortableFunctor<TZoneInfo>;
+      TZoneInfoList = {$IFDEF FPC}specialize{$ENDIF} TArrayList<TZoneInfo,
+        TZoneInfoCompareFunctor>;
   private
     FParser : TParser;
   protected
@@ -108,6 +128,10 @@ type
 
     procedure TestEachTrNodesCallback (ANode : TParser.TTagNode;
       AData : Pointer);
+  public
+    {$IFNDEF FPC}
+    procedure AssertTrue (AMessage : String; ACondition : Boolean);
+    {$ENDIF}
   published
     procedure TestEachTrNodes;
     procedure TestConcatTextNode;
@@ -121,6 +145,10 @@ type
   protected
     procedure SetUp; override;
     procedure TearDown; override;
+  public
+    {$IFNDEF FPC}
+    procedure AssertTrue (AMessage : String; ACondition : Boolean);
+    {$ENDIF}
   published
     procedure TestH1Tag;
     procedure TestEachHeadingNodes;
@@ -147,6 +175,14 @@ procedure TParserHtml5TestCase.TearDown;
 begin
   FreeAndNil(FParser);
 end;
+
+{$IFNDEF FPC}
+procedure TParserHtml5TestCase.AssertTrue (AMessage : String; ACondition : 
+  Boolean);
+begin
+  CheckTrue(ACondition, AMessage);
+end;
+{$ENDIF}
 
 procedure TParserHtml5TestCase.TestH1Tag;
 var
@@ -407,7 +443,6 @@ procedure TParserHtml5TestCase.TestLastNodeAttribute;
 var
   Node : TParser.TTagNode;
   Attribute : TParser.TTagNodeAttribute;
-  Value : string;
 begin
   Node := FParser.Parse(Html5TestPage, DOCUMENT_BODY);
   AssertTrue('Error body node is nil', Node.IsOk);
@@ -425,9 +460,7 @@ begin
 
   Attribute := Attribute.Prev;
   AssertTrue('Error attribute is nil', Attribute.IsOk);
-  Value := Attribute.Key;
   AssertTrue('Error not correct attribute key', Attribute.Key = 'class');
-  Value := Attribute.Value;
   AssertTrue('Error not correct attribute value', Attribute.Value = 'page');
 
   Attribute := Attribute.Prev;
@@ -448,6 +481,14 @@ procedure TParserIanaTestCase.TearDown;
 begin
   FreeAndNil(FParser);
 end;
+
+{$IFNDEF FPC}
+procedure TParserIanaTestCase.AssertTrue (AMessage : String; ACondition : 
+  Boolean);
+begin
+  CheckTrue(ACondition, AMessage);
+end;
+{$ENDIF}
 
 { Test each tr node }
 procedure TParserIanaTestCase.TestEachTrNodes;
@@ -485,44 +526,44 @@ begin
 
   Node := Node.EachChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_TR),
       TParser.TTransform.Create.TagNodeTransform(
-        @TestEachTrNodesCallback, Pointer(ZoneList)));
+        {$IFDEF FPC}@{$ENDIF}TestEachTrNodesCallback, Pointer(ZoneList)));
 
-  AssertTrue('Error children list count', ZoneList.Count = 5);
+  AssertTrue('Error children list count', ZoneList.Length = 5);
 
   AssertTrue('Error list element 0 name is not correct',
-    ZoneList[0].Name = '.aaa');
+    ZoneList.Value[0].Name = '.aaa');
   AssertTrue('Error list element 0 info is not correct',
-    ZoneList[0].Info = 'generic');
+    ZoneList.Value[0].Info = 'generic');
   AssertTrue('Error list element 0 manager is not correct',
-    ZoneList[0].Manager = 'American Automobile Association, Inc.');
+    ZoneList.Value[0].Manager = 'American Automobile Association, Inc.');
 
   AssertTrue('Error list element 1 name is not correct',
-    ZoneList[1].Name = '.aarp');
+    ZoneList.Value[1].Name = '.aarp');
   AssertTrue('Error list element 1 info is not correct',
-    ZoneList[1].Info = 'generic');
+    ZoneList.Value[1].Info = 'generic');
   AssertTrue('Error list element 1 manager is not correct',
-    ZoneList[1].Manager = 'AARP');
+    ZoneList.Value[1].Manager = 'AARP');
 
   AssertTrue('Error list element 2 name is not correct',
-    ZoneList[2].Name = '.abarth');
+    ZoneList.Value[2].Name = '.abarth');
   AssertTrue('Error list element 2 info is not correct',
-    ZoneList[2].Info = 'generic');
+    ZoneList.Value[2].Info = 'generic');
   AssertTrue('Error list element 2 manager is not correct',
-    ZoneList[2].Manager = 'Fiat Chrysler Automobiles N.V.');
+    ZoneList.Value[2].Manager = 'Fiat Chrysler Automobiles N.V.');
 
   AssertTrue('Error list element 3 name is not correct',
-    ZoneList[3].Name = '.abb');
+    ZoneList.Value[3].Name = '.abb');
   AssertTrue('Error list element 3 info is not correct',
-    ZoneList[3].Info = 'generic');
+    ZoneList.Value[3].Info = 'generic');
   AssertTrue('Error list element 3 manager is not correct',
-    ZoneList[3].Manager = 'ABB Ltd');
+    ZoneList.Value[3].Manager = 'ABB Ltd');
 
   AssertTrue('Error list element 4 name is not correct',
-    ZoneList[4].Name = '.abbott');
+    ZoneList.Value[4].Name = '.abbott');
   AssertTrue('Error list element 4 info is not correct',
-    ZoneList[4].Info = 'generic');
+    ZoneList.Value[4].Info = 'generic');
   AssertTrue('Error list element 4 manager is not correct',
-    ZoneList[4].Manager = 'Abbott Laboratories, Inc.');
+    ZoneList.Value[4].Manager = 'Abbott Laboratories, Inc.');
 end;
 
 { Test text node with other tags inside }
@@ -604,7 +645,7 @@ begin
 
   Zone.Manager := Node.Value;
 
-  TZoneInfoList(AData).Add(Zone);
+  TZoneInfoList(AData).Append(Zone);
 end;
 
 { TParserTeamtenTestCase }
@@ -619,6 +660,14 @@ procedure TParserTeamtenTestCase.TearDown;
 begin
   FreeAndNil(FParser);
 end;
+
+{$IFNDEF FPC}
+procedure TParserTeamtenTestCase.AssertTrue (AMessage : String; ACondition : 
+  Boolean);
+begin
+  CheckTrue(ACondition, AMessage);
+end;
+{$ENDIF}
 
 procedure TParserTeamtenTestCase.TestEachLinkTagCallback(
   ANode: TParser.TTagNode; AData: Pointer);
@@ -666,7 +715,7 @@ begin
   Node := Node.EachChildrenNode(TParser.TFilter.Create.Tag(MyHTML_TAG_LINK)
     .AttributeKeyValue('rel', 'stylesheet'),
     TParser.TTransform.Create.TagNodeTransform(
-      @TestEachLinkTagCallback, Pointer(List)));
+      {$IFDEF FPC}@{$ENDIF}TestEachLinkTagCallback, Pointer(List)));
 
   AssertTrue('Error <a> tag list count', List.Count = 4);
   AssertTrue('Error <a> tag 1 attribute value is not correct', List[0] =
@@ -702,36 +751,36 @@ begin
   AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_DIV);
 
   List := Node.FindAllChildrenNodes(TParser.TFilter.Create.Tag(MyHTML_TAG_A));
-  AssertTrue('Error tags list count', List.Count = 5);
+  AssertTrue('Error tags list count', List.Length = 5);
 
-  Attribute :=  List[0].FirstNodeAttribute(TParser.TFilter.Create
+  Attribute :=  List.Value[0].FirstNodeAttribute(TParser.TFilter.Create
     .AttributeKey('href'));
   AssertTrue('Error attribute is nil', Attribute.IsOk);
   Value := Attribute.Value;
   AssertTrue('Error node attribute href is not correct', Value = '/lawrence/');
 
-  Attribute :=  List[1].FirstNodeAttribute(TParser.TFilter.Create
+  Attribute :=  List.Value[1].FirstNodeAttribute(TParser.TFilter.Create
     .AttributeKey('href'));
   AssertTrue('Error attribute is nil', Attribute.IsOk);
   Value := Attribute.Value;
   AssertTrue('Error node attribute href is not correct', Value =
     'mailto:lk@teamten.com');
 
-  Attribute :=  List[2].FirstNodeAttribute(TParser.TFilter.Create
+  Attribute :=  List.Value[2].FirstNodeAttribute(TParser.TFilter.Create
     .AttributeKey('href'));
   AssertTrue('Error attribute is nil', Attribute.IsOk);
   Value := Attribute.Value;
   AssertTrue('Error node attribute href is not correct', Value =
     'https://www.linkedin.com/pub/lawrence-kesteloot/2/68a/7a3');
 
-  Attribute :=  List[3].FirstNodeAttribute(TParser.TFilter.Create
+  Attribute :=  List.Value[3].FirstNodeAttribute(TParser.TFilter.Create
     .AttributeKey('href'));
   AssertTrue('Error attribute is nil', Attribute.IsOk);
   Value := Attribute.Value;
   AssertTrue('Error node attribute href is not correct', Value =
     'https://twitter.com/lkesteloot');
 
-  Attribute :=  List[4].FirstNodeAttribute(TParser.TFilter.Create
+  Attribute :=  List.Value[4].FirstNodeAttribute(TParser.TFilter.Create
     .AttributeKey('href'));
   AssertTrue('Error attribute is nil', Attribute.IsOk);
   Value := Attribute.Value;
@@ -776,6 +825,14 @@ begin
   FreeAndNil(FParser);
 end;
 
+{$IFNDEF FPC}
+procedure TParserSimpleHTMLTestCase.AssertTrue (AMessage : String; ACondition : 
+  Boolean);
+begin
+  CheckTrue(ACondition, AMessage);
+end;
+{$ENDIF}
+
 function TParserSimpleHTMLTestCase.TagIdEqualCallback(ANode: TParser.TTagNode;
   AData: Pointer): Boolean;
 begin
@@ -802,7 +859,7 @@ end;
 procedure TParserSimpleHTMLTestCase.TestParseDocument;
 begin
   FParser.Parse(SimpleHTMLDocument, DOCUMENT_HTML);
-  AssertFalse('Error document parse: ' + FParser.Error, FParser.HasErrors);
+  AssertTrue('Error document parse: ' + FParser.Error, not FParser.HasErrors);
 end;
 
 { Test title tag value }
@@ -828,14 +885,16 @@ procedure TParserSimpleHTMLTestCase.TestTitleTagCallback;
 var
   Node : TParser.TTagNode;
   Value : string;
-  TagId : TParser.TTag = MyHTML_TAG_TITLE;
+  TagId : TParser.TTag;
 begin
+  TagId := MyHTML_TAG_TITLE;
+
   Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD);
   AssertTrue('Error head node is nil', Node.IsOk);
   AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEAD);
 
   Node := Node.FirstChildrenNode(TParser.TFilter.Create.TagNodeCallback(
-    @TagIdEqualCallback, @TagId));
+    {$IFDEF FPC}@{$ENDIF}TagIdEqualCallback, @TagId));
   AssertTrue('Error title tag is nil', Node.IsOk);
   AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_TITLE);
 
@@ -874,22 +933,25 @@ var
   Node : TParser.TTagNode;
   Attribute : TParser.TTagNodeAttribute;
   Value : string;
-  TagId : TParser.TTag = MyHTML_TAG_META;
-  CharsetAttribute : string = 'charset';
+  TagId : TParser.TTag;
+  CharsetAttribute : string;
 begin
+  TagId := MyHTML_TAG_META;
+  CharsetAttribute := 'charset';
+
   Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD);
   AssertTrue('Error head node is nil', Node.IsOk);
   AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEAD);
 
   Node := Node.FirstChildrenNode(TParser.TFilter.Create
-    .TagNodeCallback(@TagIdEqualCallback, @TagId)
-    .TagNodeAttributeCallback(@TagAttributeKeyEqualCallback,
+    .TagNodeCallback({$IFDEF FPC}@{$ENDIF}TagIdEqualCallback, @TagId)
+    .TagNodeAttributeCallback({$IFDEF FPC}@{$ENDIF}TagAttributeKeyEqualCallback,
       PChar(CharsetAttribute)));
   AssertTrue('Error meta tag is nil', Node.IsOk);
   AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_META);
 
   Attribute := Node.FirstNodeAttribute(TParser.TFilter.Create
-    .TagNodeAttributeCallback(@TagAttributeKeyEqualCallback,
+    .TagNodeAttributeCallback({$IFDEF FPC}@{$ENDIF}TagAttributeKeyEqualCallback,
       PChar(CharsetAttribute)));
   AssertTrue('Error charset attribute is nil', Attribute.IsOk);
   AssertTrue('Error not correct attribute key', Attribute.Key = 'charset');
@@ -903,7 +965,7 @@ procedure TParserSimpleHTMLTestCase.TestMetaTagKeywordsAttributeValue;
 var
   Node : TParser.TTagNode;
   Attribute : TParser.TTagNodeAttribute;
-  Keywords : TStringList;
+  Keywords : TParser.TStringList;
 begin
   Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD);
   AssertTrue('Error head node is nil', Node.IsOk);
@@ -920,11 +982,11 @@ begin
   AssertTrue('Error not correct attribute key', Attribute.Key = 'content');
 
   Keywords := Attribute.ValueList;
-  AssertTrue('Error keywords list count', Keywords.Count = 2);
+  AssertTrue('Error keywords list count', Keywords.Length = 2);
   AssertTrue('Error keywords list 0 value is not correct',
-    Keywords[0] = 'some_keywords');
+    Keywords.Value[0] = 'some_keywords');
   AssertTrue('Error keywords list 1 value is not correct',
-    Keywords[1] = 'keywords');
+    Keywords.Value[1] = 'keywords');
 end;
 
 { Test meta tag keywords attribute value by callback functions }
@@ -932,33 +994,36 @@ procedure TParserSimpleHTMLTestCase.TestMetaTagKeywordsAttributeValueCallback;
 var
   Node : TParser.TTagNode;
   Attribute : TParser.TTagNodeAttribute;
-  Keywords : TStringList;
-  TagId : TParser.TTag = MyHTML_TAG_META;
-  KeywordsAttribute : string = 'content';
+  Keywords : TParser.TStringList;
+  TagId : TParser.TTag;
+  KeywordsAttribute : string;
 begin
+  TagId := MyHTML_TAG_META;
+  KeywordsAttribute := 'content';
+
   Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD);
   AssertTrue('Error head node is nil', Node.IsOk);
   AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEAD);
 
   Node := Node.FirstChildrenNode(TParser.TFilter.Create
-    .TagNodeCallback(@TagIdEqualCallback, @TagId)
-    .TagNodeAttributeCallback(@TagAttributeKeyEqualCallback,
+    .TagNodeCallback({$IFDEF FPC}@{$ENDIF}TagIdEqualCallback, @TagId)
+    .TagNodeAttributeCallback({$IFDEF FPC}@{$ENDIF}TagAttributeKeyEqualCallback,
       PChar(KeywordsAttribute)));
   AssertTrue('Error meta tag is nil', Node.IsOk);
   AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_META);
 
   Attribute := Node.FirstNodeAttribute(TParser.TFilter.Create
-    .TagNodeAttributeCallback(@TagAttributeKeyEqualCallback,
+    .TagNodeAttributeCallback({$IFDEF FPC}@{$ENDIF}TagAttributeKeyEqualCallback,
       PChar(KeywordsAttribute)));
   AssertTrue('Error charset attribute is nil', Attribute.IsOk);
   AssertTrue('Error not correct attribute key', Attribute.Key = 'content');
 
   Keywords := Attribute.ValueList;
-  AssertTrue('Error keywords list count', Keywords.Count = 2);
+  AssertTrue('Error keywords list count', Keywords.Length = 2);
   AssertTrue('Error keywords list 0 value is not correct',
-    Keywords[0] = 'some_keywords');
+    Keywords.Value[0] = 'some_keywords');
   AssertTrue('Error keywords list 0 value is not correct',
-    Keywords[1] = 'keywords');
+    Keywords.Value[1] = 'keywords');
 end;
 
 { Test meta tag description attribute value }
@@ -993,21 +1058,24 @@ var
   Node : TParser.TTagNode;
   Attribute : TParser.TTagNodeAttribute;
   Value : string;
-  TagId : TParser.TTag = MyHTML_TAG_META;
-  DescriptionAttribute : string = 'content';
+  TagId : TParser.TTag;
+  DescriptionAttribute : string;
 begin
+  TagId := MyHTML_TAG_META;
+  DescriptionAttribute := 'content';
+
   Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD);
   AssertTrue('Error head node is nil', Node.IsOk);
   AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEAD);
 
   Node := Node.FirstChildrenNode(TParser.TFilter.Create
-    .TagNodeCallback(@TagIdEqualCallback, @TagId)
+    .TagNodeCallback({$IFDEF FPC}@{$ENDIF}TagIdEqualCallback, @TagId)
     .AttributeKeyValue('name', 'description'));
   AssertTrue('Error meta tag is nil', Node.IsOk);
   AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_META);
 
   Attribute := Node.FirstNodeAttribute(TParser.TFilter.Create
-    .TagNodeAttributeCallback(@TagAttributeKeyEqualCallback,
+    .TagNodeAttributeCallback({$IFDEF FPC}@{$ENDIF}TagAttributeKeyEqualCallback,
       PChar(DescriptionAttribute)));
   AssertTrue('Error description attribute is nil', Attribute.IsOk);
   AssertTrue('Error not correct attribute key', Attribute.Key = 'content');
@@ -1049,21 +1117,24 @@ var
   Node : TParser.TTagNode;
   Attribute : TParser.TTagNodeAttribute;
   Value : string;
-  TagId : TParser.TTag = MyHTML_TAG_LINK;
-  StylesheetAttribute : string = 'href';
+  TagId : TParser.TTag;
+  StylesheetAttribute : string;
 begin
+  TagId := MyHTML_TAG_LINK;
+  StylesheetAttribute := 'href';
+
   Node := FParser.Parse(SimpleHTMLDocument, DOCUMENT_HEAD);
   AssertTrue('Error head node is nil', Node.IsOk);
   AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_HEAD);
 
   Node := Node.FirstChildrenNode(TParser.TFilter.Create
-    .TagNodeCallback(@TagIdEqualCallback, @TagId)
+    .TagNodeCallback({$IFDEF FPC}@{$ENDIF}TagIdEqualCallback, @TagId)
     .AttributeKeyValue('rel', 'stylesheet'));
   AssertTrue('Error meta tag is nil', Node.IsOk);
   AssertTrue('Error not correct tag id', Node.Tag = MyHTML_TAG_LINK);
 
   Attribute := Node.FirstNodeAttribute(TParser.TFilter.Create
-    .TagNodeAttributeCallback(@TagAttributeKeyEqualCallback,
+    .TagNodeAttributeCallback({$IFDEF FPC}@{$ENDIF}TagAttributeKeyEqualCallback,
       PChar(StylesheetAttribute)));
   AssertTrue('Error charset attribute is nil', Attribute.IsOk);
   AssertTrue('Error not correct attribute key', Attribute.Key = 'href');
@@ -1165,11 +1236,19 @@ begin
   myhtml_destroy(FHTML);
 end;
 
+{$IFNDEF FPC}
+procedure TMyHTMLLibrarySimpleHTMLTestCase.AssertTrue (AMessage : String; 
+  ACondition : Boolean);
+begin
+  CheckTrue(ACondition, AMessage);
+end;
+{$ENDIF}
+
 { Tokenize string by space symbol }
 function TMyHTMLLibrarySimpleHTMLTestCase.StringTokenize(AString: string
   ): TStringList;
 var
-  Index : SizeInt;
+  Index : Integer;
 begin
   Result := TStringList.Create;
   while AString <> '' do
@@ -1195,7 +1274,8 @@ begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
 
-  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
+  FError := myhtml_parse(FTree, FEncoding, 
+    API.CString.Create(SimpleHTMLDocument).ToPAnsiChar,
     Length(SimpleHTMLDocument));
   AssertTrue('Error document parse',
     FError = mystatus_t(MyHTML_STATUS_OK));
@@ -1220,7 +1300,7 @@ procedure TMyHTMLLibrarySimpleHTMLTestCase.TestTitleTag;
   function NodeTextValue (ANode : pmyhtml_tree_node_t) : string;
     {$IFNDEF DEBUG}inline;{$ENDIF}
   var
-  TextNode : pmyhtml_tree_node_t;
+    TextNode : pmyhtml_tree_node_t;
   begin
     if ANode <> nil then
     begin
@@ -1228,7 +1308,7 @@ procedure TMyHTMLLibrarySimpleHTMLTestCase.TestTitleTag;
       if (TextNode <> nil) and (myhtml_tags_t(myhtml_node_tag_id(TextNode)) =
         MyHTML_TAG__TEXT) then
       begin
-        Result := myhtml_node_text(TextNode, nil);
+        Result := API.CString.Create(myhtml_node_text(TextNode, nil)).ToString;
       end else
         Result := '';
     end else
@@ -1242,8 +1322,10 @@ begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
 
-  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
+  FError := myhtml_parse(FTree, FEncoding, 
+    API.CString.Create(SimpleHTMLDocument).ToPAnsiChar,
     Length(SimpleHTMLDocument));
+
   AssertTrue('Error document parse',
     FError = mystatus_t(MyHTML_STATUS_OK));
 
@@ -1282,7 +1364,8 @@ procedure TMyHTMLLibrarySimpleHTMLTestCase.TestMetaTagCharsetAttributeValue;
   function FindNextAttributeByKey (ANode : pmyhtml_tree_node_t; AKey :
     string) : pmyhtml_tree_attr_t; {$IFNDEF DEBUG}inline;{$ENDIF}
   begin
-    Result := myhtml_attribute_by_key(ANode, PChar(AKey), Length(AKey));
+    Result := myhtml_attribute_by_key(ANode, 
+      API.CString.Create(AKey).ToPAnsiChar, Length(AKey));
   end;
 
   { Find node start from ANode and have attribute with exists key. Return
@@ -1307,8 +1390,10 @@ begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
 
-  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
+  FError := myhtml_parse(FTree, FEncoding, 
+    API.CString.Create(SimpleHTMLDocument).ToPAnsiChar,
     Length(SimpleHTMLDocument));
+
   AssertTrue('Error document parse',
     FError = mystatus_t(MyHTML_STATUS_OK));
 
@@ -1325,7 +1410,8 @@ begin
   if Attribute = nil then
     Fail('Error META tag attribute is nil');
 
-  Charset := myhtml_attribute_value(Attribute, nil);
+  Charset := API.CString.Create(myhtml_attribute_value(Attribute, nil))
+    .ToString;
   AssertTrue('Error charser attribute is not correct', Charset = 'utf-8');
 end;
 
@@ -1337,8 +1423,10 @@ procedure TMyHTMLLibrarySimpleHTMLTestCase.TestMetaTagKeywordsAttributeValue;
     string; AValue : string) : pmyhtml_tree_attr_t;
     {$IFNDEF DEBUG}inline;{$ENDIF}
   begin
-    Result := myhtml_attribute_by_key(ANode, PChar(AKey), Length(AKey));
-    if (Result <> nil) and (myhtml_attribute_value(Result, nil) <> AValue) then
+    Result := myhtml_attribute_by_key(ANode, 
+      API.CString.Create(AKey).ToPAnsiChar, Length(AKey));
+    if (Result <> nil) and (API.CString.Create(myhtml_attribute_value(Result, 
+      nil)).ToString <> AValue) then
       Result := nil;
   end;
 
@@ -1368,7 +1456,8 @@ begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
 
-  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
+  FError := myhtml_parse(FTree, FEncoding, 
+    API.CString.Create(SimpleHTMLDocument).ToPAnsiChar,
     Length(SimpleHTMLDocument));
   AssertTrue('Error document parse',
     FError = mystatus_t(MyHTML_STATUS_OK));
@@ -1386,11 +1475,13 @@ begin
   if Node = nil then
     Fail('Error META tag is nil');
 
-  Attribute := myhtml_attribute_by_key(Node, 'content', Length('content'));
+  Attribute := myhtml_attribute_by_key(Node, API.CString.Create('content')
+    .ToPAnsiChar, Length('content'));
   if Attribute = nil then
     Fail('Error META tag attribute is nil');
 
-  Keywords := StringTokenize(myhtml_attribute_value(Attribute, nil));
+  Keywords := StringTokenize(API.CString.Create(myhtml_attribute_value(
+    Attribute, nil)).ToString);
   AssertTrue('Error keywords list count not correct', Keywords.Count = 2);
   AssertTrue('Error keywords 0 is not correct', Keywords[0] = 'some_keywords');
   AssertTrue('Error keywords 1 is not correct', Keywords[1] = 'keywords');
@@ -1404,8 +1495,10 @@ procedure TMyHTMLLibrarySimpleHTMLTestCase.TestMetaTagDescriptionAttributeValue;
     string; AValue : string) : pmyhtml_tree_attr_t;
     {$IFNDEF DEBUG}inline;{$ENDIF}
   begin
-    Result := myhtml_attribute_by_key(ANode, PChar(AKey), Length(AKey));
-    if (Result <> nil) and (myhtml_attribute_value(Result, nil) <> AValue) then
+    Result := myhtml_attribute_by_key(ANode, API.CString.Create(AKey)
+      .ToPAnsiChar, Length(AKey));
+    if (Result <> nil) and (API.CString.Create(myhtml_attribute_value(Result, 
+      nil)).ToString <> AValue) then
       Result := nil;
   end;
 
@@ -1435,7 +1528,8 @@ begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
 
-  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
+  FError := myhtml_parse(FTree, FEncoding, 
+    API.CString.Create(SimpleHTMLDocument).ToPAnsiChar,
     Length(SimpleHTMLDocument));
   AssertTrue('Error document parse',
     FError = mystatus_t(MyHTML_STATUS_OK));
@@ -1453,11 +1547,13 @@ begin
   if Node = nil then
     Fail('Error META tag is nil');
 
-  Attribute := myhtml_attribute_by_key(Node, 'content', Length('content'));
+  Attribute := myhtml_attribute_by_key(Node, API.CString.Create('content')
+    .ToPAnsiChar, Length('content'));
   if Attribute = nil then
     Fail('Error META tag attribute is nil');
 
-  Description := myhtml_attribute_value(Attribute, nil);
+  Description := API.CString.Create(myhtml_attribute_value(Attribute, nil))
+    .ToString;
   AssertTrue('Error description attribute is not correct', Description =
     'description');
 end;
@@ -1470,8 +1566,10 @@ procedure TMyHTMLLibrarySimpleHTMLTestCase.TestLinkTagRelAttribute;
     string; AValue : string) : pmyhtml_tree_attr_t;
     {$IFNDEF DEBUG}inline;{$ENDIF}
   begin
-    Result := myhtml_attribute_by_key(ANode, PChar(AKey), Length(AKey));
-    if (Result <> nil) and (myhtml_attribute_value(Result, nil) <> AValue) then
+    Result := myhtml_attribute_by_key(ANode, API.CString.Create(AKey)
+      .ToPAnsiChar, Length(AKey));
+    if (Result <> nil) and (API.CString.Create(myhtml_attribute_value(Result, 
+      nil)).ToString <> AValue) then
       Result := nil;
   end;
 
@@ -1501,7 +1599,8 @@ begin
   myhtml_tree_clean(FTree);
   myhtml_clean(FHTML);
 
-  FError := myhtml_parse(FTree, FEncoding, PChar(SimpleHTMLDocument),
+  FError := myhtml_parse(FTree, FEncoding, 
+    API.CString.Create(SimpleHTMLDocument).ToPAnsiChar,
     Length(SimpleHTMLDocument));
   AssertTrue('Error document parse',
     FError = mystatus_t(MyHTML_STATUS_OK));
@@ -1519,19 +1618,21 @@ begin
   if Node = nil then
     Fail('Error LINK tag is nil');
 
-  Attribute := myhtml_attribute_by_key(Node, 'href', Length('href'));
+  Attribute := myhtml_attribute_by_key(Node, API.CString.Create('href')
+   .ToPAnsiChar, Length('href'));
   if Attribute = nil then
     Fail('Error LINK tag attribute is nil');
 
-  Stylesheet := myhtml_attribute_value(Attribute, nil);
+  Stylesheet := API.CString.Create(myhtml_attribute_value(Attribute, nil))
+    .ToString;
   AssertTrue('Error link href is not correct', Stylesheet = 'style.css');
 end;
 
 initialization
-  RegisterTest(TMyHTMLLibrarySimpleHTMLTestCase);
-  RegisterTest(TParserSimpleHTMLTestCase);
-  RegisterTest(TParserTeamtenTestCase);
-  RegisterTest(TParserIanaTestCase);
-  RegisterTest(TParserHtml5TestCase);
+  RegisterTest(TMyHTMLLibrarySimpleHTMLTestCase{$IFNDEF FPC}.Suite{$ENDIF});
+  RegisterTest(TParserSimpleHTMLTestCase{$IFNDEF FPC}.Suite{$ENDIF});
+  RegisterTest(TParserTeamtenTestCase{$IFNDEF FPC}.Suite{$ENDIF});
+  RegisterTest(TParserIanaTestCase{$IFNDEF FPC}.Suite{$ENDIF});
+  RegisterTest(TParserHtml5TestCase{$IFNDEF FPC}.Suite{$ENDIF});
 end.
 
